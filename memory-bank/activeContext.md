@@ -6,66 +6,37 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Billing System V5 — Session 6 Complete (BIL-09 + BIL-10) ✅
+## Latest: Billing System Cleanup — Session 7 Complete ✅
 
-### Session 6: Super Admin Revenue Dashboard + Chiko AI Business Assistant
+### Session 7: Dead Page Removal, Env Trimming, NaN Guards, Branding Cleanup
 
-**BIL-09: Super Admin Revenue Dashboard — COMPLETE ✅**
+Post-implementation cleanup of the billing system. Removed dead code, fixed edge cases, eliminated branding leaks.
 
-Full revenue analytics dashboard for super admins with Recharts visualizations.
+**Deleted Files (2):**
 
-**New Files (1):**
+- `src/app/(dashboard)/settings/subscription/page.tsx` — Dead page calling non-existent `/api/billing/paddle/overview`, used wrong plan names
+- `src/components/settings/subscription-details.tsx` — 192-line component only used by the dead page
 
-- `src/components/admin/admin-revenue-overview.tsx` — Client component with 4 stat cards (MRR/ARR/Agencies/Churn), 12-month MRR history line chart, plan distribution pie chart, trial funnel bars, cancellation reasons breakdown, platform costs vs revenue with net margin
+**Modified Files (7):**
 
-**Modified Files (4):**
+- `src/lib/paddle/client.ts` — Added `.trim()` to all 13 env var reads in PADDLE_IDS; suppressed API key warning during production builds (guards: `typeof window === "undefined"`, `NODE_ENV !== "production"`, `NEXT_PHASE !== "phase-production-build"`)
+- `src/components/billing/usage-dashboard.tsx` — Added `Number.isFinite()` guards on Progress value and percent display to prevent NaN when limits are 0
+- `src/app/(dashboard)/dashboard/billing/success/page.tsx` — Changed `"Welcome to DRAMAC Pro!"` → `"Welcome to {PLATFORM.name}!"`
+- `src/components/billing/plan-comparison-table.tsx` — Replaced 2 hardcoded "DRAMAC" strings with `PLATFORM.name`
+- `src/components/billing/plan-change-dialog.tsx` — Replaced 3 hardcoded "DRAMAC"/"White-label" strings with `PLATFORM.name` references
+- `src/components/settings/index.ts` — Removed `SubscriptionDetails` export (deleted component)
+- `src/config/settings-navigation.ts` — Removed dead Subscription nav link, cleaned unused Receipt import
 
-- `src/lib/paddle/billing-actions.ts` — Added `createAdminClient` import, `verifySuperAdmin()` helper, 7 admin server actions (getRevenueOverview, getMrrHistory, getPlanDistribution, getTrialFunnel, getChurnAnalysis, getCancellationReasons, getPlatformCostEstimate) + 7 type interfaces
-- `src/components/admin/index.ts` — Added AdminRevenueOverview export
-- `src/app/(dashboard)/admin/billing/page.tsx` — Updated to use AdminRevenueOverview, added deep analytics link
-- `src/app/(dashboard)/admin/billing/revenue/page.tsx` — Added back button, updated header
+**Audit Results (no code changes needed):**
 
-**BIL-10: Chiko AI Business Assistant — COMPLETE ✅**
+- **Role access**: All billing pages confirmed correct — `/settings/billing` (owner-only), `/admin/billing` (super_admin), `/pricing` (public), `/billing/success` (auth-only)
+- **Agency branding**: All billing components use semantic Tailwind classes (`bg-primary`, `text-primary`, etc.) — fully compatible with BrandingProvider CSS variable overrides
 
-AI-powered business assistant using Claude Haiku 4.5 with 7 query categories.
+**Verification:** VS Code language server: zero errors on all 7 modified files. Committed as `5d9fd1d0`.
 
-**New Files (5):**
+## Billing V5 — ALL 10 PHASES + CLEANUP COMPLETE ✅
 
-- `src/components/chiko/chiko-query-builder.ts` — Query builder with 7 categories (revenue, bookings, clients, orders, chat, marketing, general), keyword classifier, agency-scoped DB queries, ~2000 token context cap
-- `src/app/api/chiko/route.ts` — POST endpoint with auth, usage limit check, context building, Claude Haiku 4.5 call, conversation persistence, usage tracking (maxDuration=60)
-- `src/components/chiko/chiko-chat.tsx` — Full chat UI with message history, 5 quick actions, auto-scroll, loading state, conversation persistence, empty state with Chiko branding
-- `src/app/(dashboard)/dashboard/chiko/page.tsx` — Auth-guarded page with agency verification
-- `migrations/bil-10-chiko-conversations.sql` — Applied via Supabase MCP: chiko_conversations table (UUID, agency_id, user_id, messages JSONB, title) + RLS (owner CRUD + super_admin read) + updated_at trigger
-
-**Modified Files (1):**
-
-- `src/config/navigation.ts` — Added Sparkles import, "Chiko AI" nav item under Account section with `/dashboard/chiko` href
-
-**Carry-over Fix (from Session 5):**
-
-- `src/components/billing/current-plan-card.tsx` — Replaced inline AlertDialog cancel with CancellationFlow component wrapper (DialogTrigger asChild pattern)
-
-**Verification:**
-
-- **TSC**: 197 errors (exact baseline maintained, zero new errors)
-- **DB**: Migration applied via Supabase MCP (chiko_conversations table + RLS + trigger)
-
-### Summary of Session 6 Changes
-
-| Category       | Files                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| Migrations     | 1 new (bil-10-chiko-conversations)                                          |
-| Components     | 4 new (admin-revenue-overview, chiko-query-builder, chiko-chat, chiko page) |
-| API Routes     | 1 new (api/chiko)                                                           |
-| Server actions | 7 new admin actions + 7 types in billing-actions.ts                         |
-| Navigation     | 1 modified (Chiko AI added to Account section)                              |
-| Admin exports  | 1 modified (admin/index.ts)                                                 |
-| Admin pages    | 2 modified (billing page + revenue page)                                    |
-| Carry-over     | 1 modified (current-plan-card — CancellationFlow wiring)                    |
-
-## Billing V5 — ALL 10 PHASES COMPLETE ✅
-
-BIL-01 through BIL-10 all implemented across 6 sessions. The billing system is production-ready with:
+BIL-01 through BIL-10 all implemented across 6 sessions + Session 7 cleanup. The billing system is production-ready with:
 
 - 3-tier pricing (Starter/Growth/Agency)
 - Paddle.js checkout & trial
@@ -75,18 +46,14 @@ BIL-01 through BIL-10 all implemented across 6 sessions. The billing system is p
 - Overage billing engine
 - Super admin revenue dashboard with Recharts
 - Chiko AI business assistant with Claude Haiku 4.5
+- All branding references use PLATFORM constant (no hardcoded strings)
+- All env var reads trimmed to prevent CRLF mismatches
 
 ### Next Steps
 
 1. **Wave 6 Session 1 (EM-60)**: Hotel Management Module — first industry vertical
 2. Create Paddle Sandbox products manually (fill `.env.local` placeholders)
 3. Regenerate Supabase types (`database.types.ts`) to remove `as any` casts
-
-### Session 6 Post-Verification Fixes Applied
-
-- **CRITICAL FIX**: Chiko API route UPDATE query now checks `agency_id` + `user_id` (was missing — cross-user data leakage risk)
-- **Dead code removed**: `BarChart`/`Bar` unused imports from admin-revenue-overview.tsx
-- **Dead code removed**: `handleCancel` function + `cancelSubscriptionPaddle` import from current-plan-card.tsx (replaced by CancellationFlow)
 
 ## Previous: Billing System V5 — Session 4 Complete (BIL-05 + BIL-06 Audit & Fix) ✅
 

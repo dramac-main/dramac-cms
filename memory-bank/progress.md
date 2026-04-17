@@ -173,6 +173,8 @@
 
 **Session 6 (BIL-09+10 — FINAL)**: BIL-09: AdminRevenueOverview component with 4 stat cards, MRR history line chart, plan distribution pie chart, trial funnel, cancellation reasons, costs vs revenue. 7 admin server actions + types in billing-actions.ts. Admin billing page + revenue page updated. BIL-10: Chiko AI with Claude Haiku 4.5. Query builder (7 categories, keyword classifier, agency-scoped). API endpoint (auth, usage limits, Claude call, conversation persistence). Chat UI (quick actions, message history, auto-scroll). Dashboard page + navigation integration. chiko_conversations table + RLS via Supabase MCP. Carry-over: CancellationFlow wired into CurrentPlanCard. TSC: 197 errors (baseline maintained).
 
+**Session 7 (BIL-CLEANUP)**: Post-implementation cleanup. Deleted dead /settings/subscription page + subscription-details component (266 lines removed). Added .trim() to all 13 Paddle env var reads. Added Number.isFinite() NaN guards on usage dashboard progress bars. Suppressed Paddle API key warning during production builds. Replaced 5 hardcoded "DRAMAC" strings in billing components with PLATFORM.name. Audited role access (all correct) and agency branding CSS (all semantic). Commit: 5d9fd1d0.
+
 **Key files:** `/phases/PHASE-BIL-MASTER-GUIDE.md` (full spec), `/phases/PHASE-BIL-SESSION-BRIEF.md` (6-session plan + prompts), `/docs/PRICING-STRATEGY-V5.md` (cost model + pricing)
 
 **Pricing**: Starter $29/mo ($290/yr), Growth $79/mo ($790/yr), Agency $149/mo ($1,490/yr). All 7 modules every plan, white-label Agency only, 14-day trial Growth only. Projected 68-85% net margins.
@@ -243,6 +245,7 @@
 | Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates)            |
 | Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
 | Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
+| Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                            |
 
 ---
 
@@ -255,6 +258,9 @@
 | `database.ts` is 580K+ chars           | Requires `--max-old-space-size=8192` for tsc    | Medium   |
 | Vercel GitHub webhook intermittent     | Deploy via `npx vercel --prod --yes` workaround | Low      |
 | Wave 6 industry verticals              | DB schemas ready but modules not built          | Planned  |
+| Dead /settings/subscription removed    | Was calling non-existent API                    | ✅ Fixed  |
+| Hardcoded "DRAMAC" in billing          | Branding leaks in 3 components                  | ✅ Fixed  |
+| Paddle env var CRLF issue              | Price IDs with \r\n cause 404s                  | ✅ Fixed  |
 
 # Progress: What Works & What's Left
 

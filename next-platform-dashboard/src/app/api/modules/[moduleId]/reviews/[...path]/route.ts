@@ -1,9 +1,9 @@
 /**
  * Module Reviews Catch-All API Route
- * 
+ *
  * Consolidated route handler for review sub-operations.
  * Replaces individual route files to reduce Vercel route count.
- * 
+ *
  * Handles:
  * - GET/PATCH/DELETE /reviews/[reviewId]
  * - POST /reviews/[reviewId]/vote
@@ -23,7 +23,7 @@ import {
 function notFound(action: string) {
   return NextResponse.json(
     { error: `Unknown review action: ${action}` },
-    { status: 404 }
+    { status: 404 },
   );
 }
 
@@ -32,18 +32,18 @@ function notFound(action: string) {
 // =============================================================
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ moduleId: string; path: string[] }> }
+  { params }: { params: Promise<{ moduleId: string; path: string[] }> },
 ) {
   const { path } = await params;
 
   // Only handle /reviews/[reviewId] (single segment)
   if (path.length !== 1) {
-    return notFound(path.join('/'));
+    return notFound(path.join("/"));
   }
 
   // The base reviews/[reviewId] GET is handled by the individual route
   // This catch-all only handles sub-paths
-  return notFound(path.join('/'));
+  return notFound(path.join("/"));
 }
 
 // =============================================================
@@ -51,12 +51,12 @@ export async function GET(
 // =============================================================
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ moduleId: string; path: string[] }> }
+  { params }: { params: Promise<{ moduleId: string; path: string[] }> },
 ) {
   const { path } = await params;
 
   if (path.length !== 1) {
-    return notFound(path.join('/'));
+    return notFound(path.join("/"));
   }
 
   const reviewId = path[0];
@@ -76,7 +76,8 @@ export async function PATCH(
     return NextResponse.json(review);
   } catch (error) {
     console.error("[Reviews API] PATCH error:", error);
-    const message = error instanceof Error ? error.message : "Failed to update review";
+    const message =
+      error instanceof Error ? error.message : "Failed to update review";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -86,12 +87,12 @@ export async function PATCH(
 // =============================================================
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ moduleId: string; path: string[] }> }
+  { params }: { params: Promise<{ moduleId: string; path: string[] }> },
 ) {
   const { path } = await params;
 
   if (path.length !== 1) {
-    return notFound(path.join('/'));
+    return notFound(path.join("/"));
   }
 
   const reviewId = path[0];
@@ -101,7 +102,8 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Reviews API] DELETE error:", error);
-    const message = error instanceof Error ? error.message : "Failed to delete review";
+    const message =
+      error instanceof Error ? error.message : "Failed to delete review";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -111,27 +113,27 @@ export async function DELETE(
 // =============================================================
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ moduleId: string; path: string[] }> }
+  { params }: { params: Promise<{ moduleId: string; path: string[] }> },
 ) {
   const { path } = await params;
 
   // Handle /reviews/[reviewId]/action
   if (path.length !== 2) {
-    return notFound(path.join('/'));
+    return notFound(path.join("/"));
   }
 
   const reviewId = path[0];
   const action = path[1];
 
   switch (action) {
-    case 'vote':
+    case "vote":
       return handleVote(request, reviewId);
-    case 'response':
+    case "response":
       return handleResponse(request, reviewId);
-    case 'report':
+    case "report":
       return handleReport(request, reviewId);
     default:
-      return notFound(path.join('/'));
+      return notFound(path.join("/"));
   }
 }
 
@@ -143,7 +145,7 @@ async function handleVote(request: NextRequest, reviewId: string) {
     if (!voteType || !["helpful", "not_helpful"].includes(voteType)) {
       return NextResponse.json(
         { error: "Invalid vote type. Must be 'helpful' or 'not_helpful'." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -161,17 +163,21 @@ async function handleResponse(request: NextRequest, reviewId: string) {
     const body = await request.json();
     const { response } = body;
 
-    if (!response || typeof response !== "string" || response.trim().length === 0) {
+    if (
+      !response ||
+      typeof response !== "string" ||
+      response.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: "Response text is required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (response.length > 2000) {
       return NextResponse.json(
         { error: "Response must be 2000 characters or less." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -179,7 +185,8 @@ async function handleResponse(request: NextRequest, reviewId: string) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Reviews API] Developer response error:", error);
-    const message = error instanceof Error ? error.message : "Failed to add response";
+    const message =
+      error instanceof Error ? error.message : "Failed to add response";
     const status = message.includes("Not authorized") ? 403 : 500;
     return NextResponse.json({ error: message }, { status });
   }
@@ -193,7 +200,7 @@ async function handleReport(request: NextRequest, reviewId: string) {
     if (!reason || typeof reason !== "string" || reason.trim().length === 0) {
       return NextResponse.json(
         { error: "Report reason is required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -201,7 +208,8 @@ async function handleReport(request: NextRequest, reviewId: string) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Reviews API] Report error:", error);
-    const message = error instanceof Error ? error.message : "Failed to report review";
+    const message =
+      error instanceof Error ? error.message : "Failed to report review";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
