@@ -21,7 +21,12 @@ import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // Environment Validation
 // ============================================================================
 
-if (!process.env.PADDLE_API_KEY) {
+if (
+  typeof window === "undefined" &&
+  !process.env.PADDLE_API_KEY &&
+  process.env.NODE_ENV !== "production" &&
+  process.env.NEXT_PHASE !== "phase-production-build"
+) {
   console.warn(
     "[Paddle] PADDLE_API_KEY not set - billing features will be disabled",
   );
@@ -73,22 +78,22 @@ export const isPaddleSandbox = paddleEnvironment === "sandbox";
  */
 export const PADDLE_IDS = {
   products: {
-    starter: process.env.PADDLE_PRODUCT_STARTER || "",
-    growth: process.env.PADDLE_PRODUCT_GROWTH || "",
-    agency: process.env.PADDLE_PRODUCT_AGENCY || "",
+    starter: (process.env.PADDLE_PRODUCT_STARTER || "").trim(),
+    growth: (process.env.PADDLE_PRODUCT_GROWTH || "").trim(),
+    agency: (process.env.PADDLE_PRODUCT_AGENCY || "").trim(),
   },
   prices: {
-    starter_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || "",
-    starter_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || "",
-    growth_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_MONTHLY || "",
-    growth_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_YEARLY || "",
-    agency_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_MONTHLY || "",
-    agency_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_YEARLY || "",
+    starter_monthly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || "").trim(),
+    starter_yearly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || "").trim(),
+    growth_monthly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_MONTHLY || "").trim(),
+    growth_yearly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_YEARLY || "").trim(),
+    agency_monthly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_MONTHLY || "").trim(),
+    agency_yearly: (process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_YEARLY || "").trim(),
     // Overage prices for metered billing (server-side only)
-    automation_overage: process.env.PADDLE_PRICE_AUTOMATION_OVERAGE || "",
-    ai_overage: process.env.PADDLE_PRICE_AI_OVERAGE || "",
-    email_overage: process.env.PADDLE_PRICE_EMAIL_OVERAGE || "",
-    storage_overage: process.env.PADDLE_PRICE_STORAGE_OVERAGE || "",
+    automation_overage: (process.env.PADDLE_PRICE_AUTOMATION_OVERAGE || "").trim(),
+    ai_overage: (process.env.PADDLE_PRICE_AI_OVERAGE || "").trim(),
+    email_overage: (process.env.PADDLE_PRICE_EMAIL_OVERAGE || "").trim(),
+    storage_overage: (process.env.PADDLE_PRICE_STORAGE_OVERAGE || "").trim(),
   },
 } as const;
 

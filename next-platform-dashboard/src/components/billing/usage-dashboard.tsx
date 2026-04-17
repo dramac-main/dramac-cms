@@ -280,7 +280,7 @@ function UsageCard({
         </div>
 
         <Progress
-          value={Math.min(percent, 100)}
+          value={Number.isFinite(percent) ? Math.min(percent, 100) : 0}
           className={cn(
             "h-2",
             isCritical && "[&>div]:bg-red-500",
@@ -298,7 +298,7 @@ function UsageCard({
               isCaution && "text-yellow-600",
             )}
           >
-            {percent.toFixed(1)}% used
+            {Number.isFinite(percent) ? percent.toFixed(1) : "0.0"}% used
           </span>
           {overage > 0 && (
             <Badge variant="destructive" className="text-xs">

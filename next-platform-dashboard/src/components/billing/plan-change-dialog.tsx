@@ -33,6 +33,7 @@ import {
   getPlanLimits,
   type PlanType,
 } from "@/lib/paddle/client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 // ============================================================================
 // Types
@@ -79,7 +80,7 @@ const PLAN_HIGHLIGHTS: Record<PlanType, string[]> = {
   agency: [
     "30 websites",
     "20 team members",
-    "White-label branding",
+    `White-label (remove ${PLATFORM.name} branding)`,
     "Dedicated support",
     "API access",
     "Custom integrations",
@@ -483,7 +484,7 @@ function GainsList({
   }
   // Check plan-specific features
   if (to === "agency" && from !== "agency") {
-    gains.push("White-label branding");
+    gains.push(`White-label (remove ${PLATFORM.name} branding)`);
   }
 
   return (
@@ -525,7 +526,7 @@ function LossesList({
     );
   }
   if (from === "agency" && to !== "agency") {
-    losses.push("White-label branding removed");
+    losses.push(`White-label branding removed (${PLATFORM.name} branding restored)`);
   }
 
   return (

@@ -11,6 +11,7 @@
 
 import { Check, X, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PLATFORM } from "@/lib/constants/platform";
 
 // ============================================================================
 // Types
@@ -112,7 +113,7 @@ const COMPARISON_DATA: ComparisonGroup[] = [
     name: "Platform",
     rows: [
       { label: "Custom domains", starter: true, growth: true, agency: true },
-      { label: "DRAMAC Studio", starter: true, growth: true, agency: true },
+      { label: `${PLATFORM.name} Studio`, starter: true, growth: true, agency: true },
       { label: "Client portal", starter: true, growth: true, agency: true },
       { label: "Free trial", starter: false, growth: "14 days", agency: false },
       { label: "API access", starter: true, growth: true, agency: true },
@@ -152,7 +153,7 @@ const COMPARISON_DATA: ComparisonGroup[] = [
         agency: true,
       },
       {
-        label: "Remove DRAMAC branding",
+        label: `Remove ${PLATFORM.name} branding`,
         starter: false,
         growth: false,
         agency: true,

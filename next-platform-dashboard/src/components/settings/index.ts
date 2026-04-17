@@ -11,4 +11,3 @@ export { InviteMemberDialog } from "./invite-member-dialog";
 export { NotificationPreferencesForm } from "./notification-preferences-form";
 export { BrandingForm } from "./branding-form";
 export { DomainsManager } from "./domains-manager";
-export { SubscriptionDetails } from "./subscription-details";
