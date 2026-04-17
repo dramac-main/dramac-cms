@@ -162,7 +162,7 @@ export async function cancelSubscriptionPaddle(
 
   try {
     await subscriptionService.cancelSubscription(agencyId, immediately);
-    revalidatePath("/dashboard/billing");
+    revalidatePath("/settings/billing");
     return { success: true };
   } catch (error) {
     console.error("[Billing Action] cancelSubscription error:", error);
@@ -188,7 +188,7 @@ export async function pauseSubscriptionPaddle(agencyId: string) {
 
   try {
     await subscriptionService.pauseSubscription(agencyId);
-    revalidatePath("/dashboard/billing");
+    revalidatePath("/settings/billing");
     return { success: true };
   } catch (error) {
     console.error("[Billing Action] pauseSubscription error:", error);
@@ -214,7 +214,7 @@ export async function resumeSubscriptionPaddle(agencyId: string) {
 
   try {
     await subscriptionService.resumeSubscription(agencyId);
-    revalidatePath("/dashboard/billing");
+    revalidatePath("/settings/billing");
     return { success: true };
   } catch (error) {
     console.error("[Billing Action] resumeSubscription error:", error);
@@ -240,7 +240,7 @@ export async function undoCancelSubscriptionPaddle(agencyId: string) {
 
   try {
     await subscriptionService.undoCancelSubscription(agencyId);
-    revalidatePath("/dashboard/billing");
+    revalidatePath("/settings/billing");
     return { success: true };
   } catch (error) {
     console.error("[Billing Action] undoCancelSubscription error:", error);
@@ -277,7 +277,7 @@ export async function changeSubscriptionPlanPaddle(
       newBillingCycle,
       prorate,
     );
-    revalidatePath("/dashboard/billing");
+    revalidatePath("/settings/billing");
     return { success: true };
   } catch (error) {
     console.error("[Billing Action] changePlan error:", error);

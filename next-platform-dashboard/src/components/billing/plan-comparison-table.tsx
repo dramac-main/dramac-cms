@@ -113,7 +113,12 @@ const COMPARISON_DATA: ComparisonGroup[] = [
     name: "Platform",
     rows: [
       { label: "Custom domains", starter: true, growth: true, agency: true },
-      { label: `${PLATFORM.name} Studio`, starter: true, growth: true, agency: true },
+      {
+        label: `${PLATFORM.name} Studio`,
+        starter: true,
+        growth: true,
+        agency: true,
+      },
       { label: "Client portal", starter: true, growth: true, agency: true },
       { label: "Free trial", starter: false, growth: "14 days", agency: false },
       { label: "API access", starter: true, growth: true, agency: true },

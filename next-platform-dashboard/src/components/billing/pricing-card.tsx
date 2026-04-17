@@ -162,6 +162,7 @@ export function PricingCard({
         priceId: checkoutData.data.priceId,
         agencyId: checkoutData.data.agencyId,
         email: checkoutData.data.customerEmail || email,
+        successUrl: `${window.location.origin}/settings/billing/success?plan=${plan.id}&cycle=${billingCycle}`,
       });
 
       onSelect?.(plan.id);

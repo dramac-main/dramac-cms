@@ -23,9 +23,15 @@ import { OverageSummary } from "@/components/billing/overage-summary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Pause } from "lucide-react";
+import { Pause, CheckCircle2 } from "lucide-react";
 
-export default async function BillingPage() {
+interface BillingPageProps {
+  searchParams: Promise<{ success?: string }>;
+}
+
+export default async function BillingPage({ searchParams }: BillingPageProps) {
+  const params = await searchParams;
+  const showSuccess = params.success === "true";
   const supabase = await createClient();
 
   const {
@@ -44,27 +50,39 @@ export default async function BillingPage() {
     redirect("/settings");
   }
 
-  // Fetch subscription data for CurrentPlanCard
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("agency_id", member.agency_id)
-    .in("status", ["active", "trialing", "past_due"])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  // Fetch Paddle subscription for payment method & status
+  // Fetch Paddle subscription (authoritative source) for plan & payment method
   const { data: paddleSub } = (await supabase
     .from("paddle_subscriptions")
     .select(
-      "status, card_last4, card_brand, card_expiry, plan_type, billing_cycle, current_period_end",
+      "id, paddle_subscription_id, plan_type, billing_cycle, status, current_period_start, current_period_end, trial_end, cancel_at_period_end, unit_price, currency, card_last4, card_brand, card_expiry",
     )
     .eq("agency_id", member.agency_id)
     .in("status", ["active", "trialing", "past_due", "paused"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle()) as { data: any; error: any };
+
+  // Map paddle_subscriptions data to the format CurrentPlanCard expects
+  const subscription = paddleSub
+    ? {
+        id: paddleSub.id,
+        plan_id: paddleSub.plan_type,
+        billing_cycle: paddleSub.billing_cycle,
+        status:
+          paddleSub.status === "trialing"
+            ? "on_trial"
+            : paddleSub.status === "canceled"
+              ? "cancelled"
+              : paddleSub.status,
+        current_period_start: paddleSub.current_period_start,
+        current_period_end: paddleSub.current_period_end,
+        trial_ends_at: paddleSub.trial_end,
+        cancelled_at: paddleSub.cancel_at_period_end
+          ? paddleSub.current_period_end
+          : null,
+        paddle_subscription_id: paddleSub.paddle_subscription_id,
+      }
+    : null;
 
   // Fetch current period usage for overage summary
   const { data: usagePeriod } = (await supabase
@@ -85,6 +103,16 @@ export default async function BillingPage() {
         title="Billing & Subscription"
         description="Manage your subscription, payment methods, and view invoices."
       />
+
+      {/* Success Banner - shown after checkout redirect */}
+      {showSuccess && (
+        <Alert className="border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/30">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800 dark:text-green-300">
+            Your subscription is now active! Welcome to DM Suite.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Pause Banner */}
       {isPaused && (

@@ -19,9 +19,12 @@ export default function BillingSuccessPage() {
             <CircleCheck className="w-10 h-10 text-green-600" />
           </div>
 
-          <h1 className="text-2xl font-bold mb-2">Welcome to {PLATFORM.name}!</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            Welcome to {PLATFORM.name}!
+          </h1>
           <p className="text-muted-foreground mb-6">
-            Your subscription is now active. You have full access to all features.
+            Your subscription is now active. You have full access to all
+            features.
           </p>
 
           <div className="space-y-3">

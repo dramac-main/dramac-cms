@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTlds, setSelectedTlds] = useState<string[]>(POPULAR_TLDS);
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showMoreTlds, setShowMoreTlds] = useState(false);
   const [searchSource, setSearchSource] = useState<'resellerclub' | 'fallback' | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
@@ -80,17 +80,15 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
     const cleaned = normalizeDomainKeyword(value);
     setKeyword(value.toLowerCase().trim()); // Show what user typed (preserve dots)
     
-    // Debounce search
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    // Debounce search — useRef ensures we always clear the latest timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
     
-    const timeout = setTimeout(() => {
+    searchTimeoutRef.current = setTimeout(() => {
       performSearch(cleaned);
     }, 500);
-    
-    setSearchTimeout(timeout);
-  }, [performSearch, searchTimeout]);
+  }, [performSearch]);
   
   const handleManualSearch = () => {
     if (keyword.length >= 2) {

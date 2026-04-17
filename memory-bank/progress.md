@@ -245,7 +245,7 @@
 | Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates)            |
 | Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
 | Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
-| Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                            |
+| Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
 
 ---
 
@@ -258,9 +258,9 @@
 | `database.ts` is 580K+ chars           | Requires `--max-old-space-size=8192` for tsc    | Medium   |
 | Vercel GitHub webhook intermittent     | Deploy via `npx vercel --prod --yes` workaround | Low      |
 | Wave 6 industry verticals              | DB schemas ready but modules not built          | Planned  |
-| Dead /settings/subscription removed    | Was calling non-existent API                    | ✅ Fixed  |
-| Hardcoded "DRAMAC" in billing          | Branding leaks in 3 components                  | ✅ Fixed  |
-| Paddle env var CRLF issue              | Price IDs with \r\n cause 404s                  | ✅ Fixed  |
+| Dead /settings/subscription removed    | Was calling non-existent API                    | ✅ Fixed |
+| Hardcoded "DRAMAC" in billing          | Branding leaks in 3 components                  | ✅ Fixed |
+| Paddle env var CRLF issue              | Price IDs with \r\n cause 404s                  | ✅ Fixed |
 
 # Progress: What Works & What's Left
 

@@ -526,7 +526,9 @@ function LossesList({
     );
   }
   if (from === "agency" && to !== "agency") {
-    losses.push(`White-label branding removed (${PLATFORM.name} branding restored)`);
+    losses.push(
+      `White-label branding removed (${PLATFORM.name} branding restored)`,
+    );
   }
 
   return (

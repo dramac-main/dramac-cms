@@ -1,6 +1,6 @@
 /**
  * Settings Navigation Configuration
- * 
+ *
  * Navigation items for the settings sidebar.
  * Used by the unified Sidebar component with variant="settings"
  */
@@ -54,9 +54,7 @@ export const settingsNavigation: SettingsNavSection[] = [
   },
   {
     title: "Billing",
-    items: [
-      { name: "Billing", href: "/settings/billing", icon: CreditCard },
-    ],
+    items: [{ name: "Billing", href: "/settings/billing", icon: CreditCard }],
   },
 ];
 
@@ -64,5 +62,5 @@ export const settingsNavigation: SettingsNavSection[] = [
  * Flatten settings navigation for simple iteration
  */
 export function getFlatSettingsNav(): SettingsNavItem[] {
-  return settingsNavigation.flatMap(section => section.items);
+  return settingsNavigation.flatMap((section) => section.items);
 }
