@@ -25,18 +25,31 @@ interface Contact {
   phone: string | null;
   company_name?: string | null;
   address?: string | null;
+  // Enriched fields from CRM
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
+
+export interface ContactInvoiceData {
+  contactId: string;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  clientAddress: string | null;
+  clientTaxId: string | null;
+  preferredCurrency: string | null;
+  paymentTerms: string | null;
 }
 
 interface ContactInvoicePickerProps {
   siteId: string;
   value?: string | null;
-  onSelect: (contact: {
-    contactId: string;
-    clientName: string;
-    clientEmail: string | null;
-    clientPhone: string | null;
-    clientAddress: string | null;
-  }) => void;
+  onSelect: (contact: ContactInvoiceData) => void;
 }
 
 export function ContactInvoicePicker({
@@ -57,7 +70,7 @@ export function ContactInvoicePicker({
         const supabase = createClient();
         const { data } = await (supabase as any)
           .from("mod_crmmod01_contacts")
-          .select("id, name, email, phone, company_name, address")
+          .select("id, name, email, phone, company_name, address, address_line_1, address_line_2, city, state, postal_code, country, custom_fields")
           .eq("site_id", siteId)
           .order("name", { ascending: true })
           .limit(200);
@@ -111,12 +124,42 @@ export function ContactInvoicePicker({
                   key={contact.id}
                   onSelect={() => {
                     setSelectedName(contact.name);
+
+                    // Build structured address from CRM fields
+                    const addressParts = [
+                      contact.address_line_1,
+                      contact.address_line_2,
+                      [contact.city, contact.state, contact.postal_code]
+                        .filter(Boolean)
+                        .join(", "),
+                      contact.country,
+                    ].filter(Boolean);
+                    const fullAddress =
+                      addressParts.length > 0
+                        ? addressParts.join("\n")
+                        : contact.address || null;
+
+                    // Extract invoice-relevant fields from custom_fields
+                    const cf = contact.custom_fields || {};
+                    const taxId =
+                      (cf.tax_id as string) ||
+                      (cf.tpin as string) ||
+                      (cf.vat_number as string) ||
+                      null;
+                    const preferredCurrency =
+                      (cf.preferred_currency as string) || null;
+                    const paymentTerms =
+                      (cf.payment_terms as string) || null;
+
                     onSelect({
                       contactId: contact.id,
                       clientName: contact.name,
                       clientEmail: contact.email,
                       clientPhone: contact.phone,
-                      clientAddress: contact.address || null,
+                      clientAddress: fullAddress,
+                      clientTaxId: taxId,
+                      preferredCurrency,
+                      paymentTerms,
                     });
                     setOpen(false);
                   }}

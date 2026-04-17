@@ -160,7 +160,10 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         companyWebsite: prev.companyWebsite || data.companyWebsite,
         companyAddress: prev.companyAddress || data.companyAddress,
         companyTaxId: prev.companyTaxId || data.companyTaxId,
-        brandColor: prev.brandColor === "#000000" && data.brandColor !== "#000000" ? data.brandColor : prev.brandColor,
+        brandColor:
+          prev.brandColor === "#000000" && data.brandColor !== "#000000"
+            ? data.brandColor
+            : prev.brandColor,
         brandLogoUrl: prev.brandLogoUrl || data.brandLogoUrl,
       }));
       toast.success("Populated empty fields from site branding");
@@ -448,15 +451,17 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Company details can be auto-filled from your site branding settings.
-              Only empty fields will be updated.
+              Company details can be auto-filled from your site branding
+              settings. Only empty fields will be updated.
             </AlertDescription>
           </Alert>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">Company Information</CardTitle>
+                  <CardTitle className="text-base">
+                    Company Information
+                  </CardTitle>
                   <CardDescription>
                     Appears on invoices sent to clients.
                   </CardDescription>
@@ -584,7 +589,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                       onChange={handleLogoUpload}
                       className="hidden"
                     />
-                    <p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG. Max 2MB.</p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, WebP or SVG. Max 2MB.
+                    </p>
                   </div>
                 </div>
               </div>

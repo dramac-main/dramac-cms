@@ -6,19 +6,53 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: INVFIX-01 — Settings Auto-Populate + Invoice Form UX ✅
+## Latest: INVFIX-02 — Calculation Engine, Line Item Validation, Live Preview ✅
+
+### Session 2 (INVFIX-01 Audit Fixes + INVFIX-02): Complete
+
+**Files Modified (8):**
+
+- `src/modules/invoicing/actions/settings-actions.ts` — Expanded AutoPopulateData with brandFontHeading/brandFontBody; theme.* fallback resolution (flat → nested); business_name resolution for companyName
+- `src/modules/invoicing/components/contact-invoice-picker.tsx` — Expanded CRM contact picker with richer fields
+- `src/modules/invoicing/components/invoice-form.tsx` — Default tax rate preselection from settings; Sheet replaces Dialog for mobile preview (bottom slide-up 90vh); hasAttemptedSubmit state with line item validation on submit; companyName/companyLogoUrl loaded from settings and passed to InvoicePreview
+- `src/modules/invoicing/components/invoice-line-items.tsx` — defaultTaxRateId/defaultTaxRate props for new rows; exported validateLineItem() function; showErrors prop with inline red borders and error messages
+- `src/modules/invoicing/components/invoice-preview.tsx` — Company logo (Image 64x64), invoice number display, tax breakdown by rate (Map grouping), "Amount Due" label, payment instructions section
+- `src/modules/invoicing/components/invoicing-settings-form.tsx` — Auto-populate improvements (from Session 1)
+- `src/modules/invoicing/lib/invoicing-utils.ts` — bankersRound() (IEEE 754 half-even); taxMode parameter (exclusive/inclusive/compound); discount validation (percentage clamped 0-10000, fixed clamped to subtotal)
+- `src/modules/invoicing/lib/invoicing-bootstrap.ts` — Auto-populate from branding on seed (from Session 1)
+
+**Key Design Decisions:**
+
+- Invoice number generation already atomic (RPC uses SELECT ... FOR UPDATE) — no changes needed
+- bankersRound() replaces all Math.round() in calculation engine to eliminate systematic bias
+- Line item validation: name required, quantity > 0, unitPrice >= 0 — inline red borders + toast on submit
+- Mobile preview uses Sheet (bottom slide-up) instead of Dialog for better UX
+- Site branding resolution: flat fields first (primary_color, logo_url), then theme.* nested fallback
+- Tax breakdown in preview groups by rate (e.g., "Tax (16%): $X", "Tax (5%): $Y")
+
+**TSC:** 219 errors (zero new, matches pre-existing baseline — all marketing module)
+
+### Next Steps
+
+1. **Session 3 (INVFIX-03)**: CRM deep integration + e-commerce product import + catalog picker
+2. **Session 4 (INVFIX-04)**: Online payments + reconciliation + receipt PDF
+3. **Session 5 (INVFIX-05+06)**: Recurring lifecycle + Vendors/Bills/POs
+
+## Previous: INVFIX-01 — Settings Auto-Populate + Invoice Form UX ✅
 
 ### Session 1 (INVFIX-01): Complete
 
 **Commit:** `3fd6b6dd` — `feat(invfix): INVFIX-01 settings branding auto-populate + invoice form UX`
 
 **Files Modified (4):**
+
 - `src/modules/invoicing/actions/settings-actions.ts` — Added `getAutoPopulateData` action (queries sites + agencies for branding), `uploadInvoiceLogo` server action (Supabase `branding` bucket)
 - `src/modules/invoicing/components/invoicing-settings-form.tsx` — Auto-populate button (Wand2 icon), info banner, logo upload with preview, `brandLogoUrl` in form state
 - `src/modules/invoicing/components/invoice-form.tsx` — Contact summary card (collapsible), payment terms → due date auto-calc, responsive preview at md (was xl), floating preview button for mobile (Dialog), auto-populate notes/terms from settings on create
 - `src/modules/invoicing/lib/invoicing-bootstrap.ts` — Auto-populate company info from site branding on initial seed
 
 **Key Design Decisions:**
+
 - Auto-populate fills only EMPTY fields (never overwrites user data)
 - Brand color only auto-populates if still at default #000000
 - Bootstrap auto-populate is non-fatal (try/catch with console.warn)
@@ -26,12 +60,6 @@ The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves
 - agencies table doesn't have phone/address columns — those fields left empty for manual entry
 
 **TSC:** 445 lines (zero new errors, matches pre-existing baseline)
-
-### Next Steps
-
-1. **Session 2 (INVFIX-02)**: Calculation engine fix (invoice number race condition) + line item validation + live preview enhancement
-2. **Session 3 (INVFIX-03)**: CRM deep integration + e-commerce product import
-3. **Session 4 (INVFIX-04)**: Online payments + reconciliation + receipt PDF
 
 ## Previous: Invoice Module Overhaul — Master Guide Created ✅
 

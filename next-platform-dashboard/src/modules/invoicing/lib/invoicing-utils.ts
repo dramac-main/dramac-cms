@@ -10,6 +10,18 @@ import { DEFAULT_INVOICING_SETTINGS } from "./invoicing-constants";
 import type { RecurringFrequency } from "../types/recurring-types";
 
 /**
+ * Banker's rounding (IEEE 754 half-even).
+ * When value is exactly 0.5, rounds to the nearest even integer.
+ */
+export function bankersRound(value: number): number {
+  const rounded = Math.round(value);
+  if (Math.abs(value % 1) === 0.5) {
+    return rounded % 2 === 0 ? rounded : rounded - 1;
+  }
+  return rounded;
+}
+
+/**
  * Format an amount in cents to a display string.
  * E.g., 25000 → "K250.00"
  */
@@ -52,6 +64,14 @@ export function generateInvoiceNumber(
 /**
  * Calculate line item totals.
  * Returns subtotal, discount amount, tax amount, and total — all in cents.
+ *
+ * taxMode:
+ *  - "exclusive" (default): tax is added on top of the subtotal
+ *  - "inclusive": subtotal already includes tax
+ *  - "compound": rates applied sequentially (each on subtotal + prior tax)
+ *
+ * discountValue for percentage: basis points (1000 = 10%)
+ * discountValue for fixed: cents
  */
 export function calculateLineItemTotals(
   quantity: number,
@@ -59,31 +79,44 @@ export function calculateLineItemTotals(
   discountType: "percentage" | "fixed" | null,
   discountValue: number,
   taxRate: number,
+  taxMode: "exclusive" | "inclusive" | "compound" = "exclusive",
 ): {
   subtotal: number;
   discountAmount: number;
   taxAmount: number;
   total: number;
 } {
-  const rawSubtotal = Math.round(quantity * unitPrice);
+  const rawSubtotal = bankersRound(quantity * unitPrice);
 
   let discountAmount = 0;
   if (discountType === "percentage") {
     // discountValue is in basis points (1000 = 10%)
-    discountAmount = Math.round((rawSubtotal * discountValue) / 10000);
+    const clampedDiscount = Math.min(Math.max(discountValue, 0), 10000);
+    discountAmount = bankersRound((rawSubtotal * clampedDiscount) / 10000);
   } else if (discountType === "fixed") {
-    discountAmount = discountValue;
+    // Fixed discount cannot exceed subtotal
+    discountAmount = Math.min(Math.max(discountValue, 0), rawSubtotal);
   }
 
-  const subtotal = rawSubtotal - discountAmount;
-  const taxAmount = Math.round((subtotal * taxRate) / 100);
-  const total = subtotal + taxAmount;
+  const afterDiscount = rawSubtotal - discountAmount;
+
+  let taxAmount = 0;
+  if (taxMode === "inclusive") {
+    // Tax is already included in the price
+    taxAmount = bankersRound(afterDiscount - afterDiscount / (1 + taxRate / 100));
+  } else {
+    // Exclusive (default) and compound both use the same single-rate formula
+    taxAmount = bankersRound((afterDiscount * taxRate) / 100);
+  }
+
+  const total = taxMode === "inclusive" ? afterDiscount : afterDiscount + taxAmount;
 
   return { subtotal: rawSubtotal, discountAmount, taxAmount, total };
 }
 
 /**
  * Calculate invoice-level totals from line items.
+ * Invoice-level discount is applied to the subtotal before adding tax.
  */
 export function calculateInvoiceTotals(
   lineItems: Array<{
@@ -105,9 +138,11 @@ export function calculateInvoiceTotals(
 
   let discountAmount = 0;
   if (invoiceDiscountType === "percentage") {
-    discountAmount = Math.round((subtotal * invoiceDiscountValue) / 10000);
+    const clampedDiscount = Math.min(Math.max(invoiceDiscountValue, 0), 10000);
+    discountAmount = bankersRound((subtotal * clampedDiscount) / 10000);
   } else if (invoiceDiscountType === "fixed") {
-    discountAmount = invoiceDiscountValue;
+    // Fixed discount cannot exceed subtotal
+    discountAmount = Math.min(Math.max(invoiceDiscountValue, 0), subtotal);
   }
 
   const total = subtotal - discountAmount + taxAmount;

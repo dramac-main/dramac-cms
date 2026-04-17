@@ -13,6 +13,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, GripVertical, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/** Validate a single line item, returning field-level errors. */
+export function validateLineItem(
+  item: CreateInvoiceLineItemInput,
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!item.name?.trim()) errors.name = "Item name is required";
+  if (!item.quantity || item.quantity <= 0) errors.quantity = "Qty must be > 0";
+  if (item.unitPrice == null || item.unitPrice < 0)
+    errors.unitPrice = "Price must be ≥ 0";
+  return errors;
+}
 
 interface InvoiceLineItemsProps {
   siteId: string;
@@ -20,6 +33,9 @@ interface InvoiceLineItemsProps {
   onChange: (items: CreateInvoiceLineItemInput[]) => void;
   currency?: string;
   disabled?: boolean;
+  defaultTaxRateId?: string | null;
+  defaultTaxRate?: number;
+  showErrors?: boolean;
 }
 
 function LineItemRow({
@@ -30,6 +46,7 @@ function LineItemRow({
   onChange,
   onRemove,
   disabled,
+  showErrors,
 }: {
   item: CreateInvoiceLineItemInput;
   index: number;
@@ -38,6 +55,7 @@ function LineItemRow({
   onChange: (index: number, field: string, value: unknown) => void;
   onRemove: (index: number) => void;
   disabled?: boolean;
+  showErrors?: boolean;
 }) {
   const totals = calculateLineItemTotals(
     item.quantity,
@@ -46,6 +64,8 @@ function LineItemRow({
     item.discountValue || 0,
     item.taxRate || 0,
   );
+
+  const errors = showErrors ? validateLineItem(item) : {};
 
   return (
     <div className="grid grid-cols-[auto_1fr_80px_100px_100px_80px_100px_auto] gap-2 items-start py-2 border-b border-border last:border-b-0">
@@ -59,8 +79,11 @@ function LineItemRow({
           onChange={(e) => onChange(index, "name", e.target.value)}
           placeholder="Item name"
           disabled={disabled}
-          className="font-medium"
+          className={cn("font-medium", errors.name && "border-destructive")}
         />
+        {errors.name && (
+          <p className="text-xs text-destructive">{errors.name}</p>
+        )}
         <Textarea
           value={item.description || ""}
           onChange={(e) => onChange(index, "description", e.target.value)}
@@ -71,27 +94,37 @@ function LineItemRow({
         />
       </div>
 
-      <Input
-        type="number"
-        value={item.quantity}
-        onChange={(e) => onChange(index, "quantity", Number(e.target.value))}
-        min={0}
-        step={1}
-        disabled={disabled}
-        className="text-right"
-      />
+      <div className="space-y-1">
+        <Input
+          type="number"
+          value={item.quantity}
+          onChange={(e) => onChange(index, "quantity", Number(e.target.value))}
+          min={0}
+          step={1}
+          disabled={disabled}
+          className={cn("text-right", errors.quantity && "border-destructive")}
+        />
+        {errors.quantity && (
+          <p className="text-xs text-destructive">{errors.quantity}</p>
+        )}
+      </div>
 
-      <Input
-        type="number"
-        value={item.unitPrice / 100}
-        onChange={(e) =>
-          onChange(index, "unitPrice", Math.round(Number(e.target.value) * 100))
-        }
-        min={0}
-        step={0.01}
-        disabled={disabled}
-        className="text-right"
-      />
+      <div className="space-y-1">
+        <Input
+          type="number"
+          value={item.unitPrice / 100}
+          onChange={(e) =>
+            onChange(index, "unitPrice", Math.round(Number(e.target.value) * 100))
+          }
+          min={0}
+          step={0.01}
+          disabled={disabled}
+          className={cn("text-right", errors.unitPrice && "border-destructive")}
+        />
+        {errors.unitPrice && (
+          <p className="text-xs text-destructive">{errors.unitPrice}</p>
+        )}
+      </div>
 
       <Input
         type="number"
@@ -146,6 +179,9 @@ export function InvoiceLineItems({
   onChange,
   currency = "ZMW",
   disabled,
+  defaultTaxRateId,
+  defaultTaxRate,
+  showErrors,
 }: InvoiceLineItemsProps) {
   const handleFieldChange = useCallback(
     (index: number, field: string, value: unknown) => {
@@ -171,9 +207,12 @@ export function InvoiceLineItems({
         quantity: 1,
         unitPrice: 0,
         sortOrder: items.length,
+        ...(defaultTaxRateId
+          ? { taxRateId: defaultTaxRateId, taxRate: defaultTaxRate ?? 0 }
+          : {}),
       },
     ]);
-  }, [items, onChange]);
+  }, [items, onChange, defaultTaxRateId, defaultTaxRate]);
 
   const handleItemPickerSelect = useCallback(
     (item: Item) => {
@@ -231,6 +270,7 @@ export function InvoiceLineItems({
           onChange={handleFieldChange}
           onRemove={handleRemove}
           disabled={disabled}
+          showErrors={showErrors}
         />
       ))}
 

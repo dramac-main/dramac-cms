@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { CreateInvoiceLineItemInput } from "../actions/invoice-actions";
 import {
   calculateLineItemTotals,
@@ -20,6 +21,10 @@ interface InvoicePreviewProps {
   discountType: "percentage" | "fixed" | null;
   discountValue: number;
   notes?: string;
+  invoiceNumber?: string;
+  companyName?: string;
+  companyLogoUrl?: string;
+  paymentInstructions?: string;
 }
 
 export function InvoicePreview({
@@ -33,6 +38,10 @@ export function InvoicePreview({
   discountType,
   discountValue,
   notes,
+  invoiceNumber,
+  companyName,
+  companyLogoUrl,
+  paymentInstructions,
 }: InvoicePreviewProps) {
   const validItems = lineItems.filter((li) => li.name.trim());
 
@@ -52,14 +61,44 @@ export function InvoicePreview({
     discountValue,
   );
 
+  // Tax breakdown grouped by rate
+  const taxByRate = new Map<number, number>();
+  validItems.forEach((item, i) => {
+    const rate = item.taxRate || 0;
+    if (rate > 0) {
+      taxByRate.set(rate, (taxByRate.get(rate) || 0) + computedItems[i].taxAmount);
+    }
+  });
+
   const fmt = (cents: number) => formatInvoiceAmount(cents, currency);
 
   return (
     <Card className="border-dashed">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-muted-foreground font-normal">
-          Live Preview
-        </CardTitle>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-sm text-muted-foreground font-normal">
+              Live Preview
+            </CardTitle>
+            {companyName && (
+              <p className="font-semibold text-sm">{companyName}</p>
+            )}
+          </div>
+          {companyLogoUrl && (
+            <Image
+              src={companyLogoUrl}
+              alt="Company logo"
+              width={64}
+              height={64}
+              className="rounded object-contain"
+            />
+          )}
+        </div>
+        {invoiceNumber && (
+          <p className="text-xs text-muted-foreground font-mono mt-1">
+            {invoiceNumber}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="text-sm space-y-4">
         {/* Client */}
@@ -128,7 +167,18 @@ export function InvoicePreview({
               <span>-{fmt(totals.discountAmount)}</span>
             </div>
           )}
-          {totals.taxAmount > 0 && (
+          {/* Tax breakdown by rate */}
+          {taxByRate.size > 0 && (
+            <>
+              {Array.from(taxByRate.entries()).map(([rate, amount]) => (
+                <div key={rate} className="flex justify-between">
+                  <span className="text-muted-foreground">Tax ({rate}%)</span>
+                  <span>{fmt(amount)}</span>
+                </div>
+              ))}
+            </>
+          )}
+          {taxByRate.size === 0 && totals.taxAmount > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Tax</span>
               <span>{fmt(totals.taxAmount)}</span>
@@ -136,10 +186,25 @@ export function InvoicePreview({
           )}
           <Separator />
           <div className="flex justify-between font-bold text-base pt-1">
-            <span>Total</span>
+            <span>Amount Due</span>
             <span>{fmt(totals.total)}</span>
           </div>
         </div>
+
+        {/* Payment Instructions */}
+        {paymentInstructions && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">
+                Payment Instructions
+              </p>
+              <p className="text-xs whitespace-pre-line">
+                {paymentInstructions}
+              </p>
+            </div>
+          </>
+        )}
 
         {/* Notes */}
         {notes && (

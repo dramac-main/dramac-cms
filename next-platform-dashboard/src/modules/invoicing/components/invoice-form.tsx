@@ -8,9 +8,10 @@ import type {
 } from "../actions/invoice-actions";
 import type { Invoice } from "../types";
 import { createInvoice, updateInvoice } from "../actions/invoice-actions";
-import { getInvoicingSettings } from "../actions/settings-actions";
+import { getInvoicingSettings, getTaxRates } from "../actions/settings-actions";
 import { ContactInvoicePicker } from "./contact-invoice-picker";
-import { InvoiceLineItems } from "./invoice-line-items";
+import type { ContactInvoiceData } from "./contact-invoice-picker";
+import { InvoiceLineItems, validateLineItem } from "./invoice-line-items";
 import { InvoicePreview } from "./invoice-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,12 +27,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Save, Loader2, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelector } from "./currency-selector";
@@ -47,6 +48,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   const [isPending, startTransition] = useTransition();
   const [showClientFields, setShowClientFields] = useState(!invoice?.contactId);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Form state
   const [contactId, setContactId] = useState(invoice?.contactId || "");
@@ -82,14 +84,29 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   const [footer, setFooter] = useState(invoice?.footer || "");
   const [reference, setReference] = useState(invoice?.reference || "");
 
+  // Default tax rate from settings
+  const [defaultTaxRateId, setDefaultTaxRateId] = useState<string | null>(null);
+  const [defaultTaxRate, setDefaultTaxRate] = useState<number>(0);
+  const [companyName, setCompanyName] = useState("");
+  const [companyLogoUrl, setCompanyLogoUrl] = useState("");
+
   // Auto-populate defaults from settings on create
   useEffect(() => {
     if (mode !== "create") return;
-    getInvoicingSettings(siteId).then((s) => {
+    getInvoicingSettings(siteId).then(async (s) => {
       if (!s) return;
       if (!terms && s.defaultTerms) setTerms(s.defaultTerms);
       if (!notes && s.defaultNotes) setNotes(s.defaultNotes);
-      if (s.defaultCurrency && currency === "ZMW") setCurrency(s.defaultCurrency);
+      if (s.defaultCurrency && currency === "ZMW")
+        setCurrency(s.defaultCurrency);
+      if (s.companyName) setCompanyName(s.companyName);
+      if (s.brandLogoUrl) setCompanyLogoUrl(s.brandLogoUrl);
+      if (s.defaultTaxRateId) {
+        setDefaultTaxRateId(s.defaultTaxRateId);
+        const rates = await getTaxRates(siteId);
+        const match = rates.find((r) => r.id === s.defaultTaxRateId);
+        if (match) setDefaultTaxRate(match.rate);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId, mode]);
@@ -138,27 +155,35 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
     })) || [{ name: "", quantity: 1, unitPrice: 0, sortOrder: 0 }],
   );
 
-  const handleContactSelect = (data: {
-    contactId: string;
-    clientName: string;
-    clientEmail: string | null;
-    clientPhone: string | null;
-    clientAddress: string | null;
-  }) => {
+  const handleContactSelect = (data: ContactInvoiceData) => {
     setContactId(data.contactId);
     setClientName(data.clientName);
     setClientEmail(data.clientEmail || "");
     setClientPhone(data.clientPhone || "");
     setClientAddress(data.clientAddress || "");
+    if (data.clientTaxId) setClientTaxId(data.clientTaxId);
+    if (data.preferredCurrency) setCurrency(data.preferredCurrency);
+    if (data.paymentTerms) {
+      setPaymentTerms(data.paymentTerms);
+      calcDueDate(issueDate, data.paymentTerms);
+    }
   };
 
   const handleSubmit = () => {
+    setHasAttemptedSubmit(true);
     if (!clientName.trim()) {
       toast.error("Client name is required");
       return;
     }
     if (lineItems.length === 0 || !lineItems.some((li) => li.name.trim())) {
       toast.error("At least one line item is required");
+      return;
+    }
+    const hasLineErrors = lineItems
+      .filter((li) => li.name.trim())
+      .some((li) => Object.keys(validateLineItem(li)).length > 0);
+    if (hasLineErrors) {
+      toast.error("Please fix line item errors before saving");
       return;
     }
 
@@ -233,7 +258,8 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
                   <div>
                     <p className="font-medium">{clientName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {[clientEmail, clientPhone].filter(Boolean).join(" · ") || "No contact details"}
+                      {[clientEmail, clientPhone].filter(Boolean).join(" · ") ||
+                        "No contact details"}
                     </p>
                   </div>
                   <Button
@@ -336,7 +362,10 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               </div>
               <div>
                 <Label htmlFor="paymentTerms">Payment Terms</Label>
-                <Select value={paymentTerms} onValueChange={handlePaymentTermsChange}>
+                <Select
+                  value={paymentTerms}
+                  onValueChange={handlePaymentTermsChange}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -383,6 +412,9 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               items={lineItems}
               onChange={setLineItems}
               currency={currency}
+              defaultTaxRateId={defaultTaxRateId}
+              defaultTaxRate={defaultTaxRate}
+              showErrors={hasAttemptedSubmit}
             />
           </CardContent>
         </Card>
@@ -513,22 +545,24 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
             }
             discountValue={discountType ? Math.round(discountValue * 100) : 0}
             notes={notes}
+            companyName={companyName}
+            companyLogoUrl={companyLogoUrl}
           />
         </div>
       </div>
 
       {/* Floating preview button — mobile */}
       <div className="fixed bottom-6 right-6 md:hidden z-50">
-        <Dialog open={mobilePreviewOpen} onOpenChange={setMobilePreviewOpen}>
-          <DialogTrigger asChild>
+        <Sheet open={mobilePreviewOpen} onOpenChange={setMobilePreviewOpen}>
+          <SheetTrigger asChild>
             <Button size="lg" className="rounded-full shadow-lg h-14 w-14">
               <Eye className="h-5 w-5" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Invoice Preview</DialogTitle>
-            </DialogHeader>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-xl">
+            <SheetHeader>
+              <SheetTitle>Invoice Preview</SheetTitle>
+            </SheetHeader>
             <InvoicePreview
               clientName={clientName}
               clientEmail={clientEmail}
@@ -542,9 +576,11 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               }
               discountValue={discountType ? Math.round(discountValue * 100) : 0}
               notes={notes}
+              companyName={companyName}
+              companyLogoUrl={companyLogoUrl}
             />
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );

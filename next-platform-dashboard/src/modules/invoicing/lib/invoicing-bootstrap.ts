@@ -7,7 +7,9 @@ import { getAutoPopulateData } from "../actions/settings-actions";
  * Creates: settings row, default 16% VAT tax rate, default expense categories.
  * Follows the same pattern as seedMarketingSettings for marketing.
  */
-export async function seedDefaultInvoicingSettings(siteId: string): Promise<void> {
+export async function seedDefaultInvoicingSettings(
+  siteId: string,
+): Promise<void> {
   const supabase = createAdminClient();
 
   // Check if settings already exist for this site
@@ -81,12 +83,18 @@ export async function seedDefaultInvoicingSettings(siteId: string): Promise<void
     const brandingData = await getAutoPopulateData(siteId);
     if (brandingData) {
       const updates: Record<string, string> = {};
-      if (brandingData.companyName) updates.company_name = brandingData.companyName;
-      if (brandingData.companyEmail) updates.company_email = brandingData.companyEmail;
-      if (brandingData.companyPhone) updates.company_phone = brandingData.companyPhone;
-      if (brandingData.companyWebsite) updates.company_website = brandingData.companyWebsite;
-      if (brandingData.companyAddress) updates.company_address = brandingData.companyAddress;
-      if (brandingData.companyTaxId) updates.company_tax_id = brandingData.companyTaxId;
+      if (brandingData.companyName)
+        updates.company_name = brandingData.companyName;
+      if (brandingData.companyEmail)
+        updates.company_email = brandingData.companyEmail;
+      if (brandingData.companyPhone)
+        updates.company_phone = brandingData.companyPhone;
+      if (brandingData.companyWebsite)
+        updates.company_website = brandingData.companyWebsite;
+      if (brandingData.companyAddress)
+        updates.company_address = brandingData.companyAddress;
+      if (brandingData.companyTaxId)
+        updates.company_tax_id = brandingData.companyTaxId;
       if (brandingData.brandColor && brandingData.brandColor !== "#000000") {
         updates.brand_color = brandingData.brandColor;
       }
@@ -98,8 +106,13 @@ export async function seedDefaultInvoicingSettings(siteId: string): Promise<void
       }
     }
   } catch (err) {
-    console.warn("[Invoicing] Auto-populate from branding failed (non-fatal):", err);
+    console.warn(
+      "[Invoicing] Auto-populate from branding failed (non-fatal):",
+      err,
+    );
   }
 
-  console.log(`[Invoicing] Default settings, VAT rate, and expense categories seeded for site ${siteId}`);
+  console.log(
+    `[Invoicing] Default settings, VAT rate, and expense categories seeded for site ${siteId}`,
+  );
 }
