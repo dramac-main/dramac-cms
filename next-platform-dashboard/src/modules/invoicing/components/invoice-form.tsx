@@ -53,7 +53,9 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
 
   // Source tracking (e.g., from CRM deal)
   const [sourceType] = useState<InvoiceSourceType | "">(
-    (invoice?.sourceType || searchParams.get("sourceType") || "") as InvoiceSourceType | "",
+    (invoice?.sourceType || searchParams.get("sourceType") || "") as
+      | InvoiceSourceType
+      | "",
   );
   const [sourceId] = useState(
     invoice?.sourceId || searchParams.get("sourceId") || "",
@@ -62,6 +64,9 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   // Form state — pre-fill from query params (deal-to-invoice flow)
   const [contactId, setContactId] = useState(
     invoice?.contactId || searchParams.get("contactId") || "",
+  );
+  const [companyId, setCompanyId] = useState(
+    invoice?.companyId || searchParams.get("companyId") || "",
   );
   const [clientName, setClientName] = useState(
     invoice?.clientName || searchParams.get("clientName") || "",
@@ -132,7 +137,11 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
             setLineItems((prev) =>
               prev.map((li) =>
                 !li.taxRateId
-                  ? { ...li, taxRateId: s.defaultTaxRateId!, taxRate: match.rate }
+                  ? {
+                      ...li,
+                      taxRateId: s.defaultTaxRateId!,
+                      taxRate: match.rate,
+                    }
                   : li,
               ),
             );
@@ -187,7 +196,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
       taxRate: li.taxRate || li.tax_rate,
     })) || [
       {
-        name: dealAmount ? (searchParams.get("reference") || "Deal Item") : "",
+        name: dealAmount ? searchParams.get("reference") || "Deal Item" : "",
         quantity: 1,
         unitPrice: dealAmount ? Number(dealAmount) : 0,
         sortOrder: 0,
@@ -229,6 +238,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
 
     const input: CreateInvoiceInput = {
       contactId: contactId || undefined,
+      companyId: companyId || undefined,
       clientName: clientName.trim(),
       clientEmail: clientEmail || undefined,
       clientPhone: clientPhone || undefined,

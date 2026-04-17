@@ -201,8 +201,8 @@
 | INVFIX-01 | Settings Auto-Populate from Site Branding + Invoice Form UX  | ✅ Complete    |
 | INVFIX-02 | Calculation Engine Fix, Line Item Validation, Live Preview   | ✅ Complete    |
 | INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | ✅ Complete    |
-| INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | 📋 Not Started |
-| INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | 📋 Not Started |
+| INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | ✅ Complete    |
+| INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | 📋 Not Started |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | 📋 Not Started |
 | INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 📋 Not Started |
@@ -214,6 +214,14 @@
 **Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (10-session plan + prompts)
 
 **Scope:** Overhaul of existing invoicing module (187 files, 19 DB tables, 13 tabs). Fixes critical bugs (invoice number race condition, settings not auto-populating), adds missing features (delivery notes, email templates, dunning, reconciliation), expands Chiko AI to client portal, cleans up dead routes.
+
+**Session 4 note (April 17, 2026 audit):** INVFIX-03 carryover fixes landed, and INVFIX-04 implementation was started, but post-implementation review found remaining carryover in four areas: online-payment settings persistence, manual-only public payment flow despite Stripe/settings UI, raw payment snake_case data feeding new receipt/export/detail features, and payment-list navigation still bypassing the new payment detail route. TSC remains 219 with no regression.
+
+**Session 5 note:** Audit found real progress, but not closure. Payments now have settings mapping, detail/receipt/reconciliation surfaces, and better list navigation; recurring now has stats, retry/error logging, summary cards, and cleaner detail handling. Remaining blockers: Stripe card flow is still not real (pending-only fallback), `onlinePaymentEnabled` is not gating card UI, receipt numbering is not actually wired to a dedicated sequence, recurring form still lacks notification + next-12 preview-in-form, generated recurring invoices still use stale template client data, and cron robustness is still missing processing locks, alert email, and structured generation history. TSC remains 219 baseline.
+
+**April 2026 hotfix note:** The follow-up debugging pass confirmed three real runtime bugs and fixed them in code: invoicing settings save was broken by a nonexistent `stripe_secret_key` column mapping, invoice reads/writes were returning raw snake_case rows instead of mapped camelCase records, and the item catalog price editor was storing user-entered display values as cents directly. Stripe was removed from the active invoicing module surface so invoice collection is manual-only and consistent with Paddle being the platform billing provider. Public invoice view totals were also corrected to use `discount_amount` and `tax_amount`. Global TSC still has unrelated portal/automation/live-chat errors, but no invoicing-specific errors were introduced by this hotfix.
+
+**Session 6 — INVFIX-04/05 Carryover Closure (July 2026):** All 9 carryover items closed. Migration cleaned (3 Stripe columns removed, `notify_before_generation` added). Public payment form gated by `onlinePaymentEnabled` (frontend + backend 403). Payment/receipt number generators hardened to MAX-based sequences. Reconciliation and view routes use `mapRecords()`. Recurring notification toggle persisted. Storefront customer resolution wired in `generateInvoiceFromTemplate()`. TSC: 0 invoicing errors, 219 total (unchanged baseline). INVFIX-04 and INVFIX-05 are now **CLOSED**.
 
 ---
 

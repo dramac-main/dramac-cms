@@ -21,11 +21,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  CalendarClock,
+  Receipt,
+  DollarSign,
+  AlertTriangle,
+} from "lucide-react";
 import {
   getRecurringInvoices,
+  getRecurringStats,
   type RecurringFilters,
   type RecurringPagination,
+  type RecurringStats,
 } from "../actions/recurring-actions";
 import {
   RECURRING_STATUS_CONFIG,
@@ -50,7 +62,15 @@ export function RecurringList({ siteId }: RecurringListProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [frequencyFilter, setFrequencyFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [stats, setStats] = useState<RecurringStats | null>(null);
   const pageSize = 25;
+
+  // Load stats on mount
+  useEffect(() => {
+    getRecurringStats(siteId)
+      .then(setStats)
+      .catch(() => {});
+  }, [siteId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +138,72 @@ export function RecurringList({ siteId }: RecurringListProps) {
           </Button>
         </Link>
       </div>
+
+      {/* Summary Cards */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-blue-500" />
+                <p className="text-xs text-muted-foreground">
+                  Active Templates
+                </p>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.activeCount}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-orange-500" />
+                <p className="text-xs text-muted-foreground">Due This Week</p>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.nextDueThisWeek}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-green-500" />
+                <p className="text-xs text-muted-foreground">Total Generated</p>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.totalGenerated}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-emerald-500" />
+                <p className="text-xs text-muted-foreground">
+                  Monthly Recurring
+                </p>
+              </div>
+              <p className="text-2xl font-bold mt-1">
+                {formatInvoiceAmount(stats.monthlyRecurringRevenue, "ZMW")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Failed Generation Alert */}
+      {stats && stats.failedRecent > 0 && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="pt-4 pb-4 flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-orange-800">
+                {stats.failedRecent} failed generation
+                {stats.failedRecent > 1 ? "s" : ""} in the last 7 days
+              </p>
+              <p className="text-xs text-orange-600">
+                Check individual recurring invoices for error details.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -230,19 +316,13 @@ export function RecurringList({ siteId }: RecurringListProps) {
                           {r.name}
                         </Link>
                       </TableCell>
-                      <TableCell>
-                        {r.clientName || (r as any).client_name}
-                      </TableCell>
+                      <TableCell>{r.clientName}</TableCell>
                       <TableCell>
                         {RECURRING_FREQUENCY_LABELS[
                           (r.frequency as RecurringFrequency) || "monthly"
                         ] || r.frequency}
                       </TableCell>
-                      <TableCell>
-                        {formatDate(
-                          r.nextGenerateDate || (r as any).next_generate_date,
-                        )}
-                      </TableCell>
+                      <TableCell>{formatDate(r.nextGenerateDate)}</TableCell>
                       <TableCell className="text-right font-mono">
                         {formatInvoiceAmount(r.total, r.currency)}
                       </TableCell>
@@ -257,12 +337,8 @@ export function RecurringList({ siteId }: RecurringListProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {r.occurrencesGenerated ??
-                          (r as any).occurrences_generated ??
-                          0}
-                        {r.maxOccurrences || (r as any).max_occurrences
-                          ? ` / ${r.maxOccurrences || (r as any).max_occurrences}`
-                          : ""}
+                        {r.occurrencesGenerated ?? 0}
+                        {r.maxOccurrences ? ` / ${r.maxOccurrences}` : ""}
                       </TableCell>
                     </TableRow>
                   );

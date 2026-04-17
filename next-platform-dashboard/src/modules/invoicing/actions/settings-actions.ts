@@ -80,6 +80,8 @@ export async function updateInvoicingSettings(
     companyTaxId: "company_tax_id",
     onlinePaymentEnabled: "online_payment_enabled",
     paymentInstructions: "payment_instructions",
+    bankTransferInstructions: "bank_transfer_instructions",
+    mobileMoneyInstructions: "mobile_money_instructions",
     timezone: "timezone",
     metadata: "metadata",
   };

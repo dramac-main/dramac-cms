@@ -1095,7 +1095,6 @@ export async function getPaymentMethodDistribution(
     card: "#8b5cf6",
     cheque: "#6b7280",
     paypal: "#0070ba",
-    stripe: "#635bff",
     online: "#06b6d4",
     other: "#9ca3af",
   };
@@ -1107,7 +1106,6 @@ export async function getPaymentMethodDistribution(
     card: "Card",
     cheque: "Cheque",
     paypal: "PayPal",
-    stripe: "Stripe",
     online: "Online",
     other: "Other",
   };

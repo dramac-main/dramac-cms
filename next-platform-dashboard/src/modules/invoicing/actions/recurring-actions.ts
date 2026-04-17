@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import {
   calculateLineItemTotals,
@@ -92,6 +93,118 @@ export interface RecurringPagination {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// RECURRING STATS (dashboard summary cards)
+// ═══════════════════════════════════════════════════════════════
+
+export interface RecurringStats {
+  activeCount: number;
+  nextDueThisWeek: number;
+  totalGenerated: number;
+  monthlyRecurringRevenue: number;
+  failedRecent: number;
+}
+
+export async function getRecurringStats(
+  siteId: string,
+): Promise<RecurringStats> {
+  const supabase = await getModuleClient();
+
+  // Active count
+  const { count: activeCount } = await supabase
+    .from(INV_TABLES.recurringInvoices)
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .eq("status", "active");
+
+  // Next due this week
+  const today = new Date();
+  const weekEnd = new Date(today);
+  weekEnd.setDate(today.getDate() + 7);
+  const todayStr = today.toISOString().split("T")[0];
+  const weekEndStr = weekEnd.toISOString().split("T")[0];
+
+  const { count: nextDueThisWeek } = await supabase
+    .from(INV_TABLES.recurringInvoices)
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .eq("status", "active")
+    .gte("next_generate_date", todayStr)
+    .lte("next_generate_date", weekEndStr);
+
+  // Total generated (all time) — sum of occurrences_generated across all templates
+  const { data: totals } = await supabase
+    .from(INV_TABLES.recurringInvoices)
+    .select("occurrences_generated, total, frequency")
+    .eq("site_id", siteId);
+
+  let totalGenerated = 0;
+  let monthlyRecurringRevenue = 0;
+
+  if (totals) {
+    for (const r of totals) {
+      totalGenerated += r.occurrences_generated || 0;
+    }
+    // MRR: sum totals of active templates, normalized to monthly
+    const { data: activeTemplates } = await supabase
+      .from(INV_TABLES.recurringInvoices)
+      .select("total, frequency, custom_interval_days")
+      .eq("site_id", siteId)
+      .eq("status", "active");
+
+    if (activeTemplates) {
+      for (const t of activeTemplates) {
+        const amount = t.total || 0;
+        switch (t.frequency) {
+          case "weekly":
+            monthlyRecurringRevenue += amount * 4.33;
+            break;
+          case "biweekly":
+            monthlyRecurringRevenue += amount * 2.17;
+            break;
+          case "monthly":
+            monthlyRecurringRevenue += amount;
+            break;
+          case "quarterly":
+            monthlyRecurringRevenue += amount / 3;
+            break;
+          case "semi_annually":
+            monthlyRecurringRevenue += amount / 6;
+            break;
+          case "annually":
+            monthlyRecurringRevenue += amount / 12;
+            break;
+          case "custom":
+            if (t.custom_interval_days) {
+              monthlyRecurringRevenue += amount * (30 / t.custom_interval_days);
+            }
+            break;
+        }
+      }
+    }
+  }
+
+  // Recent failed generations (last 7 days)
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const { count: failedRecent } = await supabase
+    .from(INV_TABLES.invoiceActivity)
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .eq("entity_type", "recurring_invoice")
+    .eq("action", "generation_failed")
+    .gte("created_at", weekAgo.toISOString());
+
+  return {
+    activeCount: activeCount || 0,
+    nextDueThisWeek: nextDueThisWeek || 0,
+    totalGenerated,
+    monthlyRecurringRevenue: Math.round(monthlyRecurringRevenue),
+    failedRecent: failedRecent || 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // GET RECURRING INVOICES (paginated + filters)
 // ═══════════════════════════════════════════════════════════════
 
@@ -137,7 +250,7 @@ export async function getRecurringInvoices(
   if (error) throw new Error(error.message);
 
   return {
-    recurring: (data || []) as RecurringInvoice[],
+    recurring: mapRecords<RecurringInvoice>(data || []),
     total: count || 0,
   };
 }
@@ -178,9 +291,9 @@ export async function getRecurringInvoice(recurringId: string): Promise<
     .order("created_at", { ascending: false });
 
   return {
-    ...(recurring as RecurringInvoice),
-    lineItems: (lineItems || []) as RecurringLineItem[],
-    generatedInvoices: (generatedInvoices || []) as Invoice[],
+    ...mapRecord<RecurringInvoice>(recurring),
+    lineItems: mapRecords<RecurringLineItem>(lineItems || []),
+    generatedInvoices: mapRecords<Invoice>(generatedInvoices || []),
   };
 }
 
@@ -251,6 +364,7 @@ export async function createRecurringInvoice(
       max_occurrences: input.maxOccurrences || null,
       occurrences_generated: 0,
       auto_send: input.autoSend ?? true,
+      notify_before_generation: input.notifyBeforeGeneration ?? false,
       payment_terms_days: input.paymentTermsDays || 30,
       notes: input.notes || null,
       terms: input.terms || null,
@@ -302,7 +416,7 @@ export async function createRecurringInvoice(
     // Automation module may not be installed
   }
 
-  return recurring as RecurringInvoice;
+  return mapRecord<RecurringInvoice>(recurring);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -343,6 +457,7 @@ export async function updateRecurringInvoice(
     endDate: "end_date",
     maxOccurrences: "max_occurrences",
     autoSend: "auto_send",
+    notifyBeforeGeneration: "notify_before_generation",
     paymentTermsDays: "payment_terms_days",
     notes: "notes",
     terms: "terms",
@@ -422,7 +537,7 @@ export async function updateRecurringInvoice(
     `Recurring invoice "${updated.name}" updated`,
   );
 
-  return updated as RecurringInvoice;
+  return mapRecord<RecurringInvoice>(updated);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -613,7 +728,7 @@ export async function generateNow(recurringId: string): Promise<Invoice> {
     `Invoice ${invoice.invoiceNumber} generated manually from recurring "${recurring.name}"`,
   );
 
-  return invoice as Invoice;
+  return invoice;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -726,6 +841,59 @@ async function generateInvoiceFromTemplate(
   const viewToken = crypto.randomUUID();
   const paymentToken = crypto.randomUUID();
 
+  // ── Resolve current client data from CRM if linked ─────────
+  let clientName = recurring.client_name;
+  let clientEmail = recurring.client_email || null;
+  let clientAddress = recurring.client_address || null;
+
+  if (recurring.contact_id) {
+    const { data: contact } = await supabase
+      .from("mod_crmmod01_contacts")
+      .select("first_name, last_name, email, address")
+      .eq("id", recurring.contact_id)
+      .single();
+    if (contact) {
+      const fullName =
+        `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
+      if (fullName) clientName = fullName;
+      if (contact.email) clientEmail = contact.email;
+      if (contact.address) clientAddress = contact.address;
+    }
+  }
+
+  if (recurring.company_id) {
+    const { data: company } = await supabase
+      .from("mod_crmmod01_companies")
+      .select("name, email, address")
+      .eq("id", recurring.company_id)
+      .single();
+    if (company) {
+      // Company name overrides contact name only if no contact was linked
+      if (!recurring.contact_id && company.name) clientName = company.name;
+      if (company.email) clientEmail = company.email;
+      if (company.address) clientAddress = company.address;
+    }
+  }
+
+  // Resolve storefront customer if linked
+  if (recurring.storefront_customer_id) {
+    const { data: customer } = await supabase
+      .from("mod_ecommod01_customers")
+      .select("first_name, last_name, email, address")
+      .eq("id", recurring.storefront_customer_id)
+      .single();
+    if (customer) {
+      const fullName =
+        `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
+      // Only override if no CRM contact/company was linked
+      if (!recurring.contact_id && !recurring.company_id) {
+        if (fullName) clientName = fullName;
+      }
+      if (customer.email) clientEmail = customer.email;
+      if (customer.address) clientAddress = customer.address;
+    }
+  }
+
   // Insert invoice
   const { data: invoice, error } = await supabase
     .from(INV_TABLES.invoices)
@@ -736,9 +904,9 @@ async function generateInvoiceFromTemplate(
       contact_id: recurring.contact_id || null,
       company_id: recurring.company_id || null,
       storefront_customer_id: recurring.storefront_customer_id || null,
-      client_name: recurring.client_name,
-      client_email: recurring.client_email || null,
-      client_address: recurring.client_address || null,
+      client_name: clientName,
+      client_email: clientEmail,
+      client_address: clientAddress,
       currency: recurring.currency || "ZMW",
       exchange_rate: 1,
       issue_date: today,
@@ -823,7 +991,7 @@ async function generateInvoiceFromTemplate(
     // Automation module may not be installed
   }
 
-  return invoice as Invoice;
+  return mapRecord<Invoice>(invoice);
 }
 
 // ═══════════════════════════════════════════════════════════════

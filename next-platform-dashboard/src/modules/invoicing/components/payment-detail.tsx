@@ -13,7 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Image as ImageIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Image as ImageIcon,
+  FileText,
+} from "lucide-react";
 import type { InvoiceStatus } from "../types/invoice-types";
 
 interface PaymentDetailProps {
@@ -81,6 +86,16 @@ export function PaymentDetail({ siteId, paymentId }: PaymentDetailProps) {
             </Badge>
           </div>
         </div>
+        {data.status === "completed" && (
+          <Button variant="outline" size="sm" asChild className="ml-auto">
+            <Link
+              href={`/dashboard/sites/${siteId}/invoicing/payments/${paymentId}/receipt`}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              View Receipt
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

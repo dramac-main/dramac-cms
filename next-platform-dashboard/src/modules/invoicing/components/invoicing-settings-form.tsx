@@ -97,6 +97,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
     brandLogoUrl: "",
     paymentInstructions: "",
     timezone: "Africa/Lusaka",
+    onlinePaymentEnabled: false,
+    bankTransferInstructions: "",
+    mobileMoneyInstructions: "",
   });
 
   // Tax rate creation
@@ -137,6 +140,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
             brandLogoUrl: s.brandLogoUrl ?? "",
             paymentInstructions: s.paymentInstructions ?? "",
             timezone: s.timezone,
+            onlinePaymentEnabled: s.onlinePaymentEnabled ?? false,
+            bankTransferInstructions: s.bankTransferInstructions ?? "",
+            mobileMoneyInstructions: s.mobileMoneyInstructions ?? "",
           });
         }
         setTaxRates(rates);
@@ -223,6 +229,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         brandLogoUrl: form.brandLogoUrl || null,
         paymentInstructions: form.paymentInstructions || null,
         timezone: form.timezone,
+        onlinePaymentEnabled: form.onlinePaymentEnabled,
+        bankTransferInstructions: form.bankTransferInstructions || null,
+        mobileMoneyInstructions: form.mobileMoneyInstructions || null,
       });
       if (result.success) {
         toast.success("Settings saved");
@@ -273,7 +282,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="h-100 w-full" />
       </div>
     );
   }
@@ -293,6 +302,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="tax">Tax Rates</TabsTrigger>
           <TabsTrigger value="late-fees">Late Fees</TabsTrigger>
+          <TabsTrigger value="online-payments">Online Payments</TabsTrigger>
         </TabsList>
 
         {/* General Tab */}
@@ -553,7 +563,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                     <img
                       src={form.brandLogoUrl}
                       alt="Invoice logo"
-                      className="h-12 w-auto max-w-[120px] rounded border object-contain"
+                      className="h-12 w-auto max-w-30 rounded border object-contain"
                     />
                   ) : (
                     <div className="h-12 w-12 rounded border border-dashed flex items-center justify-center text-muted-foreground">
@@ -850,6 +860,118 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                 />
                 <Label>Enable overdue reminders</Label>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Online Payments Tab */}
+        <TabsContent value="online-payments" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Online Payments</CardTitle>
+              <CardDescription>
+                Configure how clients can pay invoices online via the payment
+                link.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={form.onlinePaymentEnabled}
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, onlinePaymentEnabled: v })
+                  }
+                />
+                <Label>Enable online payments</Label>
+              </div>
+
+              {form.onlinePaymentEnabled && (
+                <div className="space-y-6">
+                  <Separator />
+                  {/* Bank Transfer Instructions */}
+                  <div>
+                    <Label htmlFor="bankTransferInstructions">
+                      Bank Transfer Instructions
+                    </Label>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Shown when clients select bank transfer. Include account
+                      name, number, and bank details.
+                    </p>
+                    <Textarea
+                      id="bankTransferInstructions"
+                      value={form.bankTransferInstructions}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          bankTransferInstructions: e.target.value,
+                        })
+                      }
+                      rows={4}
+                      placeholder={`Account Name: Your Company\nBank: Zanaco\nAccount #: 1234567890\nBranch: Main Branch`}
+                    />
+                  </div>
+
+                  {/* Mobile Money Instructions */}
+                  <div>
+                    <Label htmlFor="mobileMoneyInstructions">
+                      Mobile Money Instructions
+                    </Label>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Shown when clients select mobile money. Include provider
+                      and number.
+                    </p>
+                    <Textarea
+                      id="mobileMoneyInstructions"
+                      value={form.mobileMoneyInstructions}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          mobileMoneyInstructions: e.target.value,
+                        })
+                      }
+                      rows={3}
+                      placeholder={`Airtel Money: 097X XXX XXX\nMTN MoMo: 096X XXX XXX`}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  {/* Online payment note */}
+                  <div>
+                    <Label>Payment Collection</Label>
+                    <p className="mt-1 rounded-lg border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+                      This invoice module is configured for manual collection
+                      flows only. Use bank transfer and mobile money
+                      instructions here, and keep Paddle-managed card billing in
+                      the platform billing system instead of the invoice module.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  {/* General Payment Instructions */}
+                  <div>
+                    <Label htmlFor="paymentInstructions">
+                      General Payment Instructions
+                    </Label>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Shown on all payment pages and invoice PDFs.
+                    </p>
+                    <Textarea
+                      id="paymentInstructions"
+                      value={form.paymentInstructions}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          paymentInstructions: e.target.value,
+                        })
+                      }
+                      rows={3}
+                      placeholder="Please include your invoice number as the payment reference."
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

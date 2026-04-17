@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Bell } from "lucide-react";
 import { FrequencySelector } from "./frequency-selector";
+import { RecurringSchedulePreview } from "./recurring-schedule-preview";
 import {
   createRecurringInvoice,
   updateRecurringInvoice,
@@ -85,6 +86,11 @@ export function RecurringForm({ siteId, existing }: RecurringFormProps) {
   );
   const [autoSend, setAutoSend] = useState(
     existing?.autoSend ?? (existing as any)?.auto_send ?? true,
+  );
+  const [notifyBeforeGeneration, setNotifyBeforeGeneration] = useState(
+    (existing as any)?.notifyBeforeGeneration ??
+      (existing as any)?.notify_before_generation ??
+      false,
   );
   const [paymentTermsDays, setPaymentTermsDays] = useState(
     String(
@@ -171,6 +177,7 @@ export function RecurringForm({ siteId, existing }: RecurringFormProps) {
           ? parseInt(maxOccurrences, 10)
           : undefined,
         autoSend,
+        notifyBeforeGeneration,
         paymentTermsDays: parseInt(paymentTermsDays, 10) || 30,
         notes: notes.trim() || undefined,
         terms: terms.trim() || undefined,
@@ -320,9 +327,33 @@ export function RecurringForm({ siteId, existing }: RecurringFormProps) {
               <Switch checked={autoSend} onCheckedChange={setAutoSend} />
               <Label>Auto-send generated invoices</Label>
             </div>
+            <div className="flex items-center gap-3 pt-2">
+              <Switch
+                checked={notifyBeforeGeneration}
+                onCheckedChange={setNotifyBeforeGeneration}
+              />
+              <div className="flex items-center gap-1.5">
+                <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label>Notify me before each generation</Label>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Schedule Preview */}
+      {startDate && frequency && (
+        <RecurringSchedulePreview
+          frequency={frequency}
+          customIntervalDays={customIntervalDays}
+          startDate={startDate}
+          endDate={endDate || undefined}
+          maxOccurrences={maxOccurrences ? parseInt(maxOccurrences, 10) : null}
+          amount={calculateTotal()}
+          currency="ZMW"
+          count={12}
+        />
+      )}
 
       {/* Line Items */}
       <Card>

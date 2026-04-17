@@ -28,9 +28,11 @@ export async function createInvoiceFromBooking(
   }
 
   const appt = appointment as Record<string, unknown>;
-  const service = appt.mod_bookmod01_services as
-    | { name?: string; price?: number; currency?: string }
-    | null;
+  const service = appt.mod_bookmod01_services as {
+    name?: string;
+    price?: number;
+    currency?: string;
+  } | null;
 
   const params = new URLSearchParams({
     source: "booking",
@@ -56,7 +58,7 @@ export async function createInvoiceFromBooking(
   }
 
   return {
-    url: `/modules/invoicing/invoices/new?${params.toString()}`,
+    url: `/dashboard/sites/${siteId}/invoicing/invoices/new?${params.toString()}`,
   };
 }
 

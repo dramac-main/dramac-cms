@@ -21,7 +21,6 @@ const METHOD_ICONS: Record<PaymentMethod, React.ElementType> = {
   card: CreditCard,
   cheque: FileCheck,
   paypal: CircleDollarSign,
-  stripe: CreditCard,
   online: Globe,
   other: HelpCircle,
 };

@@ -112,16 +112,17 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   cancelled: "Cancelled",
 };
 
-export const VALID_INVOICE_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
-  draft: ["sent", "void"],
-  sent: ["viewed", "partial", "paid", "overdue", "void"],
-  viewed: ["partial", "paid", "overdue", "void"],
-  partial: ["paid", "overdue", "void"],
-  paid: [],
-  overdue: ["partial", "paid", "void"],
-  void: [],
-  cancelled: [],
-};
+export const VALID_INVOICE_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> =
+  {
+    draft: ["sent", "void"],
+    sent: ["viewed", "partial", "paid", "overdue", "void"],
+    viewed: ["partial", "paid", "overdue", "void"],
+    partial: ["paid", "overdue", "void"],
+    paid: [],
+    overdue: ["partial", "paid", "void"],
+    void: [],
+    cancelled: [],
+  };
 
 // ─── Invoice Source Types ──────────────────────────────────────
 export const INVOICE_SOURCE_LABELS: Record<InvoiceSourceType, string> = {
@@ -149,7 +150,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   card: "Card",
   cheque: "Cheque",
   paypal: "PayPal",
-  stripe: "Stripe",
   other: "Other",
   online: "Online",
 };

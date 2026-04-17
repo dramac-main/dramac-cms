@@ -76,6 +76,8 @@ export interface InvoicingSettings {
   companyTaxId: string | null;
   onlinePaymentEnabled: boolean;
   paymentInstructions: string | null;
+  bankTransferInstructions: string | null;
+  mobileMoneyInstructions: string | null;
   timezone: string;
   metadata: Record<string, unknown>;
   createdAt: string;

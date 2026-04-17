@@ -54,6 +54,7 @@ export interface RecurringInvoice {
   discountValue: number;
   taxAmount: number;
   total: number;
+  notifyBeforeGeneration: boolean;
   tags: string[];
   lastGeneratedAt: string | null;
   metadata: Record<string, unknown>;
@@ -106,6 +107,7 @@ export interface CreateRecurringInput {
   endDate?: string | null;
   maxOccurrences?: number | null;
   autoSend?: boolean;
+  notifyBeforeGeneration?: boolean;
   paymentTermsDays?: number;
   notes?: string | null;
   terms?: string | null;

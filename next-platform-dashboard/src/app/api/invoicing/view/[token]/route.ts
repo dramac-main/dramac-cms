@@ -7,9 +7,9 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import { INV_TABLES } from "@/modules/invoicing/lib/invoicing-constants";
-
-type SupabaseAdmin = any;
+import type { Invoice, InvoiceLineItem } from "@/modules/invoicing/types/invoice-types";
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     }
 
-    const supabase: SupabaseAdmin = createAdminClient();
+    const supabase = createAdminClient() as any;
 
     // Fetch invoice by view token
     const { data: invoice, error } = await supabase
@@ -80,46 +80,47 @@ export async function GET(
       });
     }
 
-    // Map snake_case → camelCase for client consumption
-    const mapLineItem = (li: Record<string, unknown>) => ({
-      id: li.id,
-      invoiceId: li.invoice_id,
-      name: li.name,
-      description: li.description,
-      quantity: li.quantity,
-      unitPrice: li.unit_price,
-      discountType: li.discount_type,
-      discountValue: li.discount_value,
-      discountAmount: li.discount_amount,
-      taxRate: li.tax_rate,
-      taxAmount: li.tax_amount,
-      subtotal: li.subtotal,
-      total: li.total,
-      sortOrder: li.sort_order,
-    });
+    // Map using standard mapRecord / mapRecords helpers
+    const inv = mapRecord<Invoice>(invoice);
+    const items = mapRecords<InvoiceLineItem>(lineItems ?? []);
 
     const result = {
-      id: invoice.id,
-      invoiceNumber: invoice.invoice_number,
-      status: invoice.status === "sent" ? "viewed" : invoice.status,
-      clientName: invoice.client_name,
-      clientEmail: invoice.client_email,
-      clientPhone: invoice.client_phone,
-      clientAddress: invoice.client_address,
-      clientCompany: invoice.client_company,
-      currency: invoice.currency,
-      issueDate: invoice.issue_date,
-      dueDate: invoice.due_date,
-      subtotal: invoice.subtotal,
-      discountTotal: invoice.discount_total,
-      taxTotal: invoice.tax_total,
-      total: invoice.total,
-      amountPaid: invoice.amount_paid,
-      amountDue: invoice.amount_due,
-      notes: invoice.notes,
-      terms: invoice.terms,
-      reference: invoice.reference,
-      lineItems: (lineItems ?? []).map(mapLineItem),
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      status: invoice.status === "sent" ? "viewed" : inv.status,
+      clientName: inv.clientName,
+      clientEmail: inv.clientEmail,
+      clientPhone: inv.clientPhone,
+      clientAddress: inv.clientAddress,
+      clientCompany: invoice.client_company ?? null,
+      currency: inv.currency,
+      issueDate: inv.issueDate,
+      dueDate: inv.dueDate,
+      subtotal: inv.subtotal,
+      discountTotal: inv.discountAmount,
+      taxTotal: inv.taxAmount,
+      total: inv.total,
+      amountPaid: inv.amountPaid,
+      amountDue: inv.amountDue,
+      notes: inv.notes,
+      terms: inv.terms,
+      reference: inv.reference,
+      lineItems: items.map((li) => ({
+        id: li.id,
+        invoiceId: li.invoiceId,
+        name: li.name,
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        discountType: li.discountType,
+        discountValue: li.discountValue,
+        discountAmount: li.discountAmount,
+        taxRate: li.taxRate,
+        taxAmount: li.taxAmount,
+        subtotal: li.subtotal,
+        total: li.total,
+        sortOrder: li.sortOrder,
+      })),
       settings: settings
         ? {
             companyName: settings.company_name,

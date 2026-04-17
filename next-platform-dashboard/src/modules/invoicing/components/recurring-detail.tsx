@@ -45,6 +45,7 @@ import type {
   RecurringFrequency,
 } from "../types/recurring-types";
 import type { Invoice, InvoiceStatus } from "../types/invoice-types";
+import { toast } from "sonner";
 
 interface RecurringDetailProps {
   siteId: string;
@@ -95,7 +96,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
       await pauseRecurringInvoice(recurringId);
       reload();
     } catch {
-      // handle error silently
+      toast.error("Failed to pause recurring invoice");
     } finally {
       setActionLoading("");
     }
@@ -107,7 +108,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
       await resumeRecurringInvoice(recurringId);
       reload();
     } catch {
-      // handle error silently
+      toast.error("Failed to resume recurring invoice");
     } finally {
       setActionLoading("");
     }
@@ -120,6 +121,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
       reload();
       router.push(`${base}/invoices/${invoice.id}`);
     } catch {
+      toast.error("Failed to generate invoice");
       reload();
     } finally {
       setActionLoading("");
@@ -138,6 +140,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
       await deleteRecurringInvoice(recurringId);
       router.push(`${base}/recurring`);
     } catch {
+      toast.error("Failed to delete recurring invoice");
       setActionLoading("");
     }
   };
@@ -159,7 +162,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
   }
 
   const r = recurring;
-  const status = (r.status || (r as any).status) as RecurringStatus;
+  const status = r.status as RecurringStatus;
   const statusCfg = RECURRING_STATUS_CONFIG[status];
   const freq =
     RECURRING_FREQUENCY_LABELS[
@@ -200,7 +203,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
               )}
             </div>
             <p className="text-muted-foreground">
-              {r.clientName || (r as any).client_name} · {freq}
+              {r.clientName} · {freq}
             </p>
           </div>
         </div>
@@ -290,47 +293,33 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Start Date</span>
-                  <p className="font-medium">
-                    {formatDate(r.startDate || (r as any).start_date)}
-                  </p>
+                  <p className="font-medium">{formatDate(r.startDate)}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">End Date</span>
-                  <p className="font-medium">
-                    {formatDate(r.endDate || (r as any).end_date)}
-                  </p>
+                  <p className="font-medium">{formatDate(r.endDate)}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Next Generation</span>
                   <p className="font-medium">
-                    {formatDate(
-                      r.nextGenerateDate || (r as any).next_generate_date,
-                    )}
+                    {formatDate(r.nextGenerateDate)}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Generated / Max</span>
                   <p className="font-medium">
-                    {r.occurrencesGenerated ??
-                      (r as any).occurrences_generated ??
-                      0}
-                    {r.maxOccurrences || (r as any).max_occurrences
-                      ? ` / ${r.maxOccurrences || (r as any).max_occurrences}`
-                      : " / ∞"}
+                    {r.occurrencesGenerated ?? 0}
+                    {r.maxOccurrences ? ` / ${r.maxOccurrences}` : " / ∞"}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Auto-Send</span>
-                  <p className="font-medium">
-                    {(r.autoSend ?? (r as any).auto_send) ? "Yes" : "No"}
-                  </p>
+                  <p className="font-medium">{r.autoSend ? "Yes" : "No"}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Payment Terms</span>
                   <p className="font-medium">
-                    Net{" "}
-                    {r.paymentTermsDays ?? (r as any).payment_terms_days ?? 30}{" "}
-                    days
+                    Net {r.paymentTermsDays ?? 30} days
                   </p>
                 </div>
                 <div>
@@ -376,16 +365,12 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
                         {li.unit ? ` ${li.unit}` : ""}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatInvoiceAmount(
-                          li.unitPrice || (li as any).unit_price,
-                          r.currency,
-                        )}
+                        {formatInvoiceAmount(li.unitPrice, r.currency)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatInvoiceAmount(
                           Math.round(
-                            (Number(li.quantity) || 1) *
-                              (li.unitPrice || (li as any).unit_price || 0),
+                            (Number(li.quantity) || 1) * (li.unitPrice || 0),
                           ),
                           r.currency,
                         )}
@@ -420,7 +405,7 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {r.generatedInvoices.map((inv: any) => {
+                    {r.generatedInvoices.map((inv) => {
                       const invStatus = (inv.status || "") as InvoiceStatus;
                       const invCfg = INVOICE_STATUS_CONFIG[invStatus];
                       return (
@@ -430,10 +415,10 @@ export function RecurringDetail({ siteId, recurringId }: RecurringDetailProps) {
                               href={`${base}/invoices/${inv.id}`}
                               className="font-medium hover:underline"
                             >
-                              {inv.invoice_number}
+                              {inv.invoiceNumber}
                             </Link>
                           </TableCell>
-                          <TableCell>{formatDate(inv.issue_date)}</TableCell>
+                          <TableCell>{formatDate(inv.issueDate)}</TableCell>
                           <TableCell className="text-right font-mono">
                             {formatInvoiceAmount(inv.total, inv.currency)}
                           </TableCell>

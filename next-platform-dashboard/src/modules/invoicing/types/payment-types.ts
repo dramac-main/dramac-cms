@@ -17,7 +17,6 @@ export type PaymentMethod =
   | "card"
   | "cheque"
   | "paypal"
-  | "stripe"
   | "other"
   | "online";
 
@@ -34,6 +33,7 @@ export interface Payment {
   siteId: string;
   invoiceId: string;
   paymentNumber: string | null;
+  receiptNumber: string | null;
   type: PaymentType;
   amount: number;
   currency: string;

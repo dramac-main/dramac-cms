@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import type { Item, ItemType } from "../types";
 
@@ -68,7 +69,7 @@ export async function getItems(
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data || []) as Item[];
+  return mapRecords<Item>(data || []);
 }
 
 export async function getItem(
@@ -87,7 +88,7 @@ export async function getItem(
     if (error.code === "PGRST116") return null;
     throw new Error(error.message);
   }
-  return data as Item;
+  return data ? mapRecord<Item>(data) : null;
 }
 
 export async function createItem(
@@ -113,7 +114,7 @@ export async function createItem(
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Item;
+  return mapRecord<Item>(data);
 }
 
 export async function updateItem(
@@ -144,7 +145,7 @@ export async function updateItem(
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Item;
+  return mapRecord<Item>(data);
 }
 
 export async function deleteItem(
@@ -188,7 +189,14 @@ export interface ImportResult {
 export async function getEcommerceProducts(
   siteId: string,
 ): Promise<
-  { id: string; name: string; base_price: number; sku: string | null; description: string | null; status: string | null }[]
+  {
+    id: string;
+    name: string;
+    base_price: number;
+    sku: string | null;
+    description: string | null;
+    status: string | null;
+  }[]
 > {
   const supabase = await getModuleClient();
   const { data, error } = await supabase
@@ -220,9 +228,7 @@ export async function importEcommerceProducts(
     return { imported: 0, skipped: 0, errors: ["No products found"] };
 
   // Check existing SKUs to prevent duplicates
-  const skus = products
-    .map((p: any) => p.sku)
-    .filter(Boolean) as string[];
+  const skus = products.map((p: any) => p.sku).filter(Boolean) as string[];
 
   let existingSkus = new Set<string>();
   if (skus.length > 0) {
@@ -254,19 +260,17 @@ export async function importEcommerceProducts(
       continue;
     }
 
-    const { error: insertErr } = await supabase
-      .from(INV_TABLES.items)
-      .insert({
-        site_id: siteId,
-        name: p.name,
-        description: p.description || null,
-        type: "product" as ItemType,
-        unit_price: p.base_price,
-        sku: p.sku || null,
-        category: "E-Commerce",
-        sort_order: 0,
-        metadata: { source: "ecommerce", source_id: p.id },
-      });
+    const { error: insertErr } = await supabase.from(INV_TABLES.items).insert({
+      site_id: siteId,
+      name: p.name,
+      description: p.description || null,
+      type: "product" as ItemType,
+      unit_price: p.base_price,
+      sku: p.sku || null,
+      category: "E-Commerce",
+      sort_order: 0,
+      metadata: { source: "ecommerce", source_id: p.id },
+    });
 
     if (insertErr) {
       errors.push(`${p.name}: ${insertErr.message}`);
@@ -281,7 +285,13 @@ export async function importEcommerceProducts(
 export async function getBookingServices(
   siteId: string,
 ): Promise<
-  { id: string; name: string; price: number | null; description: string | null; duration_minutes: number }[]
+  {
+    id: string;
+    name: string;
+    price: number | null;
+    description: string | null;
+    duration_minutes: number;
+  }[]
 > {
   const supabase = await getModuleClient();
   const { data, error } = await supabase
@@ -345,20 +355,18 @@ export async function importBookingServices(
       continue;
     }
 
-    const { error: insertErr } = await supabase
-      .from(INV_TABLES.items)
-      .insert({
-        site_id: siteId,
-        name: s.name,
-        description: s.description
-          ? `${s.description} (${s.duration_minutes} min)`
-          : `${s.duration_minutes} min service`,
-        type: "service" as ItemType,
-        unit_price: s.price || 0,
-        category: "Booking",
-        sort_order: 0,
-        metadata: { source: "booking", source_id: s.id },
-      });
+    const { error: insertErr } = await supabase.from(INV_TABLES.items).insert({
+      site_id: siteId,
+      name: s.name,
+      description: s.description
+        ? `${s.description} (${s.duration_minutes} min)`
+        : `${s.duration_minutes} min service`,
+      type: "service" as ItemType,
+      unit_price: s.price || 0,
+      category: "Booking",
+      sort_order: 0,
+      metadata: { source: "booking", source_id: s.id },
+    });
 
     if (insertErr) {
       errors.push(`${s.name}: ${insertErr.message}`);

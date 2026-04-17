@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import {
   INV_TABLES,
   VALID_INVOICE_TRANSITIONS,
@@ -234,7 +235,7 @@ export async function getInvoices(
   if (error) throw new Error(error.message);
 
   return {
-    invoices: (data || []) as Invoice[],
+    invoices: mapRecords<Invoice>((data || []) as Record<string, unknown>[]),
     total: count || 0,
   };
 }
@@ -283,10 +284,16 @@ export async function getInvoice(invoiceId: string): Promise<
     .order("created_at", { ascending: false });
 
   return {
-    ...invoice,
-    lineItems: (lineItems || []) as InvoiceLineItem[],
-    payments: (payments || []) as Payment[],
-    activities: (activities || []) as InvoiceActivity[],
+    ...mapRecord<Invoice>(invoice as Record<string, unknown>),
+    lineItems: mapRecords<InvoiceLineItem>(
+      (lineItems || []) as Record<string, unknown>[],
+    ),
+    payments: mapRecords<Payment>(
+      (payments || []) as Record<string, unknown>[],
+    ),
+    activities: mapRecords<InvoiceActivity>(
+      (activities || []) as Record<string, unknown>[],
+    ),
   } as InvoiceWithItems & {
     payments: Payment[];
     activities: InvoiceActivity[];
@@ -440,7 +447,7 @@ export async function createInvoice(
     // Automation module may not be installed
   }
 
-  return invoice as Invoice;
+  return mapRecord<Invoice>(invoice as Record<string, unknown>);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -573,7 +580,7 @@ export async function updateInvoice(
     `Invoice ${existing.invoice_number} updated`,
   );
 
-  return updated as Invoice;
+  return mapRecord<Invoice>(updated as Record<string, unknown>);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1036,8 +1043,10 @@ export async function getInvoiceByViewToken(
     .order("sort_order", { ascending: true });
 
   return {
-    ...invoice,
-    lineItems: (lineItems || []) as InvoiceLineItem[],
+    ...mapRecord<Invoice>(invoice as Record<string, unknown>),
+    lineItems: mapRecords<InvoiceLineItem>(
+      (lineItems || []) as Record<string, unknown>[],
+    ),
   } as InvoiceWithItems;
 }
 

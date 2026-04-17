@@ -3,7 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { INV_TABLES } from "../lib/invoicing-constants";
 
-type AnySupabase = ReturnType<typeof import("@supabase/supabase-js").createClient>;
+type AnySupabase = ReturnType<
+  typeof import("@supabase/supabase-js").createClient
+>;
 
 /**
  * Create an invoice from an e-commerce order.
@@ -40,21 +42,21 @@ export async function createInvoiceFromOrder(
   });
 
   // Encode line items as JSON for the invoice form to parse
-  const lineItems = ((o.mod_ecommod01_order_items || []) as Record<string, unknown>[]).map(
-    (item) => ({
-      description: (item.name as string) || "Product",
-      quantity: (item.quantity as number) || 1,
-      unit_price_cents: (item.unit_price as number) || 0,
-      amount_cents: (item.total as number) || 0,
-    }),
-  );
+  const lineItems = (
+    (o.mod_ecommod01_order_items || []) as Record<string, unknown>[]
+  ).map((item) => ({
+    description: (item.name as string) || "Product",
+    quantity: (item.quantity as number) || 1,
+    unit_price_cents: (item.unit_price as number) || 0,
+    amount_cents: (item.total as number) || 0,
+  }));
 
   if (lineItems.length > 0) {
     params.set("line_items", JSON.stringify(lineItems));
   }
 
   return {
-    url: `/modules/invoicing/invoices/new?${params.toString()}`,
+    url: `/dashboard/sites/${siteId}/invoicing/invoices/new?${params.toString()}`,
   };
 }
 
@@ -101,7 +103,8 @@ export async function createCreditNoteFromRefund(
     client_email: (o.customer_email as string) || "",
     currency: (o.currency as string) || "ZMW",
     amount_cents: String(refundAmountCents),
-    reason: reason || `Refund for order ${(o.order_number as string) || orderId}`,
+    reason:
+      reason || `Refund for order ${(o.order_number as string) || orderId}`,
   });
 
   if (inv) {
@@ -110,6 +113,6 @@ export async function createCreditNoteFromRefund(
   }
 
   return {
-    url: `/modules/invoicing/credit-notes/new?${params.toString()}`,
+    url: `/dashboard/sites/${siteId}/invoicing/credit-notes/new?${params.toString()}`,
   };
 }

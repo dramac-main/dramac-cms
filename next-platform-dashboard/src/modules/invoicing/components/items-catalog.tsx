@@ -81,6 +81,7 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<CreateItemInput>(EMPTY_FORM);
+  const [priceInput, setPriceInput] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -99,6 +100,7 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
   const handleOpenCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setPriceInput("");
     setDialogOpen(true);
   };
 
@@ -113,6 +115,7 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
       sku: item.sku ?? "",
       category: item.category ?? "",
     });
+    setPriceInput((item.unitPrice / 100).toFixed(2));
     setDialogOpen(true);
   };
 
@@ -167,118 +170,134 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
           <ImportEcommerceItems siteId={siteId} onImported={loadItems} />
           <ImportBookingServices siteId={siteId} onImported={loadItems} />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingId ? "Edit Item" : "New Item"}</DialogTitle>
-              <DialogDescription>
-                {editingId
-                  ? "Update item details."
-                  : "Create a reusable item for invoices."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div>
-                <Label htmlFor="item-name">Name *</Label>
-                <Input
-                  id="item-name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Item name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="item-desc">Description</Label>
-                <Textarea
-                  id="item-desc"
-                  value={form.description ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                  rows={2}
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label>Type</Label>
-                  <Select
-                    value={form.type}
-                    onValueChange={(v) =>
-                      setForm({ ...form, type: v as ItemType })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="service">Service</SelectItem>
-                      <SelectItem value="product">Product</SelectItem>
-                      <SelectItem value="expense">Expense</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="item-price">Unit Price (cents)</Label>
-                  <Input
-                    id="item-price"
-                    type="number"
-                    min={0}
-                    value={form.unitPrice}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        unitPrice: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <Label htmlFor="item-unit">Unit</Label>
-                  <Input
-                    id="item-unit"
-                    value={form.unit ?? ""}
-                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    placeholder="e.g., hour, piece"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="item-sku">SKU</Label>
-                  <Input
-                    id="item-sku"
-                    value={form.sku ?? ""}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="item-category">Category</Label>
-                  <Input
-                    id="item-category"
-                    value={form.category ?? ""}
-                    onChange={(e) =>
-                      setForm({ ...form, category: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+            <DialogTrigger asChild>
+              <Button onClick={handleOpenCreate}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Item
               </Button>
-              <Button onClick={handleSave} disabled={saving || !form.name}>
-                {saving && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
-                {editingId ? "Update" : "Create"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingId ? "Edit Item" : "New Item"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingId
+                    ? "Update item details."
+                    : "Create a reusable item for invoices."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div>
+                  <Label htmlFor="item-name">Name *</Label>
+                  <Input
+                    id="item-name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Item name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="item-desc">Description</Label>
+                  <Textarea
+                    id="item-desc"
+                    value={form.description ?? ""}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    rows={2}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>Type</Label>
+                    <Select
+                      value={form.type}
+                      onValueChange={(v) =>
+                        setForm({ ...form, type: v as ItemType })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="service">Service</SelectItem>
+                        <SelectItem value="product">Product</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="item-price">Unit Price</Label>
+                    <Input
+                      id="item-price"
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      value={priceInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setPriceInput(value);
+                        setForm({
+                          ...form,
+                          unitPrice: Math.round((Number(value) || 0) * 100),
+                        });
+                      }}
+                      placeholder="0.00"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Enter the full currency amount. It will be stored in cents
+                      automatically.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label htmlFor="item-unit">Unit</Label>
+                    <Input
+                      id="item-unit"
+                      value={form.unit ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, unit: e.target.value })
+                      }
+                      placeholder="e.g., hour, piece"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="item-sku">SKU</Label>
+                    <Input
+                      id="item-sku"
+                      value={form.sku ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, sku: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="item-category">Category</Label>
+                    <Input
+                      id="item-category"
+                      value={form.category ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={saving || !form.name}>
+                  {saving && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  )}
+                  {editingId ? "Update" : "Create"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

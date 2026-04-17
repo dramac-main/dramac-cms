@@ -1,56 +1,111 @@
 # Active Context
 
-**Last Updated**: April 2026
+**Last Updated**: July 2026
 
 ## Current State
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: INVFIX-03 — Cross-Module Integration ✅
+## Latest: Session 6 — INVFIX-04/05 Carryover Closure ✅
 
-### Session 3 (INVFIX-02 Carryover + INVFIX-03): Complete
+### Session 6: All Carryover Items Closed
 
-**Commit:** `d5bd4b9e` — `feat(invfix): complete INVFIX-02 carryover fixes and INVFIX-03 cross-module integration`
+Session 6 completed the 7 required outcomes from the Session 6 Quick Agent Prompt, closing all INVFIX-04 and INVFIX-05 carryover items. No INVFIX-06 work was started. Architecture remains manual-collection only (no Stripe).
 
-**INVFIX-02 Carryover Fixes (5):**
-1. **Discount tax math**: Proportional tax reduction via `discountRatio` in `calculateInvoiceTotals()`
-2. **Live preview**: `invoiceNumber` + `paymentInstructions` passed down; settings now load in edit mode too
-3. **Default tax preselection**: Applied to starter rows via `setLineItems` after settings load
-4. **Catalog-item tax propagation**: `taxRatesMap` loaded on mount, numeric rate resolved in `handleItemPickerSelect`
-5. **Line-item validation**: `unitPrice <= 0` rejected (was `< 0`)
+**Files Modified (9):**
 
-**INVFIX-03 Cross-Module Integration (5 sub-tasks):**
-
-**Files Modified (13):**
-- `src/modules/invoicing/lib/invoicing-utils.ts` — discountRatio proportional tax reduction
-- `src/modules/invoicing/components/invoice-form.tsx` — useSearchParams for deal params, sourceType/sourceId state, InvoiceSourceType import, settings load for all modes, paymentInstructions state
-- `src/modules/invoicing/components/invoice-line-items.tsx` — taxRatesMap state, resolved numeric tax rate in handleItemPickerSelect, unitPrice > 0 validation
-- `src/modules/invoicing/components/contact-invoice-picker.tsx` — Full rewrite: outstanding balance badges (from invoices table), recent contacts group, "Create New Contact" link, renderContactItem helper
-- `src/modules/crm/components/sheets/deal-detail-sheet.tsx` — linkedInvoices state, queries invoices by source_type/source_id, shows linked invoices with status badges
-- `src/modules/invoicing/actions/crm-integration-actions.ts` — Fixed sourceType "deal" → "crm_deal"
-- `src/modules/invoicing/actions/item-actions.ts` — Added: getEcommerceProducts, importEcommerceProducts (SKU dedup), getBookingServices, importBookingServices (metadata dedup), ImportResult type
-- `src/modules/invoicing/components/import-ecommerce-items.tsx` — NEW: Dialog for selecting/importing e-commerce products
-- `src/modules/invoicing/components/import-booking-services.tsx` — NEW: Dialog for selecting/importing booking services
-- `src/modules/invoicing/components/items-catalog.tsx` — Import buttons in header (ImportEcommerceItems, ImportBookingServices)
-- `src/modules/invoicing/components/item-picker.tsx` — Enhanced: 3-group picker (Invoicing Items, E-Commerce Products, Booking Services) with icons and separators
-- `src/modules/invoicing/components/invoice-preview.tsx` — No changes (already had props)
-- `src/modules/invoicing/actions/settings-actions.ts` — (from session 2, exported getTaxRates)
+1. **migrations/invfix-04-05-payment-settings.sql** — Removed 3 Stripe columns (`stripe_enabled`, `stripe_publishable_key`, `stripe_secret_key`). Added `notify_before_generation BOOLEAN DEFAULT FALSE` to recurring_invoices table. Header updated to reflect manual-only architecture.
+2. **public-payment-form.tsx** — Gated payment form behind `onlinePaymentEnabled`: when disabled, shows AlertCircle notice directing clients to follow payment instructions. Wrapped form Card in conditional render. Fixed JSX TS2657 (missing Card wrapper in conditional).
+3. **pay/[token]/route.ts** — POST handler now fetches settings and checks `online_payment_enabled`, returns 403 if disabled. Payment number generation hardened from count-based to MAX-based sequence (`PAY-{year}-NNNN`), preventing duplicates from deletions/concurrency.
+4. **payment-actions.ts** — Both `generatePaymentNumber()` and `generateReceiptNumber()` converted from count-based to MAX-based sequence lookup per year prefix, resilient to deletions and year rollovers.
+5. **reconciliation-actions.ts** — Added `mapRecords` import. `getUnmatchedPayments()` and `getPartialInvoices()` now use `mapRecords<Payment>()` / `mapRecords<Invoice>()` for base mapping then project to custom types.
+6. **view/[token]/route.ts** — Replaced manual `mapLineItem` function and 25-line manual invoice mapping with `mapRecord<Invoice>()` + `mapRecords<InvoiceLineItem>()`. `clientCompany` accessed from raw DB row (`invoice.client_company`) since it's not on the TypeScript type.
+7. **recurring-types.ts** — Added `notifyBeforeGeneration` to `RecurringInvoice` and `CreateRecurringInput` interfaces.
+8. **recurring-actions.ts** — `createRecurringInvoice()` persists `notify_before_generation`. `updateRecurringInvoice()` fieldMap includes it. `generateInvoiceFromTemplate()` resolves storefront customer from `mod_ecommod01_customers` by `storefront_customer_id`.
+9. **recurring-form.tsx** — Wired `notifyBeforeGeneration` state to `handleSubmit()` payload (toggle UI already existed).
 
 **Key Design Decisions:**
-- E-commerce import deduplicates by SKU (existing SKUs in items table skipped)
-- Booking import deduplicates by metadata source_id (prevents re-import)
-- Item picker queries all 3 sources on mount; groups with CommandSeparator
-- External products/services mapped to Item interface with synthetic IDs (ecom-*, book-*)
-- CRM deal link uses sourceType "crm_deal" (matches InvoiceSourceType enum)
-- Contact picker queries live outstanding balances from invoices table (sent/viewed/partial/overdue)
-- Import dialogs use checkbox selection with select-all, search filter, count badge
 
-**TSC:** 219 errors (matches baseline — zero new)
+- MAX-based sequence generators: query highest existing `PAY-{year}-NNNN` or `RCT-{year}-NNNN`, parse sequence, increment. Safe against deletions, concurrent inserts, and year boundaries.
+- `onlinePaymentEnabled` gates both frontend display AND backend POST acceptance (defense in depth).
+- Storefront customer resolution only overrides client name if no CRM contact/company was already linked.
+- `mapRecords()` used for base mapping then manual projection for custom types (UnmatchedPayment, PartialInvoice).
+- `clientCompany` accessed from raw DB row since `Invoice` TypeScript type doesn't include all DB columns.
+
+**TSC Result:** 0 invoicing-specific errors. 219 total errors (unchanged from baseline — all pre-existing marketing module errors).
+
+**Audit Verdict:** INVFIX-04 and INVFIX-05 carryover is **CLOSED**. Ready for INVFIX-06.
 
 ### Next Steps
 
-1. **Session 4 (INVFIX-04)**: Online payments + reconciliation + receipt PDF
-2. **Session 5 (INVFIX-05+06)**: Recurring lifecycle + Vendors/Bills/POs
+1. **INVFIX-06**: Vendors, Bills, and Purchase Orders — next session when user is ready.
+2. **Run migration** `invfix-04-05-payment-settings.sql` against live Supabase (3 Stripe column drops + notify_before_generation add).
+3. Consider addressing the 219 pre-existing TSC errors in marketing module separately.
+
+## Previous: Invoicing Hotfix — Save, Display, and Money Bugs Fixed ⚠️
+
+### April 2026 Hotfix Findings
+
+The user's escalation was correct: Stripe was still present inside the invoicing module even though platform billing is Paddle-based, invoice/settings saves had real runtime breakage, and item prices could be entered with the wrong decimal semantics.
+
+**Root causes confirmed during debugging:**
+
+1. `settings-actions.ts` still mapped `stripeSecretKey -> stripe_secret_key`, but the live `mod_invmod01_settings` table does not have a `stripe_secret_key` column.
+2. `invoice-actions.ts` was still returning raw Supabase snake_case rows cast to camelCase TypeScript types, which broke invoice list/detail/public rendering after create/update.
+3. `items-catalog.tsx` asked users for `Unit Price (cents)` and stored the raw input directly, which caused visible decimal-place errors across the module.
+4. `app/api/invoicing/view/[token]/route.ts` was returning `discount_total` / `tax_total` instead of the actual `discount_amount` / `tax_amount` columns.
+
+**What landed in the working tree:**
+
+1. Removed Stripe-specific invoice-module UI/configuration from `invoicing-settings-form.tsx`, `public-payment-form.tsx`, `payment-types.ts`, `invoicing-constants.ts`, `payment-method-icon.tsx`, and the public payment API route.
+2. `settings-actions.ts` no longer attempts to update Stripe fields, so invoicing settings saves are aligned with the live DB schema.
+3. `invoice-actions.ts` now uses `mapRecord()` / `mapRecords()` on invoice read/create/update/public-token returns.
+4. `items-catalog.tsx` now accepts normal decimal currency entry and converts to cents internally.
+5. `app/api/invoicing/view/[token]/route.ts` now maps public invoice totals from `discount_amount` and `tax_amount`.
+6. Removed the last Stripe-specific label/color fallback from invoicing report code so the active invoice module no longer contains Stripe-specific implementation paths.
+
+**Current architectural direction:**
+
+- Paddle remains the platform billing/payment system.
+- The invoicing module is now aligned to manual collection flows (bank transfer, mobile money, cash, cheque, other) rather than embedded Stripe card collection.
+
+## Previous: Session 5 Audit — INVFIX-04 + INVFIX-05 Still Open ⚠️
+
+### Session 5 (INVFIX-04 Carryover + INVFIX-05): Significant Progress, Not Closed
+
+**What definitely landed in the working tree:**
+
+1. `settings-actions.ts` — Added missing fieldMap entries for `bankTransferInstructions`, `mobileMoneyInstructions`, `stripePublishableKey`, and `stripeEnabled`
+2. `payment-actions.ts` — Added `mapRecord()` / `mapRecords()` coverage for payment reads, plus receipt/export helpers
+3. `payment-list.tsx` — Added status filter, CSV export, reconciliation entry point, and correct payment-detail navigation
+4. `public-payment-form.tsx` — Expanded manual method instructions and added Stripe-facing UI state
+5. `recurring-actions.ts` — Added `getRecurringStats()` and cleaned up recurring/invoice mapping
+6. `recurring-engine-service.ts` — Added retry logic, `last_generated_at` idempotency check, and failure logging
+7. `recurring-list.tsx` / `recurring-detail.tsx` — Added summary cards, failed-generation alert, and better action error handling
+
+**Blocking carryover still remaining after audit:**
+
+1. `public-payment-form.tsx` + `pay/[token]/route.ts` do **not** implement a real Stripe checkout/payment-intent flow. The Stripe button falls back to a success state when no checkout URL is returned, and the API only records a pending payment.
+2. `public-payment-form.tsx` exposes Stripe UI from `stripeEnabled` + publishable key alone; `onlinePaymentEnabled` is fetched but not used to gate the card option.
+3. `invoicing-settings-form.tsx` only captures Stripe publishable key/toggle; the INVFIX-04 spec still calls for a real provider configuration path.
+4. `payment-actions.ts` defines `generateReceiptNumber()` but `getPaymentReceipt()` still derives the receipt number from `payment_number` instead of using a persisted dedicated receipt sequence.
+5. `recurring-form.tsx` still lacks client notification options and an in-form next-12-occurrence preview with amounts.
+6. `RecurringSchedulePreview` remains detail-page-only and still defaults to 10 upcoming dates.
+7. `recurring-actions.ts` still copies `recurring.client_name`, `recurring.client_email`, and `recurring.client_address` into generated invoices instead of resolving current linked client/company/customer data at generation time.
+8. `recurring-engine-service.ts` adds retry/logging, but still has no actual processing lock claim, no site-owner alert email, and no structured generation-history persistence.
+9. Repo portability risk: the live database already has the new payment-settings columns, but no matching SQL migration was found under `next-platform-dashboard/migrations` during audit.
+
+**Audit verdict:** INVFIX-04 and INVFIX-05 are **not closed** yet. TSC remains 219 (baseline) with no new broad regression signal.
+
+### Next Steps
+
+1. **Re-audit INVFIX-04 using the new manual-only payment direction**: confirm receipt numbering, reconciliation flow, and public payment UX all close cleanly without Stripe.
+2. **Continue INVFIX-05 carryover**: recurring notification options, in-form next-12 preview, current linked-client resolution on generation, and cron robustness still remain open.
+3. **Do not start INVFIX-06** until the payments + recurring carryover is re-audited clean.
+
+## Previous: INVFIX-04 — Implemented, Session 5 Improved It, Final Closure Still Pending
+
+## Previous: INVFIX-03 — Cross-Module Integration ✅ (Carryover Fixed in Session 4)
 
 ## Previous: INVFIX-02 — Calculation Engine, Line Item Validation, Live Preview ✅
 

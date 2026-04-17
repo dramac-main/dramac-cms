@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Payment, PaymentMethod } from "../types/payment-types";
 import type { PaymentFilters as PFilters } from "../actions/payment-actions";
-import { getPayments } from "../actions/payment-actions";
+import { getPayments, exportPaymentsCsv } from "../actions/payment-actions";
 import { PaymentMethodIcon } from "./payment-method-icon";
 import { PaymentSummaryCard } from "./payment-summary-card";
 import { AmountDisplay } from "./amount-display";
@@ -13,6 +13,7 @@ import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
 } from "../lib/invoicing-constants";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -32,7 +33,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Search,
+  Scale,
+} from "lucide-react";
 
 interface PaymentListProps {
   siteId: string;
@@ -46,8 +53,10 @@ export function PaymentList({ siteId }: PaymentListProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [exporting, setExporting] = useState(false);
   const pageSize = 25;
 
   useEffect(() => {
@@ -55,6 +64,7 @@ export function PaymentList({ siteId }: PaymentListProps) {
     const filters: PFilters = {};
     if (search) filters.search = search;
     if (methodFilter !== "all") filters.method = methodFilter as PaymentMethod;
+    if (statusFilter !== "all") filters.status = statusFilter as any;
     if (dateFrom) filters.dateFrom = dateFrom;
     if (dateTo) filters.dateTo = dateTo;
 
@@ -68,9 +78,36 @@ export function PaymentList({ siteId }: PaymentListProps) {
         setTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [siteId, page, search, methodFilter, dateFrom, dateTo]);
+  }, [siteId, page, search, methodFilter, statusFilter, dateFrom, dateTo]);
 
   const totalPages = Math.ceil(total / pageSize);
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const filters: PFilters = {};
+      if (search) filters.search = search;
+      if (methodFilter !== "all")
+        filters.method = methodFilter as PaymentMethod;
+      if (statusFilter !== "all") filters.status = statusFilter as any;
+      if (dateFrom) filters.dateFrom = dateFrom;
+      if (dateTo) filters.dateTo = dateTo;
+
+      const csv = await exportPaymentsCsv(siteId, filters);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `payments-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Payments exported successfully");
+    } catch {
+      toast.error("Failed to export payments");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -78,11 +115,30 @@ export function PaymentList({ siteId }: PaymentListProps) {
       <PaymentSummaryCard siteId={siteId} />
 
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold">Payments</h2>
-        <p className="text-sm text-muted-foreground">
-          {total} payment{total !== 1 ? "s" : ""}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Payments</h2>
+          <p className="text-sm text-muted-foreground">
+            {total} payment{total !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={exporting}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {exporting ? "Exporting…" : "Export CSV"}
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/sites/${siteId}/invoicing/reconciliation`}>
+              <Scale className="mr-2 h-4 w-4" />
+              Reconciliation
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -112,6 +168,25 @@ export function PaymentList({ siteId }: PaymentListProps) {
           <SelectContent>
             <SelectItem value="all">All Methods</SelectItem>
             {Object.entries(PAYMENT_METHOD_LABELS).map(([key, label]) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            setStatusFilter(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {Object.entries(PAYMENT_STATUS_LABELS).map(([key, label]) => (
               <SelectItem key={key} value={key}>
                 {label}
               </SelectItem>
@@ -180,7 +255,7 @@ export function PaymentList({ siteId }: PaymentListProps) {
                   className="cursor-pointer"
                   onClick={() =>
                     router.push(
-                      `/dashboard/sites/${siteId}/invoicing/invoices/${p.invoiceId}`,
+                      `/dashboard/sites/${siteId}/invoicing/payments/${p.id}`,
                     )
                   }
                 >

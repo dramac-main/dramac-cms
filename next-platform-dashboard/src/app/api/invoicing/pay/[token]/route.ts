@@ -62,6 +62,9 @@ export async function GET(
       clientName: invoice.client_name,
       dueDate: invoice.due_date,
       paymentInstructions: settings?.payment_instructions || null,
+      bankTransferInstructions: settings?.bank_transfer_instructions || null,
+      mobileMoneyInstructions: settings?.mobile_money_instructions || null,
+      onlinePaymentEnabled: settings?.online_payment_enabled ?? false,
       companyName: settings?.company_name || null,
       companyLogo: settings?.brand_logo_url || null,
       brandColor: settings?.brand_color || null,
@@ -138,6 +141,20 @@ export async function POST(
       );
     }
 
+    // Check if online payment submission is enabled
+    const { data: settings } = await supabase
+      .from(INV_TABLES.settings)
+      .select("online_payment_enabled")
+      .eq("site_id", invoice.site_id)
+      .single();
+
+    if (!settings?.online_payment_enabled) {
+      return NextResponse.json(
+        { error: "Online payment submission is not enabled" },
+        { status: 403 },
+      );
+    }
+
     if (invoice.amount_due <= 0) {
       return NextResponse.json(
         { error: "This invoice has no amount due" },
@@ -145,14 +162,24 @@ export async function POST(
       );
     }
 
-    // Generate payment number
+    // ── Manual payment flow ──────────────────────────────────
+    // Generate payment number (MAX-based to avoid gaps on deletes)
     const year = new Date().getFullYear();
-    const { count } = await supabase
+    const prefix = `PAY-${year}-`;
+    const { data: lastPay } = await supabase
       .from(INV_TABLES.payments)
-      .select("id", { count: "exact", head: true })
-      .eq("site_id", invoice.site_id);
-    const seq = String((count || 0) + 1).padStart(4, "0");
-    const paymentNumber = `PAY-${year}-${seq}`;
+      .select("payment_number")
+      .eq("site_id", invoice.site_id)
+      .like("payment_number", `${prefix}%`)
+      .order("payment_number", { ascending: false })
+      .limit(1);
+
+    let nextSeq = 1;
+    if (lastPay && lastPay.length > 0 && lastPay[0].payment_number) {
+      const match = lastPay[0].payment_number.match(/PAY-\d{4}-(\d+)/);
+      if (match) nextSeq = parseInt(match[1], 10) + 1;
+    }
+    const paymentNumber = `${prefix}${String(nextSeq).padStart(4, "0")}`;
 
     // Create PENDING payment record (not completed — requires manual verification)
     const { data: payment, error: payError } = await supabase

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import {
   INV_TABLES,
   VALID_INVOICE_TRANSITIONS,
@@ -57,12 +58,23 @@ async function generatePaymentNumber(
   siteId: string,
 ): Promise<string> {
   const year = new Date().getFullYear();
-  const { count } = await supabase
+  const prefix = `PAY-${year}-`;
+
+  // Find the highest existing sequence for this year
+  const { data } = await supabase
     .from(INV_TABLES.payments)
-    .select("id", { count: "exact", head: true })
-    .eq("site_id", siteId);
-  const next = (count || 0) + 1;
-  return `PAY-${year}-${next.toString().padStart(4, "0")}`;
+    .select("payment_number")
+    .eq("site_id", siteId)
+    .like("payment_number", `${prefix}%`)
+    .order("payment_number", { ascending: false })
+    .limit(1);
+
+  let next = 1;
+  if (data && data.length > 0 && data[0].payment_number) {
+    const match = data[0].payment_number.match(/PAY-\d{4}-(\d+)/);
+    if (match) next = parseInt(match[1], 10) + 1;
+  }
+  return `${prefix}${next.toString().padStart(4, "0")}`;
 }
 
 // ─── Input Types ───────────────────────────────────────────────
@@ -137,6 +149,7 @@ export async function recordPayment(
 
   // 4. Generate payment number
   const paymentNumber = await generatePaymentNumber(supabase, invoice.site_id);
+  const receiptNumber = await generateReceiptNumber(invoice.site_id);
   const today = new Date().toISOString().split("T")[0];
 
   // 5. Create payment record
@@ -146,6 +159,7 @@ export async function recordPayment(
       site_id: invoice.site_id,
       invoice_id: invoiceId,
       payment_number: paymentNumber,
+      receipt_number: receiptNumber,
       type: "payment",
       amount: input.amount,
       currency: input.currency || invoice.currency || "ZMW",
@@ -314,7 +328,7 @@ export async function recordPayment(
     // Non-critical — do not block payment recording
   }
 
-  return payment as Payment;
+  return mapRecord<Payment>(payment);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -369,7 +383,7 @@ export async function getPayments(
   if (error) throw new Error(error.message);
 
   return {
-    payments: (data || []) as Payment[],
+    payments: mapRecords<Payment>(data || []),
     total: count || 0,
   };
 }
@@ -397,9 +411,12 @@ export async function getPayment(
     .single();
   if (invErr) throw new Error(invErr.message);
 
+  const mappedPayment = mapRecord<Payment>(payment);
+  const mappedInvoice = mapRecord<Invoice>(invoice);
+
   return {
-    ...payment,
-    invoice,
+    ...mappedPayment,
+    invoice: mappedInvoice,
   } as Payment & { invoice: Invoice };
 }
 
@@ -463,7 +480,7 @@ export async function updatePayment(
     "user",
   );
 
-  return payment as Payment;
+  return mapRecord<Payment>(payment);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -656,7 +673,7 @@ export async function recordRefund(
     // Non-critical
   }
 
-  return refund as Payment;
+  return mapRecord<Payment>(refund);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -685,7 +702,7 @@ export async function getPaymentSummary(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  const payments = (data || []) as Payment[];
+  const payments = mapRecords<Payment>(data || []);
 
   let totalCollected = 0;
   let totalRefunded = 0;
@@ -721,4 +738,178 @@ export async function getPaymentSummary(
     refundCount,
     byMethod,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GENERATE RECEIPT NUMBER
+// ═══════════════════════════════════════════════════════════════
+
+export async function generateReceiptNumber(siteId: string): Promise<string> {
+  const supabase = await getModuleClient();
+  const year = new Date().getFullYear();
+  const prefix = `RCT-${year}-`;
+
+  // Find the highest existing receipt sequence for this year
+  const { data } = await supabase
+    .from(INV_TABLES.payments)
+    .select("receipt_number")
+    .eq("site_id", siteId)
+    .like("receipt_number", `${prefix}%`)
+    .order("receipt_number", { ascending: false })
+    .limit(1);
+
+  let next = 1;
+  if (data && data.length > 0 && data[0].receipt_number) {
+    const match = data[0].receipt_number.match(/RCT-\d{4}-(\d+)/);
+    if (match) next = parseInt(match[1], 10) + 1;
+  }
+  return `${prefix}${next.toString().padStart(4, "0")}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GET PAYMENT RECEIPT (full data with invoice + client + branding)
+// ═══════════════════════════════════════════════════════════════
+
+export interface PaymentReceiptData {
+  payment: Payment;
+  invoice: {
+    id: string;
+    invoiceNumber: string;
+    clientName: string;
+    clientEmail: string | null;
+    clientPhone: string | null;
+    clientAddress: string | null;
+    total: number;
+    amountPaid: number;
+    amountDue: number;
+    currency: string;
+    status: string;
+  };
+  company: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    website: string | null;
+    taxId: string | null;
+    logoUrl: string | null;
+    brandColor: string;
+  };
+  receiptNumber: string;
+}
+
+export async function getPaymentReceipt(
+  siteId: string,
+  paymentId: string,
+): Promise<PaymentReceiptData> {
+  const supabase = await getModuleClient();
+
+  // Fetch payment
+  const { data: payment, error: payErr } = await supabase
+    .from(INV_TABLES.payments)
+    .select("*")
+    .eq("id", paymentId)
+    .eq("site_id", siteId)
+    .single();
+  if (payErr || !payment) throw new Error("Payment not found");
+
+  // Fetch invoice
+  const { data: invoice, error: invErr } = await supabase
+    .from(INV_TABLES.invoices)
+    .select("*")
+    .eq("id", payment.invoice_id)
+    .single();
+  if (invErr || !invoice) throw new Error("Invoice not found");
+
+  // Fetch settings for branding
+  const { data: settings } = await supabase
+    .from(INV_TABLES.settings)
+    .select("*")
+    .eq("site_id", siteId)
+    .single();
+
+  // Use persisted receipt number, or generate fallback from payment number
+  const receiptNumber =
+    payment.receipt_number ||
+    (payment.payment_number
+      ? payment.payment_number.replace("PAY-", "RCT-")
+      : `RCT-${paymentId.slice(0, 8).toUpperCase()}`);
+
+  return {
+    payment: mapRecord<Payment>(payment),
+    invoice: {
+      id: invoice.id,
+      invoiceNumber: invoice.invoice_number,
+      clientName: invoice.client_name,
+      clientEmail: invoice.client_email,
+      clientPhone: invoice.client_phone,
+      clientAddress: invoice.client_address,
+      total: invoice.total,
+      amountPaid: invoice.amount_paid,
+      amountDue: invoice.amount_due,
+      currency: invoice.currency,
+      status: invoice.status,
+    },
+    company: {
+      name: settings?.company_name || null,
+      email: settings?.company_email || null,
+      phone: settings?.company_phone || null,
+      address: settings?.company_address || null,
+      website: settings?.company_website || null,
+      taxId: settings?.company_tax_id || null,
+      logoUrl: settings?.brand_logo_url || null,
+      brandColor: settings?.brand_color || "#1f2937",
+    },
+    receiptNumber,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT PAYMENTS CSV
+// ═══════════════════════════════════════════════════════════════
+
+export async function exportPaymentsCsv(
+  siteId: string,
+  filters?: PaymentFilters,
+): Promise<string> {
+  const supabase = await getModuleClient();
+
+  let query = supabase
+    .from(INV_TABLES.payments)
+    .select("*")
+    .eq("site_id", siteId)
+    .order("payment_date", { ascending: false });
+
+  if (filters?.method) query = query.eq("payment_method", filters.method);
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.type) query = query.eq("type", filters.type);
+  if (filters?.dateFrom) query = query.gte("payment_date", filters.dateFrom);
+  if (filters?.dateTo) query = query.lte("payment_date", filters.dateTo);
+  if (filters?.search) {
+    query = query.or(
+      `payment_number.ilike.%${filters.search}%,transaction_reference.ilike.%${filters.search}%`,
+    );
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const rows = mapRecords<Payment>(data || []);
+  const header =
+    "Payment Number,Type,Amount,Currency,Date,Method,Reference,Status,Notes";
+  const csvRows = rows.map((p) =>
+    [
+      p.paymentNumber || "",
+      p.type,
+      (p.amount / 100).toFixed(2),
+      p.currency,
+      p.paymentDate,
+      p.paymentMethod,
+      (p.transactionReference || "").replace(/,/g, ";"),
+      p.status,
+      (p.notes || "").replace(/,/g, ";").replace(/\n/g, " "),
+    ].join(","),
+  );
+
+  return [header, ...csvRows].join("\n");
 }

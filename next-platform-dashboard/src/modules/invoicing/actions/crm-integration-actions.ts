@@ -239,7 +239,7 @@ export async function createInvoiceFromContact(
 ): Promise<{ redirectUrl: string }> {
   // Redirect to invoice create page with contact pre-filled
   return {
-    redirectUrl: `/invoicing/invoices/new?contactId=${contactId}&siteId=${siteId}`,
+    redirectUrl: `/dashboard/sites/${siteId}/invoicing/invoices/new?contactId=${contactId}`,
   };
 }
 
@@ -259,7 +259,7 @@ export async function createInvoiceFromDeal(
     .single();
 
   if (!deal) {
-    return { redirectUrl: `/invoicing/invoices/new?siteId=${siteId}` };
+    return { redirectUrl: `/dashboard/sites/${siteId}/invoicing/invoices/new` };
   }
 
   // Get contact details if available
@@ -281,7 +281,6 @@ export async function createInvoiceFromDeal(
 
   // Build redirect URL with pre-filled data
   const params = new URLSearchParams({
-    siteId,
     sourceType: "crm_deal",
     sourceId: dealId,
   });
@@ -294,6 +293,6 @@ export async function createInvoiceFromDeal(
   if (deal.name) params.set("reference", `Deal: ${deal.name}`);
 
   return {
-    redirectUrl: `/invoicing/invoices/new?${params.toString()}`,
+    redirectUrl: `/dashboard/sites/${siteId}/invoicing/invoices/new?${params.toString()}`,
   };
 }
