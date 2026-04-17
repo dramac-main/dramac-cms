@@ -58,6 +58,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ITEM_TYPE_LABELS } from "../lib/invoicing-constants";
+import { ImportEcommerceItems } from "./import-ecommerce-items";
+import { ImportBookingServices } from "./import-booking-services";
 
 interface ItemsCatalogProps {
   siteId: string;
@@ -161,7 +163,10 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
             Reusable items for invoices — products, services, and expenses.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex items-center gap-2">
+          <ImportEcommerceItems siteId={siteId} onImported={loadItems} />
+          <ImportBookingServices siteId={siteId} onImported={loadItems} />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-1.5" />
@@ -274,6 +279,7 @@ export function ItemsCatalog({ siteId }: ItemsCatalogProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search */}

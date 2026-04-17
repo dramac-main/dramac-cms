@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type {
   CreateInvoiceInput,
   CreateInvoiceLineItemInput,
 } from "../actions/invoice-actions";
-import type { Invoice } from "../types";
+import type { Invoice, InvoiceSourceType } from "../types";
 import { createInvoice, updateInvoice } from "../actions/invoice-actions";
 import { getInvoicingSettings, getTaxRates } from "../actions/settings-actions";
 import { ContactInvoicePicker } from "./contact-invoice-picker";
@@ -45,15 +45,30 @@ interface InvoiceFormProps {
 
 export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showClientFields, setShowClientFields] = useState(!invoice?.contactId);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Form state
-  const [contactId, setContactId] = useState(invoice?.contactId || "");
-  const [clientName, setClientName] = useState(invoice?.clientName || "");
-  const [clientEmail, setClientEmail] = useState(invoice?.clientEmail || "");
+  // Source tracking (e.g., from CRM deal)
+  const [sourceType] = useState<InvoiceSourceType | "">(
+    (invoice?.sourceType || searchParams.get("sourceType") || "") as InvoiceSourceType | "",
+  );
+  const [sourceId] = useState(
+    invoice?.sourceId || searchParams.get("sourceId") || "",
+  );
+
+  // Form state — pre-fill from query params (deal-to-invoice flow)
+  const [contactId, setContactId] = useState(
+    invoice?.contactId || searchParams.get("contactId") || "",
+  );
+  const [clientName, setClientName] = useState(
+    invoice?.clientName || searchParams.get("clientName") || "",
+  );
+  const [clientEmail, setClientEmail] = useState(
+    invoice?.clientEmail || searchParams.get("clientEmail") || "",
+  );
   const [clientPhone, setClientPhone] = useState(invoice?.clientPhone || "");
   const [clientAddress, setClientAddress] = useState(
     invoice?.clientAddress || "",
@@ -82,34 +97,51 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
     invoice?.internalNotes || "",
   );
   const [footer, setFooter] = useState(invoice?.footer || "");
-  const [reference, setReference] = useState(invoice?.reference || "");
+  const [reference, setReference] = useState(
+    invoice?.reference || searchParams.get("reference") || "",
+  );
 
   // Default tax rate from settings
   const [defaultTaxRateId, setDefaultTaxRateId] = useState<string | null>(null);
   const [defaultTaxRate, setDefaultTaxRate] = useState<number>(0);
   const [companyName, setCompanyName] = useState("");
   const [companyLogoUrl, setCompanyLogoUrl] = useState("");
+  const [paymentInstructions, setPaymentInstructions] = useState("");
 
-  // Auto-populate defaults from settings on create
+  // Auto-populate defaults from settings
   useEffect(() => {
-    if (mode !== "create") return;
     getInvoicingSettings(siteId).then(async (s) => {
       if (!s) return;
-      if (!terms && s.defaultTerms) setTerms(s.defaultTerms);
-      if (!notes && s.defaultNotes) setNotes(s.defaultNotes);
-      if (s.defaultCurrency && currency === "ZMW")
-        setCurrency(s.defaultCurrency);
+      if (mode === "create") {
+        if (!terms && s.defaultTerms) setTerms(s.defaultTerms);
+        if (!notes && s.defaultNotes) setNotes(s.defaultNotes);
+        if (s.defaultCurrency && currency === "ZMW")
+          setCurrency(s.defaultCurrency);
+      }
       if (s.companyName) setCompanyName(s.companyName);
       if (s.brandLogoUrl) setCompanyLogoUrl(s.brandLogoUrl);
+      if (s.paymentInstructions) setPaymentInstructions(s.paymentInstructions);
       if (s.defaultTaxRateId) {
         setDefaultTaxRateId(s.defaultTaxRateId);
         const rates = await getTaxRates(siteId);
         const match = rates.find((r) => r.id === s.defaultTaxRateId);
-        if (match) setDefaultTaxRate(match.rate);
+        if (match) {
+          setDefaultTaxRate(match.rate);
+          // Apply default tax to the starter row on create
+          if (mode === "create") {
+            setLineItems((prev) =>
+              prev.map((li) =>
+                !li.taxRateId
+                  ? { ...li, taxRateId: s.defaultTaxRateId!, taxRate: match.rate }
+                  : li,
+              ),
+            );
+          }
+        }
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, mode]);
+  }, [siteId]);
 
   // Payment terms → auto-calc due date
   const calcDueDate = useCallback((fromDate: string, termsLabel: string) => {
@@ -138,7 +170,8 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
     calcDueDate(value, paymentTerms);
   };
 
-  // Line items
+  // Line items — pre-fill from deal amount if available
+  const dealAmount = searchParams.get("amount");
   const [lineItems, setLineItems] = useState<CreateInvoiceLineItemInput[]>(
     invoice?.lineItems?.map((li: any) => ({
       itemId: li.itemId || li.item_id,
@@ -152,7 +185,14 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
       discountValue: li.discountValue || li.discount_value,
       taxRateId: li.taxRateId || li.tax_rate_id,
       taxRate: li.taxRate || li.tax_rate,
-    })) || [{ name: "", quantity: 1, unitPrice: 0, sortOrder: 0 }],
+    })) || [
+      {
+        name: dealAmount ? (searchParams.get("reference") || "Deal Item") : "",
+        quantity: 1,
+        unitPrice: dealAmount ? Number(dealAmount) : 0,
+        sortOrder: 0,
+      },
+    ],
   );
 
   const handleContactSelect = (data: ContactInvoiceData) => {
@@ -207,6 +247,8 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
       internalNotes: internalNotes || undefined,
       footer: footer || undefined,
       reference: reference || undefined,
+      sourceType: sourceType || undefined,
+      sourceId: sourceId || undefined,
       lineItems: lineItems.filter((li) => li.name.trim()),
     };
 
@@ -545,8 +587,10 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
             }
             discountValue={discountType ? Math.round(discountValue * 100) : 0}
             notes={notes}
+            invoiceNumber={invoice?.invoiceNumber}
             companyName={companyName}
             companyLogoUrl={companyLogoUrl}
+            paymentInstructions={paymentInstructions}
           />
         </div>
       </div>
@@ -559,7 +603,10 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               <Eye className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-xl">
+          <SheetContent
+            side="bottom"
+            className="h-[90vh] overflow-y-auto rounded-t-xl"
+          >
             <SheetHeader>
               <SheetTitle>Invoice Preview</SheetTitle>
             </SheetHeader>
@@ -576,8 +623,10 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               }
               discountValue={discountType ? Math.round(discountValue * 100) : 0}
               notes={notes}
+              invoiceNumber={invoice?.invoiceNumber}
               companyName={companyName}
               companyLogoUrl={companyLogoUrl}
+              paymentInstructions={paymentInstructions}
             />
           </SheetContent>
         </Sheet>

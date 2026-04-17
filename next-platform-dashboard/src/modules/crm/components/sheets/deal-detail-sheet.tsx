@@ -120,9 +120,34 @@ export function DealDetailSheet({
   const [activityDialogOpen, setActivityDialogOpen] = useState(false)
   const [stages, setStages] = useState<PipelineStage[]>([])
   const [formData, setFormData] = useState<DealUpdate>({})
+  const [linkedInvoices, setLinkedInvoices] = useState<
+    { id: string; invoice_number: string; status: string; total: number }[]
+  >([])
   
   // Get deal
   const deal = deals.find(d => d.id === dealId)
+
+  // Load linked invoices for this deal
+  useEffect(() => {
+    if (!dealId || !siteId) { setLinkedInvoices([]); return }
+    async function load() {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        const { data } = await (supabase as any)
+          .from('mod_invmod01_invoices')
+          .select('id, invoice_number, status, total')
+          .eq('site_id', siteId)
+          .eq('source_type', 'crm_deal')
+          .eq('source_id', dealId)
+          .order('created_at', { ascending: false })
+        setLinkedInvoices(data || [])
+      } catch {
+        setLinkedInvoices([])
+      }
+    }
+    load()
+  }, [dealId, siteId])
   
   // Load stages when deal changes
   useEffect(() => {
@@ -601,6 +626,31 @@ export function DealDetailSheet({
                   <div>Updated: {new Date(deal.updated_at).toLocaleString()}</div>
                 </div>
                 
+                {/* Linked Invoices */}
+                {linkedInvoices.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Linked Invoices</Label>
+                    <div className="space-y-1">
+                      {linkedInvoices.map((inv) => (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
+                          onClick={() => window.open(`/dashboard/sites/${siteId}/invoicing/invoices/${inv.id}`, '_blank')}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="font-mono text-xs">{inv.invoice_number}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">{inv.status}</Badge>
+                            <span className="font-medium">{formatCurrency(inv.total / 100)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Delete button */}
                 <div className="pt-4">
                   <Button 

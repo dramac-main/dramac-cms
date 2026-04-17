@@ -176,3 +176,196 @@ export async function getItemCategories(siteId: string): Promise<string[]> {
   const categories = [...new Set((data || []).map((d: any) => d.category))];
   return categories.filter(Boolean) as string[];
 }
+
+// ─── Cross-Module Import ───────────────────────────────────────
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+}
+
+export async function getEcommerceProducts(
+  siteId: string,
+): Promise<
+  { id: string; name: string; base_price: number; sku: string | null; description: string | null; status: string | null }[]
+> {
+  const supabase = await getModuleClient();
+  const { data, error } = await supabase
+    .from("mod_ecommod01_products")
+    .select("id, name, base_price, sku, description, status")
+    .eq("site_id", siteId)
+    .eq("status", "active")
+    .order("name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function importEcommerceProducts(
+  siteId: string,
+  productIds: string[],
+): Promise<ImportResult> {
+  const supabase = await getModuleClient();
+
+  // Get selected products
+  const { data: products, error: fetchErr } = await supabase
+    .from("mod_ecommod01_products")
+    .select("id, name, description, base_price, sku")
+    .eq("site_id", siteId)
+    .in("id", productIds);
+
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!products || products.length === 0)
+    return { imported: 0, skipped: 0, errors: ["No products found"] };
+
+  // Check existing SKUs to prevent duplicates
+  const skus = products
+    .map((p: any) => p.sku)
+    .filter(Boolean) as string[];
+
+  let existingSkus = new Set<string>();
+  if (skus.length > 0) {
+    const { data: existing } = await supabase
+      .from(INV_TABLES.items)
+      .select("sku")
+      .eq("site_id", siteId)
+      .in("sku", skus);
+    existingSkus = new Set(
+      (existing || []).map((e: any) => e.sku).filter(Boolean),
+    );
+  }
+
+  let imported = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+
+  for (const product of products) {
+    const p = product as {
+      id: string;
+      name: string;
+      description: string | null;
+      base_price: number;
+      sku: string | null;
+    };
+
+    if (p.sku && existingSkus.has(p.sku)) {
+      skipped++;
+      continue;
+    }
+
+    const { error: insertErr } = await supabase
+      .from(INV_TABLES.items)
+      .insert({
+        site_id: siteId,
+        name: p.name,
+        description: p.description || null,
+        type: "product" as ItemType,
+        unit_price: p.base_price,
+        sku: p.sku || null,
+        category: "E-Commerce",
+        sort_order: 0,
+        metadata: { source: "ecommerce", source_id: p.id },
+      });
+
+    if (insertErr) {
+      errors.push(`${p.name}: ${insertErr.message}`);
+    } else {
+      imported++;
+    }
+  }
+
+  return { imported, skipped, errors };
+}
+
+export async function getBookingServices(
+  siteId: string,
+): Promise<
+  { id: string; name: string; price: number | null; description: string | null; duration_minutes: number }[]
+> {
+  const supabase = await getModuleClient();
+  const { data, error } = await supabase
+    .from("mod_bookmod01_services")
+    .select("id, name, price, description, duration_minutes")
+    .eq("site_id", siteId)
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function importBookingServices(
+  siteId: string,
+  serviceIds: string[],
+): Promise<ImportResult> {
+  const supabase = await getModuleClient();
+
+  // Get selected services
+  const { data: services, error: fetchErr } = await supabase
+    .from("mod_bookmod01_services")
+    .select("id, name, description, price, duration_minutes")
+    .eq("site_id", siteId)
+    .in("id", serviceIds);
+
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!services || services.length === 0)
+    return { imported: 0, skipped: 0, errors: ["No services found"] };
+
+  // Check existing by metadata source_id to prevent duplicates
+  const { data: existing } = await supabase
+    .from(INV_TABLES.items)
+    .select("metadata")
+    .eq("site_id", siteId)
+    .eq("category", "Booking");
+
+  const existingSourceIds = new Set<string>();
+  for (const e of existing || []) {
+    const meta = (e as any).metadata;
+    if (meta?.source === "booking" && meta?.source_id) {
+      existingSourceIds.add(meta.source_id);
+    }
+  }
+
+  let imported = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+
+  for (const service of services) {
+    const s = service as {
+      id: string;
+      name: string;
+      description: string | null;
+      price: number | null;
+      duration_minutes: number;
+    };
+
+    if (existingSourceIds.has(s.id)) {
+      skipped++;
+      continue;
+    }
+
+    const { error: insertErr } = await supabase
+      .from(INV_TABLES.items)
+      .insert({
+        site_id: siteId,
+        name: s.name,
+        description: s.description
+          ? `${s.description} (${s.duration_minutes} min)`
+          : `${s.duration_minutes} min service`,
+        type: "service" as ItemType,
+        unit_price: s.price || 0,
+        category: "Booking",
+        sort_order: 0,
+        metadata: { source: "booking", source_id: s.id },
+      });
+
+    if (insertErr) {
+      errors.push(`${s.name}: ${insertErr.message}`);
+    } else {
+      imported++;
+    }
+  }
+
+  return { imported, skipped, errors };
+}

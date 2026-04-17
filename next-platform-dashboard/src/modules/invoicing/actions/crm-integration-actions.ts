@@ -282,7 +282,7 @@ export async function createInvoiceFromDeal(
   // Build redirect URL with pre-filled data
   const params = new URLSearchParams({
     siteId,
-    sourceType: "deal",
+    sourceType: "crm_deal",
     sourceId: dealId,
   });
 

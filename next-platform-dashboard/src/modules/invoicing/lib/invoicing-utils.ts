@@ -103,13 +103,16 @@ export function calculateLineItemTotals(
   let taxAmount = 0;
   if (taxMode === "inclusive") {
     // Tax is already included in the price
-    taxAmount = bankersRound(afterDiscount - afterDiscount / (1 + taxRate / 100));
+    taxAmount = bankersRound(
+      afterDiscount - afterDiscount / (1 + taxRate / 100),
+    );
   } else {
     // Exclusive (default) and compound both use the same single-rate formula
     taxAmount = bankersRound((afterDiscount * taxRate) / 100);
   }
 
-  const total = taxMode === "inclusive" ? afterDiscount : afterDiscount + taxAmount;
+  const total =
+    taxMode === "inclusive" ? afterDiscount : afterDiscount + taxAmount;
 
   return { subtotal: rawSubtotal, discountAmount, taxAmount, total };
 }
@@ -134,7 +137,7 @@ export function calculateInvoiceTotals(
   total: number;
 } {
   const subtotal = lineItems.reduce((sum, li) => sum + li.subtotal, 0);
-  const taxAmount = lineItems.reduce((sum, li) => sum + li.taxAmount, 0);
+  const lineLevelTax = lineItems.reduce((sum, li) => sum + li.taxAmount, 0);
 
   let discountAmount = 0;
   if (invoiceDiscountType === "percentage") {
@@ -143,6 +146,13 @@ export function calculateInvoiceTotals(
   } else if (invoiceDiscountType === "fixed") {
     // Fixed discount cannot exceed subtotal
     discountAmount = Math.min(Math.max(invoiceDiscountValue, 0), subtotal);
+  }
+
+  // Proportionally reduce tax when invoice-level discount reduces the taxable base
+  let taxAmount = lineLevelTax;
+  if (discountAmount > 0 && subtotal > 0) {
+    const discountRatio = discountAmount / subtotal;
+    taxAmount = bankersRound(lineLevelTax * (1 - discountRatio));
   }
 
   const total = subtotal - discountAmount + taxAmount;

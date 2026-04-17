@@ -8,6 +8,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -15,8 +16,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { User, Building2, ChevronsUpDown, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { User, Building2, ChevronsUpDown, Check, UserPlus, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatInvoiceAmount } from "../lib/invoicing-utils";
 
 interface Contact {
   id: string;
@@ -33,6 +36,8 @@ interface Contact {
   postal_code?: string | null;
   country?: string | null;
   custom_fields?: Record<string, unknown> | null;
+  // Outstanding balance from invoices
+  outstanding?: number;
 }
 
 export interface ContactInvoiceData {
@@ -70,11 +75,38 @@ export function ContactInvoicePicker({
         const supabase = createClient();
         const { data } = await (supabase as any)
           .from("mod_crmmod01_contacts")
-          .select("id, name, email, phone, company_name, address, address_line_1, address_line_2, city, state, postal_code, country, custom_fields")
+          .select(
+            "id, name, email, phone, company_name, address, address_line_1, address_line_2, city, state, postal_code, country, custom_fields",
+          )
           .eq("site_id", siteId)
           .order("name", { ascending: true })
           .limit(200);
-        setContacts((data as Contact[]) || []);
+        const contactList = (data as Contact[]) || [];
+
+        // Fetch outstanding balances per contact
+        if (contactList.length > 0) {
+          const contactIds = contactList.map((c) => c.id);
+          const { data: invoices } = await (supabase as any)
+            .from("mod_invmod01_invoices")
+            .select("contact_id, amount_due")
+            .in("contact_id", contactIds)
+            .in("status", ["sent", "viewed", "partial", "overdue"]);
+
+          if (invoices) {
+            const balanceMap = new Map<string, number>();
+            for (const inv of invoices as { contact_id: string; amount_due: number }[]) {
+              balanceMap.set(
+                inv.contact_id,
+                (balanceMap.get(inv.contact_id) || 0) + (inv.amount_due || 0),
+              );
+            }
+            for (const c of contactList) {
+              c.outstanding = balanceMap.get(c.id) || 0;
+            }
+          }
+        }
+
+        setContacts(contactList);
       } catch {
         setContacts([]);
       } finally {
@@ -83,6 +115,16 @@ export function ContactInvoicePicker({
     }
     loadContacts();
   }, [siteId]);
+
+  // Recent contacts: those with outstanding invoices, sorted by amount
+  const recentContacts = useMemo(
+    () =>
+      contacts
+        .filter((c) => (c.outstanding || 0) > 0)
+        .sort((a, b) => (b.outstanding || 0) - (a.outstanding || 0))
+        .slice(0, 5),
+    [contacts],
+  );
 
   const filtered = useMemo(() => {
     if (!search) return contacts;
@@ -94,6 +136,83 @@ export function ContactInvoicePicker({
         c.company_name?.toLowerCase().includes(q),
     );
   }, [contacts, search]);
+
+  const handleSelect = (contact: Contact) => {
+    setSelectedName(contact.name);
+
+    // Build structured address from CRM fields
+    const addressParts = [
+      contact.address_line_1,
+      contact.address_line_2,
+      [contact.city, contact.state, contact.postal_code]
+        .filter(Boolean)
+        .join(", "),
+      contact.country,
+    ].filter(Boolean);
+    const fullAddress =
+      addressParts.length > 0
+        ? addressParts.join("\n")
+        : contact.address || null;
+
+    // Extract invoice-relevant fields from custom_fields
+    const cf = contact.custom_fields || {};
+    const taxId =
+      (cf.tax_id as string) ||
+      (cf.tpin as string) ||
+      (cf.vat_number as string) ||
+      null;
+    const preferredCurrency = (cf.preferred_currency as string) || null;
+    const paymentTerms = (cf.payment_terms as string) || null;
+
+    onSelect({
+      contactId: contact.id,
+      clientName: contact.name,
+      clientEmail: contact.email,
+      clientPhone: contact.phone,
+      clientAddress: fullAddress,
+      clientTaxId: taxId,
+      preferredCurrency,
+      paymentTerms,
+    });
+    setOpen(false);
+  };
+
+  const renderContactItem = (contact: Contact) => (
+    <CommandItem
+      key={contact.id}
+      onSelect={() => handleSelect(contact)}
+    >
+      <Check
+        className={cn(
+          "mr-2 h-4 w-4",
+          value === contact.id ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <User className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="font-medium truncate">
+            {contact.name}
+          </span>
+        </div>
+        <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+          {contact.email && <span>{contact.email}</span>}
+          {contact.company_name && (
+            <span className="flex items-center gap-0.5">
+              <Building2 className="h-3 w-3" />
+              {contact.company_name}
+            </span>
+          )}
+        </div>
+      </div>
+      {(contact.outstanding || 0) > 0 && (
+        <Badge variant="outline" className="ml-2 text-xs shrink-0 gap-1">
+          <AlertTriangle className="h-3 w-3 text-amber-500" />
+          {formatInvoiceAmount(contact.outstanding!)}
+        </Badge>
+      )}
+    </CommandItem>
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -107,7 +226,7 @@ export function ContactInvoicePicker({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
+      <PopoverContent className="w-[440px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search contacts…"
@@ -118,77 +237,34 @@ export function ContactInvoicePicker({
             <CommandEmpty>
               {loading ? "Loading…" : "No contacts found."}
             </CommandEmpty>
+            {/* Recent contacts with outstanding balances */}
+            {!search && recentContacts.length > 0 && (
+              <>
+                <CommandGroup heading="Outstanding Invoices">
+                  {recentContacts.map(renderContactItem)}
+                </CommandGroup>
+                <CommandSeparator />
+              </>
+            )}
+            <CommandGroup heading={search ? "Results" : "All Contacts"}>
+              {filtered.map(renderContactItem)}
+            </CommandGroup>
+            {/* Create New Contact link */}
+            <CommandSeparator />
             <CommandGroup>
-              {filtered.map((contact) => (
-                <CommandItem
-                  key={contact.id}
-                  onSelect={() => {
-                    setSelectedName(contact.name);
-
-                    // Build structured address from CRM fields
-                    const addressParts = [
-                      contact.address_line_1,
-                      contact.address_line_2,
-                      [contact.city, contact.state, contact.postal_code]
-                        .filter(Boolean)
-                        .join(", "),
-                      contact.country,
-                    ].filter(Boolean);
-                    const fullAddress =
-                      addressParts.length > 0
-                        ? addressParts.join("\n")
-                        : contact.address || null;
-
-                    // Extract invoice-relevant fields from custom_fields
-                    const cf = contact.custom_fields || {};
-                    const taxId =
-                      (cf.tax_id as string) ||
-                      (cf.tpin as string) ||
-                      (cf.vat_number as string) ||
-                      null;
-                    const preferredCurrency =
-                      (cf.preferred_currency as string) || null;
-                    const paymentTerms =
-                      (cf.payment_terms as string) || null;
-
-                    onSelect({
-                      contactId: contact.id,
-                      clientName: contact.name,
-                      clientEmail: contact.email,
-                      clientPhone: contact.phone,
-                      clientAddress: fullAddress,
-                      clientTaxId: taxId,
-                      preferredCurrency,
-                      paymentTerms,
-                    });
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === contact.id ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="font-medium truncate">
-                        {contact.name}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                      {contact.email && <span>{contact.email}</span>}
-                      {contact.company_name && (
-                        <span className="flex items-center gap-0.5">
-                          <Building2 className="h-3 w-3" />
-                          {contact.company_name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CommandItem>
-              ))}
+              <CommandItem
+                onSelect={() => {
+                  window.open(
+                    `/dashboard/sites/${siteId}/crm/contacts/new`,
+                    "_blank",
+                  );
+                  setOpen(false);
+                }}
+                className="text-primary"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create New Contact
+              </CommandItem>
             </CommandGroup>
           </CommandList>
         </Command>

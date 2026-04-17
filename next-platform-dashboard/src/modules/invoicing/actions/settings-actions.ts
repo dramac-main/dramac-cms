@@ -146,13 +146,15 @@ export async function getAutoPopulateData(
   // 3. Merge: site settings > agency settings > empty
   // Resolve flat fields first, then nested theme.* camelCase fallback
   return {
-    companyName: (settings as any).business_name || site?.name || agency?.name || "",
+    companyName:
+      (settings as any).business_name || site?.name || agency?.name || "",
     companyEmail: agency?.billing_email || "",
     companyPhone: "", // Not stored at site/agency level
     companyWebsite: agency?.website || "",
     companyAddress: "", // Not stored at site/agency level
     companyTaxId: "", // Not stored at site/agency level
-    brandColor: (settings as any).primary_color || theme.primaryColor || "#000000",
+    brandColor:
+      (settings as any).primary_color || theme.primaryColor || "#000000",
     brandLogoUrl: (settings as any).logo_url || theme.logoUrl || "",
     brandFontHeading: (settings as any).font_heading || theme.fontHeading || "",
     brandFontBody: (settings as any).font_body || theme.fontBody || "",

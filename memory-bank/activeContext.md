@@ -12,7 +12,7 @@ The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves
 
 **Files Modified (8):**
 
-- `src/modules/invoicing/actions/settings-actions.ts` — Expanded AutoPopulateData with brandFontHeading/brandFontBody; theme.* fallback resolution (flat → nested); business_name resolution for companyName
+- `src/modules/invoicing/actions/settings-actions.ts` — Expanded AutoPopulateData with brandFontHeading/brandFontBody; theme.\* fallback resolution (flat → nested); business_name resolution for companyName
 - `src/modules/invoicing/components/contact-invoice-picker.tsx` — Expanded CRM contact picker with richer fields
 - `src/modules/invoicing/components/invoice-form.tsx` — Default tax rate preselection from settings; Sheet replaces Dialog for mobile preview (bottom slide-up 90vh); hasAttemptedSubmit state with line item validation on submit; companyName/companyLogoUrl loaded from settings and passed to InvoicePreview
 - `src/modules/invoicing/components/invoice-line-items.tsx` — defaultTaxRateId/defaultTaxRate props for new rows; exported validateLineItem() function; showErrors prop with inline red borders and error messages
@@ -27,7 +27,7 @@ The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves
 - bankersRound() replaces all Math.round() in calculation engine to eliminate systematic bias
 - Line item validation: name required, quantity > 0, unitPrice >= 0 — inline red borders + toast on submit
 - Mobile preview uses Sheet (bottom slide-up) instead of Dialog for better UX
-- Site branding resolution: flat fields first (primary_color, logo_url), then theme.* nested fallback
+- Site branding resolution: flat fields first (primary_color, logo_url), then theme.\* nested fallback
 - Tax breakdown in preview groups by rate (e.g., "Tax (16%): $X", "Tax (5%): $Y")
 
 **TSC:** 219 errors (zero new, matches pre-existing baseline — all marketing module)

@@ -66,7 +66,10 @@ export function InvoicePreview({
   validItems.forEach((item, i) => {
     const rate = item.taxRate || 0;
     if (rate > 0) {
-      taxByRate.set(rate, (taxByRate.get(rate) || 0) + computedItems[i].taxAmount);
+      taxByRate.set(
+        rate,
+        (taxByRate.get(rate) || 0) + computedItems[i].taxAmount,
+      );
     }
   });
 

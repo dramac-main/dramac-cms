@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CreateInvoiceLineItemInput } from "../actions/invoice-actions";
 import type { Item } from "../types";
+import { getTaxRates } from "../actions/settings-actions";
 import {
   calculateLineItemTotals,
   formatInvoiceAmount,
@@ -22,8 +23,8 @@ export function validateLineItem(
   const errors: Record<string, string> = {};
   if (!item.name?.trim()) errors.name = "Item name is required";
   if (!item.quantity || item.quantity <= 0) errors.quantity = "Qty must be > 0";
-  if (item.unitPrice == null || item.unitPrice < 0)
-    errors.unitPrice = "Price must be ≥ 0";
+  if (item.unitPrice == null || item.unitPrice <= 0)
+    errors.unitPrice = "Price must be > 0";
   return errors;
 }
 
@@ -114,7 +115,11 @@ function LineItemRow({
           type="number"
           value={item.unitPrice / 100}
           onChange={(e) =>
-            onChange(index, "unitPrice", Math.round(Number(e.target.value) * 100))
+            onChange(
+              index,
+              "unitPrice",
+              Math.round(Number(e.target.value) * 100),
+            )
           }
           min={0}
           step={0.01}
@@ -183,6 +188,18 @@ export function InvoiceLineItems({
   defaultTaxRate,
   showErrors,
 }: InvoiceLineItemsProps) {
+  // Load tax rates for resolving catalog item tax rates
+  const [taxRatesMap, setTaxRatesMap] = useState<Map<string, number>>(
+    new Map(),
+  );
+  useEffect(() => {
+    getTaxRates(siteId).then((rates) => {
+      const m = new Map<string, number>();
+      for (const r of rates) m.set(r.id, r.rate);
+      setTaxRatesMap(m);
+    });
+  }, [siteId]);
+
   const handleFieldChange = useCallback(
     (index: number, field: string, value: unknown) => {
       const updated = [...items];
@@ -216,6 +233,9 @@ export function InvoiceLineItems({
 
   const handleItemPickerSelect = useCallback(
     (item: Item) => {
+      const resolvedRate = item.taxRateId
+        ? taxRatesMap.get(item.taxRateId) ?? defaultTaxRate ?? 0
+        : defaultTaxRate ?? 0;
       onChange([
         ...items,
         {
@@ -225,12 +245,13 @@ export function InvoiceLineItems({
           quantity: 1,
           unitPrice: item.unitPrice,
           unit: item.unit,
-          taxRateId: item.taxRateId,
+          taxRateId: item.taxRateId || defaultTaxRateId,
+          taxRate: resolvedRate,
           sortOrder: items.length,
         },
       ]);
     },
-    [items, onChange],
+    [items, onChange, taxRatesMap, defaultTaxRateId, defaultTaxRate],
   );
 
   // Compute grand total from all line items
