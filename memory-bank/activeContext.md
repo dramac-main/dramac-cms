@@ -6,7 +6,34 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Invoice Module Overhaul — Master Guide Created ✅
+## Latest: INVFIX-01 — Settings Auto-Populate + Invoice Form UX ✅
+
+### Session 1 (INVFIX-01): Complete
+
+**Commit:** `3fd6b6dd` — `feat(invfix): INVFIX-01 settings branding auto-populate + invoice form UX`
+
+**Files Modified (4):**
+- `src/modules/invoicing/actions/settings-actions.ts` — Added `getAutoPopulateData` action (queries sites + agencies for branding), `uploadInvoiceLogo` server action (Supabase `branding` bucket)
+- `src/modules/invoicing/components/invoicing-settings-form.tsx` — Auto-populate button (Wand2 icon), info banner, logo upload with preview, `brandLogoUrl` in form state
+- `src/modules/invoicing/components/invoice-form.tsx` — Contact summary card (collapsible), payment terms → due date auto-calc, responsive preview at md (was xl), floating preview button for mobile (Dialog), auto-populate notes/terms from settings on create
+- `src/modules/invoicing/lib/invoicing-bootstrap.ts` — Auto-populate company info from site branding on initial seed
+
+**Key Design Decisions:**
+- Auto-populate fills only EMPTY fields (never overwrites user data)
+- Brand color only auto-populates if still at default #000000
+- Bootstrap auto-populate is non-fatal (try/catch with console.warn)
+- Invoice logo stored in `branding` bucket at `sites/{siteId}/invoice-logo-{timestamp}.{ext}`
+- agencies table doesn't have phone/address columns — those fields left empty for manual entry
+
+**TSC:** 445 lines (zero new errors, matches pre-existing baseline)
+
+### Next Steps
+
+1. **Session 2 (INVFIX-02)**: Calculation engine fix (invoice number race condition) + line item validation + live preview enhancement
+2. **Session 3 (INVFIX-03)**: CRM deep integration + e-commerce product import
+3. **Session 4 (INVFIX-04)**: Online payments + reconciliation + receipt PDF
+
+## Previous: Invoice Module Overhaul — Master Guide Created ✅
 
 ### INVFIX Master Plan Created
 

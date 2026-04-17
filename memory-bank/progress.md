@@ -198,7 +198,7 @@
 
 | Phase     | Description                                                  | Status         |
 | --------- | ------------------------------------------------------------ | -------------- |
-| INVFIX-01 | Settings Auto-Populate from Site Branding + Invoice Form UX  | 📋 Not Started |
+| INVFIX-01 | Settings Auto-Populate from Site Branding + Invoice Form UX  | ✅ Complete |
 | INVFIX-02 | Calculation Engine Fix, Line Item Validation, Live Preview   | 📋 Not Started |
 | INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | 📋 Not Started |
 | INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | 📋 Not Started |
