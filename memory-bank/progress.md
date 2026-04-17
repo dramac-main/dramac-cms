@@ -194,6 +194,29 @@
 
 ---
 
+## Wave 10: Invoice Module Overhaul (INVFIX) — IN PROGRESS
+
+| Phase     | Description                                                  | Status         |
+| --------- | ------------------------------------------------------------ | -------------- |
+| INVFIX-01 | Settings Auto-Populate from Site Branding + Invoice Form UX  | 📋 Not Started |
+| INVFIX-02 | Calculation Engine Fix, Line Item Validation, Live Preview   | 📋 Not Started |
+| INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | 📋 Not Started |
+| INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | 📋 Not Started |
+| INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | 📋 Not Started |
+| INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | 📋 Not Started |
+| INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | 📋 Not Started |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 📋 Not Started |
+| INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
+| INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
+| INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
+| INVFIX-12 | Delivery Notes, Route Cleanup, Admin Dashboard, Polish       | 📋 Not Started |
+
+**Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (10-session plan + prompts)
+
+**Scope:** Overhaul of existing invoicing module (187 files, 19 DB tables, 13 tabs). Fixes critical bugs (invoice number race condition, settings not auto-populating), adds missing features (delivery notes, email templates, dunning, reconciliation), expands Chiko AI to client portal, cleans up dead routes.
+
+---
+
 ## Additional Systems ✅ Complete
 
 | System                   | Description                                       | Status      |
@@ -246,21 +269,25 @@
 | Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
 | Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
 | Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
+| Jul 2026 | Billing Flow Deep Audit Session 8: Fix billing page wrong table (subscriptions→paddle_subscriptions), domain search debounce (useState→useRef), checkout successUrl, revalidatePath fixes — commit 94ce88d0         |
 
 ---
 
 ## Known Technical Debt
 
-| Issue                                  | Impact                                          | Priority |
-| -------------------------------------- | ----------------------------------------------- | -------- |
-| LemonSqueezy references in legacy code | Non-functional but present                      | Low      |
-| Craft.js still in package.json         | Unused since Studio migration                   | Low      |
-| `database.ts` is 580K+ chars           | Requires `--max-old-space-size=8192` for tsc    | Medium   |
-| Vercel GitHub webhook intermittent     | Deploy via `npx vercel --prod --yes` workaround | Low      |
-| Wave 6 industry verticals              | DB schemas ready but modules not built          | Planned  |
-| Dead /settings/subscription removed    | Was calling non-existent API                    | ✅ Fixed |
-| Hardcoded "DRAMAC" in billing          | Branding leaks in 3 components                  | ✅ Fixed |
-| Paddle env var CRLF issue              | Price IDs with \r\n cause 404s                  | ✅ Fixed |
+| Issue                                  | Impact                                                         | Priority |
+| -------------------------------------- | -------------------------------------------------------------- | -------- |
+| LemonSqueezy references in legacy code | Non-functional but present                                     | Low      |
+| Craft.js still in package.json         | Unused since Studio migration                                  | Low      |
+| `database.ts` is 580K+ chars           | Requires `--max-old-space-size=8192` for tsc                   | Medium   |
+| Vercel GitHub webhook intermittent     | Deploy via `npx vercel --prod --yes` workaround                | Low      |
+| Wave 6 industry verticals              | DB schemas ready but modules not built                         | Planned  |
+| Dead /settings/subscription removed    | Was calling non-existent API                                   | ✅ Fixed |
+| Hardcoded "DRAMAC" in billing          | Branding leaks in 3 components                                 | ✅ Fixed |
+| Paddle env var CRLF issue              | Price IDs with \r\n cause 404s                                 | ✅ Fixed |
+| Billing page showed "Free Plan"        | Fetched from old subscriptions table, not paddle_subscriptions | ✅ Fixed |
+| Domain search fired on partial input   | useState for timeout ID caused stale clearTimeout              | ✅ Fixed |
+| revalidatePath pointed to old route    | 5 calls used /dashboard/billing instead of /settings/billing   | ✅ Fixed |
 
 # Progress: What Works & What's Left
 

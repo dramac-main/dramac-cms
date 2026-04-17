@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type {
   CreateInvoiceInput,
@@ -8,6 +8,7 @@ import type {
 } from "../actions/invoice-actions";
 import type { Invoice } from "../types";
 import { createInvoice, updateInvoice } from "../actions/invoice-actions";
+import { getInvoicingSettings } from "../actions/settings-actions";
 import { ContactInvoicePicker } from "./contact-invoice-picker";
 import { InvoiceLineItems } from "./invoice-line-items";
 import { InvoicePreview } from "./invoice-preview";
@@ -24,7 +25,14 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Save, Loader2, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelector } from "./currency-selector";
 
@@ -37,6 +45,8 @@ interface InvoiceFormProps {
 export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [showClientFields, setShowClientFields] = useState(!invoice?.contactId);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   // Form state
   const [contactId, setContactId] = useState(invoice?.contactId || "");
@@ -71,6 +81,45 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   );
   const [footer, setFooter] = useState(invoice?.footer || "");
   const [reference, setReference] = useState(invoice?.reference || "");
+
+  // Auto-populate defaults from settings on create
+  useEffect(() => {
+    if (mode !== "create") return;
+    getInvoicingSettings(siteId).then((s) => {
+      if (!s) return;
+      if (!terms && s.defaultTerms) setTerms(s.defaultTerms);
+      if (!notes && s.defaultNotes) setNotes(s.defaultNotes);
+      if (s.defaultCurrency && currency === "ZMW") setCurrency(s.defaultCurrency);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteId, mode]);
+
+  // Payment terms → auto-calc due date
+  const calcDueDate = useCallback((fromDate: string, termsLabel: string) => {
+    const daysMap: Record<string, number> = {
+      "Due on Receipt": 0,
+      "Net 7": 7,
+      "Net 14": 14,
+      "Net 30": 30,
+      "Net 60": 60,
+      "Net 90": 90,
+    };
+    const days = daysMap[termsLabel];
+    if (days === undefined) return;
+    const d = new Date(fromDate);
+    d.setDate(d.getDate() + days);
+    setDueDate(d.toISOString().split("T")[0]);
+  }, []);
+
+  const handlePaymentTermsChange = (value: string) => {
+    setPaymentTerms(value);
+    calcDueDate(issueDate, value);
+  };
+
+  const handleIssueDateChange = (value: string) => {
+    setIssueDate(value);
+    calcDueDate(value, paymentTerms);
+  };
 
   // Line items
   const [lineItems, setLineItems] = useState<CreateInvoiceLineItemInput[]>(
@@ -159,7 +208,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_400px] gap-6">
       {/* Form */}
       <div className="space-y-6">
         {/* Client Details */}
@@ -176,55 +225,87 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
                 onSelect={handleContactSelect}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="clientName">Client Name *</Label>
-                <Input
-                  id="clientName"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Client or company name"
-                />
+
+            {/* Summary card when contact is selected */}
+            {contactId && clientName && (
+              <div className="rounded-lg border bg-muted/50 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{clientName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {[clientEmail, clientPhone].filter(Boolean).join(" · ") || "No contact details"}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowClientFields(!showClientFields)}
+                  >
+                    {showClientFields ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="clientEmail">Email</Label>
-                <Input
-                  id="clientEmail"
-                  type="email"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="client@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="clientPhone">Phone</Label>
-                <Input
-                  id="clientPhone"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+260..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="clientTaxId">Tax ID</Label>
-                <Input
-                  id="clientTaxId"
-                  value={clientTaxId}
-                  onChange={(e) => setClientTaxId(e.target.value)}
-                  placeholder="TPIN"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="clientAddress">Address</Label>
-              <Textarea
-                id="clientAddress"
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
-                placeholder="Client address"
-                rows={2}
-              />
-            </div>
+            )}
+
+            {/* Editable fields — always shown if no contact, collapsible if contact selected */}
+            {(showClientFields || !contactId) && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="clientName">Client Name *</Label>
+                    <Input
+                      id="clientName"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      placeholder="Client or company name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientEmail">Email</Label>
+                    <Input
+                      id="clientEmail"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="client@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientPhone">Phone</Label>
+                    <Input
+                      id="clientPhone"
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      placeholder="+260..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientTaxId">Tax ID</Label>
+                    <Input
+                      id="clientTaxId"
+                      value={clientTaxId}
+                      onChange={(e) => setClientTaxId(e.target.value)}
+                      placeholder="TPIN"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="clientAddress">Address</Label>
+                  <Textarea
+                    id="clientAddress"
+                    value={clientAddress}
+                    onChange={(e) => setClientAddress(e.target.value)}
+                    placeholder="Client address"
+                    rows={2}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -241,7 +322,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
                   id="issueDate"
                   type="date"
                   value={issueDate}
-                  onChange={(e) => setIssueDate(e.target.value)}
+                  onChange={(e) => handleIssueDateChange(e.target.value)}
                 />
               </div>
               <div>
@@ -255,7 +336,7 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               </div>
               <div>
                 <Label htmlFor="paymentTerms">Payment Terms</Label>
-                <Select value={paymentTerms} onValueChange={setPaymentTerms}>
+                <Select value={paymentTerms} onValueChange={handlePaymentTermsChange}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -416,8 +497,8 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
         </div>
       </div>
 
-      {/* Live Preview */}
-      <div className="hidden xl:block">
+      {/* Live Preview — desktop */}
+      <div className="hidden md:block">
         <div className="sticky top-20">
           <InvoicePreview
             clientName={clientName}
@@ -434,6 +515,36 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
             notes={notes}
           />
         </div>
+      </div>
+
+      {/* Floating preview button — mobile */}
+      <div className="fixed bottom-6 right-6 md:hidden z-50">
+        <Dialog open={mobilePreviewOpen} onOpenChange={setMobilePreviewOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg" className="rounded-full shadow-lg h-14 w-14">
+              <Eye className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Invoice Preview</DialogTitle>
+            </DialogHeader>
+            <InvoicePreview
+              clientName={clientName}
+              clientEmail={clientEmail}
+              clientAddress={clientAddress}
+              issueDate={issueDate}
+              dueDate={dueDate}
+              currency={currency}
+              lineItems={lineItems}
+              discountType={
+                discountType ? (discountType as "percentage" | "fixed") : null
+              }
+              discountValue={discountType ? Math.round(discountValue * 100) : 0}
+              notes={notes}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

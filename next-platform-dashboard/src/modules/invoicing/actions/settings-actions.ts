@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import type { InvoicingSettings, TaxRate, CreateTaxRateInput } from "../types";
 
@@ -98,6 +99,102 @@ export async function updateInvoicingSettings(
 
   if (error) return { success: false, error: error.message };
   return { success: true };
+}
+
+// ─── Auto-Populate from Site Branding ──────────────────────────
+
+export interface AutoPopulateData {
+  companyName: string;
+  companyEmail: string;
+  companyPhone: string;
+  companyWebsite: string;
+  companyAddress: string;
+  companyTaxId: string;
+  brandColor: string;
+  brandLogoUrl: string;
+}
+
+export async function getAutoPopulateData(
+  siteId: string,
+): Promise<AutoPopulateData> {
+  const supabase = await getModuleClient();
+
+  // 1. Get site name + settings (branding, logo, colors)
+  const { data: site } = await supabase
+    .from("sites")
+    .select("name, settings, agency_id")
+    .eq("id", siteId)
+    .single();
+
+  // 2. Get agency details (company name, email, website)
+  let agency: any = null;
+  if (site?.agency_id) {
+    const { data: agencyData } = await supabase
+      .from("agencies")
+      .select("name, billing_email, website")
+      .eq("id", site.agency_id)
+      .single();
+    agency = agencyData;
+  }
+
+  const settings = site?.settings || {};
+
+  // 3. Merge: site settings > agency settings > empty
+  return {
+    companyName: site?.name || agency?.name || "",
+    companyEmail: agency?.billing_email || "",
+    companyPhone: "", // Not stored at site/agency level
+    companyWebsite: agency?.website || "",
+    companyAddress: "", // Not stored at site/agency level
+    companyTaxId: "", // Not stored at site/agency level
+    brandColor: settings.primary_color || "#000000",
+    brandLogoUrl: settings.logo_url || "",
+  };
+}
+
+// ─── Logo Upload ───────────────────────────────────────────────
+
+export async function uploadInvoiceLogo(
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const supabase = createAdminClient();
+  const file = formData.get("file") as File;
+  const siteId = formData.get("siteId") as string;
+
+  if (!file || !siteId) return { error: "Missing file or site ID" };
+
+  const validTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+  if (!validTypes.includes(file.type)) {
+    return { error: "Invalid file type. Please upload PNG, JPEG, WebP, or SVG." };
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    return { error: "File too large. Maximum size is 2MB." };
+  }
+
+  const fileExt = file.name.split(".").pop() || "png";
+  const fileName = `sites/${siteId}/invoice-logo-${Date.now()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("branding")
+    .upload(fileName, file, { cacheControl: "3600", upsert: true });
+
+  if (uploadError) {
+    console.error("[Invoicing] Logo upload error:", uploadError);
+    return { error: "Failed to upload logo" };
+  }
+
+  const { data: urlData } = supabase.storage
+    .from("branding")
+    .getPublicUrl(fileName);
+
+  // Save URL to invoicing settings
+  const client = await getModuleClient();
+  await client
+    .from(INV_TABLES.settings)
+    .update({ brand_logo_url: urlData.publicUrl, updated_at: new Date().toISOString() })
+    .eq("site_id", siteId);
+
+  return { url: urlData.publicUrl };
 }
 
 // ─── Tax Rates ─────────────────────────────────────────────────

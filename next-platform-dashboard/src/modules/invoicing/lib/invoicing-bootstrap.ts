@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { INV_TABLES, DEFAULT_EXPENSE_CATEGORIES } from "./invoicing-constants";
+import { getAutoPopulateData } from "../actions/settings-actions";
 
 /**
  * Seed default invoicing settings when the invoicing module is first installed for a site.
@@ -74,6 +75,31 @@ export async function seedDefaultInvoicingSettings(siteId: string): Promise<void
   }));
 
   await (supabase as any).from(INV_TABLES.expenseCategories).insert(categories);
+
+  // 4. Auto-populate company info from site branding
+  try {
+    const brandingData = await getAutoPopulateData(siteId);
+    if (brandingData) {
+      const updates: Record<string, string> = {};
+      if (brandingData.companyName) updates.company_name = brandingData.companyName;
+      if (brandingData.companyEmail) updates.company_email = brandingData.companyEmail;
+      if (brandingData.companyPhone) updates.company_phone = brandingData.companyPhone;
+      if (brandingData.companyWebsite) updates.company_website = brandingData.companyWebsite;
+      if (brandingData.companyAddress) updates.company_address = brandingData.companyAddress;
+      if (brandingData.companyTaxId) updates.company_tax_id = brandingData.companyTaxId;
+      if (brandingData.brandColor && brandingData.brandColor !== "#000000") {
+        updates.brand_color = brandingData.brandColor;
+      }
+      if (Object.keys(updates).length > 0) {
+        await (supabase as any)
+          .from(INV_TABLES.settings)
+          .update(updates)
+          .eq("site_id", siteId);
+      }
+    }
+  } catch (err) {
+    console.warn("[Invoicing] Auto-populate from branding failed (non-fatal):", err);
+  }
 
   console.log(`[Invoicing] Default settings, VAT rate, and expense categories seeded for site ${siteId}`);
 }

@@ -9,6 +9,8 @@ import {
   createTaxRate,
   updateTaxRate,
   deleteTaxRate,
+  getAutoPopulateData,
+  uploadInvoiceLogo,
 } from "../actions/settings-actions";
 import type { CreateTaxRateInput } from "../types";
 import { Button } from "@/components/ui/button";
@@ -53,7 +55,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Wand2, Info, Upload } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { CurrencySelector } from "./currency-selector";
 
@@ -66,6 +69,8 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [autoPopulating, setAutoPopulating] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Editable fields
   const [form, setForm] = useState({
@@ -89,6 +94,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
     companyWebsite: "",
     companyTaxId: "",
     brandColor: "#000000",
+    brandLogoUrl: "",
     paymentInstructions: "",
     timezone: "Africa/Lusaka",
   });
@@ -128,6 +134,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
             companyWebsite: s.companyWebsite ?? "",
             companyTaxId: s.companyTaxId ?? "",
             brandColor: s.brandColor,
+            brandLogoUrl: s.brandLogoUrl ?? "",
             paymentInstructions: s.paymentInstructions ?? "",
             timezone: s.timezone,
           });
@@ -136,6 +143,55 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
       })
       .finally(() => setLoading(false));
   }, [siteId]);
+
+  const handleAutoPopulate = async () => {
+    setAutoPopulating(true);
+    try {
+      const data = await getAutoPopulateData(siteId);
+      if (!data) {
+        toast.error("Could not load site branding data");
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        companyName: prev.companyName || data.companyName,
+        companyEmail: prev.companyEmail || data.companyEmail,
+        companyPhone: prev.companyPhone || data.companyPhone,
+        companyWebsite: prev.companyWebsite || data.companyWebsite,
+        companyAddress: prev.companyAddress || data.companyAddress,
+        companyTaxId: prev.companyTaxId || data.companyTaxId,
+        brandColor: prev.brandColor === "#000000" && data.brandColor !== "#000000" ? data.brandColor : prev.brandColor,
+        brandLogoUrl: prev.brandLogoUrl || data.brandLogoUrl,
+      }));
+      toast.success("Populated empty fields from site branding");
+    } catch {
+      toast.error("Failed to auto-populate");
+    } finally {
+      setAutoPopulating(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("siteId", siteId);
+      const result = await uploadInvoiceLogo(fd);
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.url) {
+        setForm((prev) => ({ ...prev, brandLogoUrl: result.url! }));
+        toast.success("Logo uploaded");
+      }
+    } catch {
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleSaveSettings = async () => {
     setSaving(true);
@@ -161,6 +217,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         companyWebsite: form.companyWebsite || null,
         companyTaxId: form.companyTaxId || null,
         brandColor: form.brandColor,
+        brandLogoUrl: form.brandLogoUrl || null,
         paymentInstructions: form.paymentInstructions || null,
         timezone: form.timezone,
       });
@@ -388,12 +445,36 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
 
         {/* Branding Tab */}
         <TabsContent value="branding" className="space-y-4 mt-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Company details can be auto-filled from your site branding settings.
+              Only empty fields will be updated.
+            </AlertDescription>
+          </Alert>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Company Information</CardTitle>
-              <CardDescription>
-                Appears on invoices sent to clients.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Company Information</CardTitle>
+                  <CardDescription>
+                    Appears on invoices sent to clients.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoPopulate}
+                  disabled={autoPopulating}
+                >
+                  {autoPopulating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="mr-2 h-4 w-4" />
+                  )}
+                  Auto-populate
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -459,6 +540,53 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                     setForm({ ...form, companyTaxId: e.target.value })
                   }
                 />
+              </div>
+              <div>
+                <Label>Company Logo</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  {form.brandLogoUrl ? (
+                    <img
+                      src={form.brandLogoUrl}
+                      alt="Invoice logo"
+                      className="h-12 w-auto max-w-[120px] rounded border object-contain"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded border border-dashed flex items-center justify-center text-muted-foreground">
+                      <Upload className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="logo-upload"
+                      className="cursor-pointer inline-flex items-center gap-2"
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingLogo}
+                        asChild
+                      >
+                        <span>
+                          {uploadingLogo ? (
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          ) : (
+                            <Upload className="mr-2 h-3 w-3" />
+                          )}
+                          {form.brandLogoUrl ? "Change" : "Upload"}
+                        </span>
+                      </Button>
+                    </Label>
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG. Max 2MB.</p>
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="brand-color">Brand Color</Label>

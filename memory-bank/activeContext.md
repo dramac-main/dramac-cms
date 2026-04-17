@@ -1,40 +1,89 @@
 # Active Context
 
-**Last Updated**: July 2026
+**Last Updated**: April 2026
 
 ## Current State
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Billing System Cleanup — Session 7 Complete ✅
+## Latest: Invoice Module Overhaul — Master Guide Created ✅
 
-### Session 7: Dead Page Removal, Env Trimming, NaN Guards, Branding Cleanup
+### INVFIX Master Plan Created
 
-Post-implementation cleanup of the billing system. Removed dead code, fixed edge cases, eliminated branding leaks.
+Comprehensive Master Implementation Guide (`phases/PHASE-INVFIX-MASTER-GUIDE.md`) and Session Brief (`phases/PHASE-INVFIX-SESSION-BRIEF.md`) created for a full overhaul of the existing invoicing module across 12 phases (INVFIX-01 through INVFIX-12), mapped to 10 sessions.
 
-**Deleted Files (2):**
+**Scope of Overhaul:**
 
-- `src/app/(dashboard)/settings/subscription/page.tsx` — Dead page calling non-existent `/api/billing/paddle/overview`, used wrong plan names
-- `src/components/settings/subscription-details.tsx` — 192-line component only used by the dead page
+- **INVFIX-01**: Settings auto-populate from site branding + invoice form UX improvements
+- **INVFIX-02**: Calculation engine fix (invoice number race condition), line item validation, live preview enhancement
+- **INVFIX-03**: CRM deep integration, e-commerce product import to items catalog, "Add from Catalog" enhancement
+- **INVFIX-04**: Payments — online payment processing, reconciliation tool, receipt PDF generation
+- **INVFIX-05**: Recurring invoices — full lifecycle, templates, auto-send, cron robustness
+- **INVFIX-06**: Vendors/Bills/POs — receive tracking, bill payment wiring, 3-way match
+- **INVFIX-07**: Expenses — approval workflow, receipt viewer, category budgets
+- **INVFIX-08**: Reports overhaul — cross-module data (e-commerce, booking, CRM), enhanced exports
+- **INVFIX-09**: Email system — 10 templates, auto-send on status change, dunning escalation with timeline
+- **INVFIX-10**: Client portal — full invoice experience, online pay, statement downloads
+- **INVFIX-11**: Ask Chiko — rename from "Chiko AI", portal expansion, sticky bottom-right widget, role-based data scoping
+- **INVFIX-12**: Delivery notes, route cleanup, super admin dashboard, quote-to-invoice conversion
 
-**Modified Files (7):**
+**Key Findings from Deep Audit:**
 
-- `src/lib/paddle/client.ts` — Added `.trim()` to all 13 env var reads in PADDLE_IDS; suppressed API key warning during production builds (guards: `typeof window === "undefined"`, `NODE_ENV !== "production"`, `NEXT_PHASE !== "phase-production-build"`)
-- `src/components/billing/usage-dashboard.tsx` — Added `Number.isFinite()` guards on Progress value and percent display to prevent NaN when limits are 0
-- `src/app/(dashboard)/dashboard/billing/success/page.tsx` — Changed `"Welcome to DRAMAC Pro!"` → `"Welcome to {PLATFORM.name}!"`
-- `src/components/billing/plan-comparison-table.tsx` — Replaced 2 hardcoded "DRAMAC" strings with `PLATFORM.name`
-- `src/components/billing/plan-change-dialog.tsx` — Replaced 3 hardcoded "DRAMAC"/"White-label" strings with `PLATFORM.name` references
-- `src/components/settings/index.ts` — Removed `SubscriptionDetails` export (deleted component)
-- `src/config/settings-navigation.ts` — Removed dead Subscription nav link, cleaned unused Receipt import
+- 187 existing files, 19 DB tables, 13 dashboard tabs, 14 prior phases (INV-01–INV-14) all "complete"
+- Critical: Invoice number has race condition (read-then-update, not atomic)
+- Critical: Settings don't auto-populate from site branding (100% manual entry)
+- Critical: Items catalog doesn't import from e-commerce products
+- Critical: Online payment not connected (UI exists, no processor wired)
+- Critical: Bill payment dialog created but never wired to bill detail page
+- High: Preview only visible on xl+ (1280px), tablets can't see it
+- High: Email templates exist but auto-send on status change missing
+- High: PO receive tracking missing entirely
+- High: Chiko AI is dashboard-only, not in client portal
+- Medium: Dunning is simple reminder, not escalating
+- ~446 total routes, 1 dead route found (`/api/make-admin/`)
 
-**Audit Results (no code changes needed):**
+### Next Steps
 
-- **Role access**: All billing pages confirmed correct — `/settings/billing` (owner-only), `/admin/billing` (super_admin), `/pricing` (public), `/billing/success` (auth-only)
-- **Agency branding**: All billing components use semantic Tailwind classes (`bg-primary`, `text-primary`, etc.) — fully compatible with BrandingProvider CSS variable overrides
+1. **Session 1 (INVFIX-01)**: Settings auto-populate + invoice form UX overhaul
+2. **Session 2 (INVFIX-02)**: Calculation engine fix + live preview
+3. **Session 3 (INVFIX-03)**: CRM + catalog integration
 
-**Verification:** VS Code language server: zero errors on all 7 modified files. Committed as `5d9fd1d0`.
+## Previous: Billing Flow Deep Audit — Session 8 Complete ✅
 
-## Billing V5 — ALL 10 PHASES + CLEANUP COMPLETE ✅
+### Session 8: Billing Page Fix, Domain Search Debounce, Checkout Flow Fixes
+
+Deep audit of the full billing user journey from pricing page through checkout to billing dashboard. Found and fixed critical bug where billing page always showed "Free Plan" after checkout.
+
+**CRITICAL FIX — Billing Page Shows Correct Plan:**
+
+- `settings/billing/page.tsx` fetched from OLD `subscriptions` table (LemonSqueezy era, never written to by Paddle webhooks)
+- Paddle webhooks write to `paddle_subscriptions` table — billing page never read from it for plan display
+- Fixed: Now queries `paddle_subscriptions` with full field set, maps to CurrentPlanCard format (status: trialing→on_trial, canceled→cancelled)
+- Added `?success=true` banner with CheckCircle2 icon on billing page
+
+**Domain Search Debounce Fix:**
+
+- `domain-search.tsx` used `useState` for timeout ID — React async state caused `clearTimeout` on stale reference
+- Rapid typing: intermediate timeouts still fired, causing searches on partial input
+- Fixed: Replaced `useState<NodeJS.Timeout>` with `useRef<NodeJS.Timeout>` for synchronous access
+
+**Checkout Flow Fixes:**
+
+- `pricing-card.tsx` — Added explicit `successUrl` with plan/cycle params to `openPaddleCheckout()`
+- `billing-actions.ts` — Fixed 5 stale `revalidatePath("/dashboard/billing")` → `revalidatePath("/settings/billing")`
+- Formatter cleanup in 5 billing/settings files
+
+**Audit Results (no changes needed):**
+
+- Webhook handlers (`webhook-handlers.ts`, 1000+ lines) — all solid, proper paddle_subscriptions lifecycle
+- Email purchase wizard — solid, zod validation, dynamic pricing, Paddle transaction checkout
+- Checkout handler — proper validation, agency_id in customData
+- Plan enforcer — correctly queries paddle_subscriptions as fallback
+- Subscription service — reads from paddle_subscriptions correctly
+
+**Verification:** TSC --noEmit passes (only pre-existing marketing module errors). Committed as `94ce88d0`.
+
+## Billing V5 — ALL 10 PHASES + CLEANUP + AUDIT COMPLETE ✅
 
 BIL-01 through BIL-10 all implemented across 6 sessions + Session 7 cleanup. The billing system is production-ready with:
 
