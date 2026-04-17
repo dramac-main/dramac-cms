@@ -200,7 +200,7 @@
 | --------- | ------------------------------------------------------------ | -------------- |
 | INVFIX-01 | Settings Auto-Populate from Site Branding + Invoice Form UX  | ✅ Complete    |
 | INVFIX-02 | Calculation Engine Fix, Line Item Validation, Live Preview   | ✅ Complete    |
-| INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | 📋 Not Started |
+| INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | ✅ Complete    |
 | INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | 📋 Not Started |
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | 📋 Not Started |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | 📋 Not Started |

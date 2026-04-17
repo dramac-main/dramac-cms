@@ -6,7 +6,53 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: INVFIX-02 — Calculation Engine, Line Item Validation, Live Preview ✅
+## Latest: INVFIX-03 — Cross-Module Integration ✅
+
+### Session 3 (INVFIX-02 Carryover + INVFIX-03): Complete
+
+**Commit:** `d5bd4b9e` — `feat(invfix): complete INVFIX-02 carryover fixes and INVFIX-03 cross-module integration`
+
+**INVFIX-02 Carryover Fixes (5):**
+1. **Discount tax math**: Proportional tax reduction via `discountRatio` in `calculateInvoiceTotals()`
+2. **Live preview**: `invoiceNumber` + `paymentInstructions` passed down; settings now load in edit mode too
+3. **Default tax preselection**: Applied to starter rows via `setLineItems` after settings load
+4. **Catalog-item tax propagation**: `taxRatesMap` loaded on mount, numeric rate resolved in `handleItemPickerSelect`
+5. **Line-item validation**: `unitPrice <= 0` rejected (was `< 0`)
+
+**INVFIX-03 Cross-Module Integration (5 sub-tasks):**
+
+**Files Modified (13):**
+- `src/modules/invoicing/lib/invoicing-utils.ts` — discountRatio proportional tax reduction
+- `src/modules/invoicing/components/invoice-form.tsx` — useSearchParams for deal params, sourceType/sourceId state, InvoiceSourceType import, settings load for all modes, paymentInstructions state
+- `src/modules/invoicing/components/invoice-line-items.tsx` — taxRatesMap state, resolved numeric tax rate in handleItemPickerSelect, unitPrice > 0 validation
+- `src/modules/invoicing/components/contact-invoice-picker.tsx` — Full rewrite: outstanding balance badges (from invoices table), recent contacts group, "Create New Contact" link, renderContactItem helper
+- `src/modules/crm/components/sheets/deal-detail-sheet.tsx` — linkedInvoices state, queries invoices by source_type/source_id, shows linked invoices with status badges
+- `src/modules/invoicing/actions/crm-integration-actions.ts` — Fixed sourceType "deal" → "crm_deal"
+- `src/modules/invoicing/actions/item-actions.ts` — Added: getEcommerceProducts, importEcommerceProducts (SKU dedup), getBookingServices, importBookingServices (metadata dedup), ImportResult type
+- `src/modules/invoicing/components/import-ecommerce-items.tsx` — NEW: Dialog for selecting/importing e-commerce products
+- `src/modules/invoicing/components/import-booking-services.tsx` — NEW: Dialog for selecting/importing booking services
+- `src/modules/invoicing/components/items-catalog.tsx` — Import buttons in header (ImportEcommerceItems, ImportBookingServices)
+- `src/modules/invoicing/components/item-picker.tsx` — Enhanced: 3-group picker (Invoicing Items, E-Commerce Products, Booking Services) with icons and separators
+- `src/modules/invoicing/components/invoice-preview.tsx` — No changes (already had props)
+- `src/modules/invoicing/actions/settings-actions.ts` — (from session 2, exported getTaxRates)
+
+**Key Design Decisions:**
+- E-commerce import deduplicates by SKU (existing SKUs in items table skipped)
+- Booking import deduplicates by metadata source_id (prevents re-import)
+- Item picker queries all 3 sources on mount; groups with CommandSeparator
+- External products/services mapped to Item interface with synthetic IDs (ecom-*, book-*)
+- CRM deal link uses sourceType "crm_deal" (matches InvoiceSourceType enum)
+- Contact picker queries live outstanding balances from invoices table (sent/viewed/partial/overdue)
+- Import dialogs use checkbox selection with select-all, search filter, count badge
+
+**TSC:** 219 errors (matches baseline — zero new)
+
+### Next Steps
+
+1. **Session 4 (INVFIX-04)**: Online payments + reconciliation + receipt PDF
+2. **Session 5 (INVFIX-05+06)**: Recurring lifecycle + Vendors/Bills/POs
+
+## Previous: INVFIX-02 — Calculation Engine, Line Item Validation, Live Preview ✅
 
 ### Session 2 (INVFIX-01 Audit Fixes + INVFIX-02): Complete
 
