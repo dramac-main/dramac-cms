@@ -19,12 +19,15 @@ import type {
   ProfitAndLoss,
   ARAgingReport,
   ARAgingClientRow,
+  ARAgingInvoice,
   TaxSummary,
   TaxSummaryByRate,
+  TaxFilingPeriod,
   ExpenseReport,
   ExpenseByCategory,
   ExpenseByVendor,
   ExpenseByMonth,
+  ExpenseBudgetComparison,
   TopClient,
   InvoiceStatusDistribution,
   PaymentMethodDistribution,
@@ -34,6 +37,7 @@ import type {
   CrossModulePeriodEntry,
   CrossModuleClientReport,
   CrossModuleClientRow,
+  RevenueTrendsComparison,
 } from "../types/report-types";
 
 // ─── Helpers ───────────────────────────────────────────────────
@@ -472,7 +476,7 @@ export async function getCashFlowReport(
         };
       })();
 
-  // Cash IN: completed payments
+  // Cash IN: invoicing completed payments
   const { data: payments } = await supabase
     .from(INV_TABLES.payments)
     .select("amount, payment_date")
@@ -481,6 +485,24 @@ export async function getCashFlowReport(
     .eq("status", "completed")
     .gte("payment_date", start)
     .lte("payment_date", end);
+
+  // Cash IN: e-commerce revenue (paid/completed orders)
+  const { data: ecomOrders } = await supabase
+    .from("mod_ecommod01_orders")
+    .select("total, created_at")
+    .eq("site_id", siteId)
+    .in("payment_status", ["paid", "completed"])
+    .gte("created_at", start)
+    .lte("created_at", end);
+
+  // Cash IN: booking revenue (paid appointments)
+  const { data: bookings } = await supabase
+    .from("mod_bookmod01_appointments")
+    .select("payment_amount, start_time")
+    .eq("site_id", siteId)
+    .eq("payment_status", "paid")
+    .gte("start_time", start)
+    .lte("start_time", end);
 
   // Cash OUT: approved/paid expenses
   const { data: expenses } = await supabase
@@ -492,20 +514,39 @@ export async function getCashFlowReport(
     .lte("date", end);
 
   // Group into monthly periods
-  const periodMap = new Map<string, { cashIn: number; cashOut: number }>();
+  const periodMap = new Map<
+    string,
+    { invoicingIn: number; ecommerceIn: number; bookingIn: number; cashOut: number }
+  >();
 
   for (const pay of payments || []) {
     const d = new Date(pay.payment_date);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { cashIn: 0, cashOut: 0 };
-    existing.cashIn += pay.amount || 0;
+    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    existing.invoicingIn += pay.amount || 0;
+    periodMap.set(key, existing);
+  }
+
+  for (const o of ecomOrders || []) {
+    const d = new Date(o.created_at);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    existing.ecommerceIn += o.total || 0;
+    periodMap.set(key, existing);
+  }
+
+  for (const b of bookings || []) {
+    const d = new Date(b.start_time);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    existing.bookingIn += b.payment_amount || 0;
     periodMap.set(key, existing);
   }
 
   for (const exp of expenses || []) {
     const d = new Date(exp.date);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { cashIn: 0, cashOut: 0 };
+    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
     existing.cashOut += exp.amount || 0;
     periodMap.set(key, existing);
   }
@@ -513,12 +554,23 @@ export async function getCashFlowReport(
   const sorted = [...periodMap.entries()].sort((a, b) =>
     a[0].localeCompare(b[0]),
   );
-  const periods: CashFlowPeriodEntry[] = sorted.map(([period, data]) => ({
-    period,
-    cashIn: data.cashIn,
-    cashOut: data.cashOut,
-    net: data.cashIn - data.cashOut,
-  }));
+
+  let runningPosition = 0;
+  const periods: CashFlowPeriodEntry[] = sorted.map(([period, data]) => {
+    const cashIn = data.invoicingIn + data.ecommerceIn + data.bookingIn;
+    const net = cashIn - data.cashOut;
+    runningPosition += net;
+    return {
+      period,
+      cashIn,
+      cashOut: data.cashOut,
+      net,
+      runningPosition,
+      invoicingIn: data.invoicingIn,
+      ecommerceIn: data.ecommerceIn,
+      bookingIn: data.bookingIn,
+    };
+  });
 
   const totalIn = periods.reduce((s, p) => s + p.cashIn, 0);
   const totalOut = periods.reduce((s, p) => s + p.cashOut, 0);
@@ -528,6 +580,11 @@ export async function getCashFlowReport(
     totalIn,
     totalOut,
     netCashFlow: totalIn - totalOut,
+    // Projected cash flow requires a reliable AI forecast source.
+    // The AI insights module (ai-actions.ts getCashFlowForecast) exists but
+    // is rate-limited and async — not suitable for embedding in a synchronous
+    // report action. Set structural flag for UI to show/hide projected section.
+    hasProjectedData: false,
   };
 }
 
@@ -644,6 +701,84 @@ export async function getProfitAndLoss(
   const netProfitMargin =
     totalIncome > 0 ? Math.round((netProfit / totalIncome) * 10000) / 100 : 0;
 
+  // Gross margin: for a service-based platform without COGS, gross margin equals
+  // net profit (all expenses are operating expenses). Made explicit so consumers
+  // are aware no cost-of-goods-sold layer exists in the data model.
+  const grossMargin = totalIncome - totalExpenses;
+  const grossMarginPercent =
+    totalIncome > 0 ? Math.round((grossMargin / totalIncome) * 10000) / 100 : 0;
+
+  // YTD comparison: fetch the same date range from the previous year
+  let ytdComparison: ProfitAndLoss["ytdComparison"] = null;
+  try {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const prevStart = new Date(startDate);
+    prevStart.setFullYear(prevStart.getFullYear() - 1);
+    const prevEnd = new Date(endDate);
+    prevEnd.setFullYear(prevEnd.getFullYear() - 1);
+
+    const { data: prevPayments } = await supabase
+      .from(INV_TABLES.payments)
+      .select("amount")
+      .eq("site_id", siteId)
+      .eq("type", "payment")
+      .eq("status", "completed")
+      .gte("payment_date", prevStart.toISOString())
+      .lte("payment_date", prevEnd.toISOString());
+
+    const previousYearIncome = (prevPayments || []).reduce(
+      (sum: number, p: any) => sum + (p.amount || 0),
+      0,
+    );
+
+    const { data: prevExpenses } = await supabase
+      .from(INV_TABLES.expenses)
+      .select("amount")
+      .eq("site_id", siteId)
+      .in("status", ["approved", "paid"])
+      .gte("date", prevStart.toISOString())
+      .lte("date", prevEnd.toISOString());
+
+    const previousYearExpenses = (prevExpenses || []).reduce(
+      (sum: number, e: any) => sum + (e.amount || 0),
+      0,
+    );
+
+    const previousYearNetProfit = previousYearIncome - previousYearExpenses;
+
+    // Only provide YTD comparison if previous year actually had data
+    if (previousYearIncome > 0 || previousYearExpenses > 0) {
+      const incomeGrowthPercent =
+        previousYearIncome > 0
+          ? Math.round(
+              ((totalIncome - previousYearIncome) / previousYearIncome) * 10000,
+            ) / 100
+          : totalIncome > 0
+            ? 100
+            : 0;
+      const expenseGrowthPercent =
+        previousYearExpenses > 0
+          ? Math.round(
+              ((totalExpenses - previousYearExpenses) / previousYearExpenses) *
+                10000,
+            ) / 100
+          : totalExpenses > 0
+            ? 100
+            : 0;
+
+      ytdComparison = {
+        previousYearIncome,
+        previousYearExpenses,
+        previousYearNetProfit,
+        incomeGrowthPercent,
+        expenseGrowthPercent,
+      };
+    }
+  } catch {
+    // YTD comparison is non-critical; degrade gracefully
+  }
+
   return {
     period: { start, end },
     income: {
@@ -656,6 +791,9 @@ export async function getProfitAndLoss(
     },
     netProfit,
     netProfitMargin,
+    grossMargin,
+    grossMarginPercent,
+    ytdComparison,
   };
 }
 
@@ -748,10 +886,88 @@ export async function getARAgingReport(siteId: string): Promise<ARAgingReport> {
     (a, b) => b.total - a.total,
   );
 
+  // Weighted DSO: sum(amount * daysOverdue) / sum(amount)
+  // Gives a dollar-weighted average of how late receivables are
+  let weightedNumerator = 0;
+  let weightedDenominator = 0;
+  for (const inv of invoices || []) {
+    const dueDate = inv.due_date || todayStr;
+    const daysOverdue = Math.max(
+      0,
+      Math.floor(
+        (today.getTime() - new Date(dueDate).getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    );
+    const amount = inv.amount_due || 0;
+    weightedNumerator += amount * daysOverdue;
+    weightedDenominator += amount;
+  }
+  const weightedDSO =
+    weightedDenominator > 0
+      ? Math.round((weightedNumerator / weightedDenominator) * 100) / 100
+      : 0;
+
   return {
     summary: { current, days1to30, days31to60, days61to90, days90plus, total },
     byClient,
+    weightedDSO,
   };
+}
+
+/**
+ * AR Aging drilldown: fetch individual invoices for a specific aging bucket.
+ * Buckets: "current" | "1-30" | "31-60" | "61-90" | "90+"
+ */
+export async function getARAgingInvoices(
+  siteId: string,
+  bucket: "current" | "1-30" | "31-60" | "61-90" | "90+",
+): Promise<ARAgingInvoice[]> {
+  const supabase = await getModuleClient();
+
+  const { data: invoices } = await supabase
+    .from(INV_TABLES.invoices)
+    .select(
+      "id, invoice_number, client_name, contact_id, amount_due, due_date, status, issue_date",
+    )
+    .eq("site_id", siteId)
+    .in("status", ["sent", "viewed", "partial", "overdue"])
+    .gt("amount_due", 0);
+
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  const results: ARAgingInvoice[] = [];
+  for (const inv of invoices || []) {
+    const dueDate = inv.due_date || todayStr;
+    const daysOverdue = Math.max(
+      0,
+      Math.floor(
+        (today.getTime() - new Date(dueDate).getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    );
+
+    let invBucket: string;
+    if (daysOverdue === 0) invBucket = "current";
+    else if (daysOverdue <= 30) invBucket = "1-30";
+    else if (daysOverdue <= 60) invBucket = "31-60";
+    else if (daysOverdue <= 90) invBucket = "61-90";
+    else invBucket = "90+";
+
+    if (invBucket === bucket) {
+      results.push({
+        id: inv.id,
+        invoiceNumber: inv.invoice_number,
+        clientName: inv.client_name || "Unknown Client",
+        contactId: inv.contact_id || "",
+        amountDue: inv.amount_due,
+        dueDate: inv.due_date,
+        daysOverdue,
+        status: inv.status,
+      });
+    }
+  }
+
+  return results.sort((a, b) => b.daysOverdue - a.daysOverdue);
 }
 
 // ─── 6. Tax Summary ────────────────────────────────────────────
@@ -774,7 +990,7 @@ export async function getTaxSummary(
   // Tax collected: from paid invoices' line items
   const { data: paidInvoices } = await supabase
     .from(INV_TABLES.invoices)
-    .select("id, tax_total")
+    .select("id, tax_total, issue_date")
     .eq("site_id", siteId)
     .eq("status", "paid")
     .gte("issue_date", start)
@@ -838,7 +1054,7 @@ export async function getTaxSummary(
   // Tax paid: from expenses with tax_amount
   const { data: expenses } = await supabase
     .from(INV_TABLES.expenses)
-    .select("tax_amount, tax_rate_id")
+    .select("tax_amount, tax_rate_id, date")
     .eq("site_id", siteId)
     .in("status", ["approved", "paid"])
     .gte("date", start)
@@ -875,12 +1091,46 @@ export async function getTaxSummary(
     }),
   );
 
+  // Filing period breakdown: group collected and paid taxes by month
+  const filingPeriodMap = new Map<
+    string,
+    { collected: number; paid: number }
+  >();
+
+  for (const inv of paidInvoices || []) {
+    const d = new Date(inv.issue_date || start);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    const existing = filingPeriodMap.get(key) || { collected: 0, paid: 0 };
+    existing.collected += inv.tax_total || 0;
+    filingPeriodMap.set(key, existing);
+  }
+
+  for (const exp of expenses || []) {
+    if ((exp.tax_amount || 0) > 0) {
+      const d = new Date(exp.date || start);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      const existing = filingPeriodMap.get(key) || { collected: 0, paid: 0 };
+      existing.paid += exp.tax_amount || 0;
+      filingPeriodMap.set(key, existing);
+    }
+  }
+
+  const byFilingPeriod: TaxFilingPeriod[] = [...filingPeriodMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([period, data]) => ({
+      period,
+      collected: data.collected,
+      paid: data.paid,
+      net: data.collected - data.paid,
+    }));
+
   return {
     period: { start, end },
     taxCollected,
     taxPaid,
     netTaxOwed: taxCollected - taxPaid,
     byRate,
+    byFilingPeriod,
   };
 }
 
@@ -1007,12 +1257,265 @@ export async function getExpenseReport(
       count: data.count,
     }));
 
+  // Top 5 vendors by spend
+  const topVendors = byVendor.slice(0, 5);
+
+  // Budget comparison: compare actual spend per category against budgets
+  // Uses the same budget data structure as getCategoryBudgetSpending
+  const budgetComparison: ExpenseBudgetComparison[] = [];
+  try {
+    // Fetch budgets for all categories that have spending
+    if (categoryIds.length > 0) {
+      const { data: budgets } = await supabase
+        .from(INV_TABLES.expenseCategories)
+        .select("id, name, monthly_budget")
+        .in("id", categoryIds);
+
+      for (const budget of budgets || []) {
+        if (budget.monthly_budget && budget.monthly_budget > 0) {
+          const catSpend = catMap.get(budget.id);
+          const spent = catSpend?.amount || 0;
+          // Scale monthly budget to the number of months in the selected range
+          const startDate = new Date(start);
+          const endDate = new Date(end);
+          const months = Math.max(
+            1,
+            (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+              (endDate.getMonth() - startDate.getMonth()) +
+              1,
+          );
+          const scaledBudget = budget.monthly_budget * months;
+          budgetComparison.push({
+            categoryId: budget.id,
+            categoryName: budget.name,
+            monthlyBudget: budget.monthly_budget,
+            spent,
+            remaining: scaledBudget - spent,
+            percentUsed:
+              scaledBudget > 0
+                ? Math.round((spent / scaledBudget) * 10000) / 100
+                : 0,
+            isOverBudget: spent > scaledBudget,
+          });
+        }
+      }
+    }
+  } catch {
+    // Budget comparison is non-critical
+  }
+
+  // Year-over-year comparison
+  let yoyComparison: ExpenseReport["yoyComparison"] = null;
+  try {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const prevStart = new Date(startDate);
+    prevStart.setFullYear(prevStart.getFullYear() - 1);
+    const prevEnd = new Date(endDate);
+    prevEnd.setFullYear(prevEnd.getFullYear() - 1);
+
+    const { data: prevExpenses } = await supabase
+      .from(INV_TABLES.expenses)
+      .select("amount, date")
+      .eq("site_id", siteId)
+      .in("status", ["approved", "paid"])
+      .gte("date", prevStart.toISOString())
+      .lte("date", prevEnd.toISOString());
+
+    const previousYearTotal = (prevExpenses || []).reduce(
+      (s: number, e: any) => s + (e.amount || 0),
+      0,
+    );
+
+    if (previousYearTotal > 0 || totalExpenses > 0) {
+      // Group previous year by month
+      const prevMonthMap = new Map<string, number>();
+      for (const exp of prevExpenses || []) {
+        const d = new Date(exp.date);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+        prevMonthMap.set(key, (prevMonthMap.get(key) || 0) + (exp.amount || 0));
+      }
+      const previousByMonth = [...prevMonthMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([month, amount]) => ({ month, amount }));
+
+      yoyComparison = {
+        previousYearTotal,
+        changePercent:
+          previousYearTotal > 0
+            ? Math.round(
+                ((totalExpenses - previousYearTotal) / previousYearTotal) *
+                  10000,
+              ) / 100
+            : totalExpenses > 0
+              ? 100
+              : 0,
+        previousByMonth,
+      };
+    }
+  } catch {
+    // YoY comparison is non-critical
+  }
+
   return {
     period: { start, end },
     totalExpenses,
     byCategory,
     byVendor,
     byMonth,
+    topVendors,
+    budgetComparison,
+    yoyComparison,
+  };
+}
+
+// ─── 7b. Revenue Trends Comparison ─────────────────────────────
+
+/**
+ * Compare revenue between two periods with client segment analysis.
+ * Returns current vs previous period totals, growth, period breakdowns,
+ * and top-10 vs others client segments.
+ */
+export async function getRevenueTrendsComparison(
+  siteId: string,
+  dateRange: DateRange,
+): Promise<RevenueTrendsComparison> {
+  const supabase = await getModuleClient();
+  const { start, end } = getDateRangeFilter(dateRange);
+
+  // Calculate the equivalent previous period
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const durationMs = endDate.getTime() - startDate.getTime();
+  const prevEnd = new Date(startDate.getTime() - 1); // 1ms before current start
+  const prevStart = new Date(prevEnd.getTime() - durationMs);
+
+  // Current period payments
+  const { data: currentPayments } = await supabase
+    .from(INV_TABLES.payments)
+    .select("amount, payment_date, invoice_id")
+    .eq("site_id", siteId)
+    .eq("type", "payment")
+    .eq("status", "completed")
+    .gte("payment_date", start)
+    .lte("payment_date", end);
+
+  // Previous period payments
+  const { data: prevPayments } = await supabase
+    .from(INV_TABLES.payments)
+    .select("amount, payment_date")
+    .eq("site_id", siteId)
+    .eq("type", "payment")
+    .eq("status", "completed")
+    .gte("payment_date", prevStart.toISOString())
+    .lte("payment_date", prevEnd.toISOString());
+
+  const currentTotal = (currentPayments || []).reduce(
+    (s: number, p: any) => s + (p.amount || 0),
+    0,
+  );
+  const previousTotal = (prevPayments || []).reduce(
+    (s: number, p: any) => s + (p.amount || 0),
+    0,
+  );
+  const growthPercent =
+    previousTotal > 0
+      ? Math.round(((currentTotal - previousTotal) / previousTotal) * 10000) /
+        100
+      : currentTotal > 0
+        ? 100
+        : 0;
+
+  // Group current period by month
+  const currentMonthMap = new Map<string, number>();
+  for (const p of currentPayments || []) {
+    const d = new Date(p.payment_date);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    currentMonthMap.set(key, (currentMonthMap.get(key) || 0) + (p.amount || 0));
+  }
+  const currentByPeriod = [...currentMonthMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([period, amount]) => ({ period, amount }));
+
+  // Group previous period by month
+  const prevMonthMap = new Map<string, number>();
+  for (const p of prevPayments || []) {
+    const d = new Date(p.payment_date);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    prevMonthMap.set(key, (prevMonthMap.get(key) || 0) + (p.amount || 0));
+  }
+  const previousByPeriod = [...prevMonthMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([period, amount]) => ({ period, amount }));
+
+  // Client segment analysis: top 10 vs rest
+  const invoiceIdSet = new Set<string>();
+  for (const p of currentPayments || []) {
+    if (p.invoice_id) invoiceIdSet.add(p.invoice_id as string);
+  }
+  const invoiceIds = [...invoiceIdSet];
+
+  let clientSegments = {
+    top10Revenue: 0,
+    top10Count: 0,
+    otherRevenue: 0,
+    otherCount: 0,
+  };
+
+  if (invoiceIds.length > 0) {
+    // Batch invoice lookups in chunks of 100 to stay within Supabase limits
+    const chunks: string[][] = [];
+    for (let i = 0; i < invoiceIds.length; i += 100) {
+      chunks.push(invoiceIds.slice(i, i + 100));
+    }
+
+    const clientRevenueMap = new Map<string, number>();
+    for (const chunk of chunks) {
+      const { data: invoiceClients } = await supabase
+        .from(INV_TABLES.invoices)
+        .select("id, contact_id, client_name")
+        .in("id", chunk);
+
+      const invoiceClientMap = new Map<string, string>();
+      for (const inv of invoiceClients || []) {
+        invoiceClientMap.set(
+          inv.id,
+          inv.contact_id || inv.client_name || "unknown",
+        );
+      }
+
+      for (const p of currentPayments || []) {
+        if (chunk.includes(p.invoice_id)) {
+          const clientKey = invoiceClientMap.get(p.invoice_id) || "unknown";
+          clientRevenueMap.set(
+            clientKey,
+            (clientRevenueMap.get(clientKey) || 0) + (p.amount || 0),
+          );
+        }
+      }
+    }
+
+    const sortedClients = [...clientRevenueMap.entries()].sort(
+      (a, b) => b[1] - a[1],
+    );
+    const top10 = sortedClients.slice(0, 10);
+    const rest = sortedClients.slice(10);
+
+    clientSegments = {
+      top10Revenue: top10.reduce((s, [, amt]) => s + amt, 0),
+      top10Count: top10.length,
+      otherRevenue: rest.reduce((s, [, amt]) => s + amt, 0),
+      otherCount: rest.length,
+    };
+  }
+
+  return {
+    currentTotal,
+    previousTotal,
+    growthPercent,
+    currentByPeriod,
+    previousByPeriod,
+    clientSegments,
   };
 }
 

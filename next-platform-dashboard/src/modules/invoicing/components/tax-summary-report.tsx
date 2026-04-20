@@ -185,6 +185,74 @@ export function TaxSummaryReport() {
               )}
             </CardContent>
           </Card>
+
+          {/* Filing Period Breakdown */}
+          {data.byFilingPeriod && data.byFilingPeriod.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Tax by Filing Period</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3">Period</th>
+                        <th className="text-right py-2 px-3">Collected</th>
+                        <th className="text-right py-2 px-3">Paid</th>
+                        <th className="text-right py-2 px-3 font-bold">Net</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.byFilingPeriod.map((fp) => (
+                        <tr
+                          key={fp.period}
+                          className="border-b last:border-0 hover:bg-muted/50"
+                        >
+                          <td className="py-2 px-3 font-medium">{fp.period}</td>
+                          <td className="text-right py-2 px-3 text-green-600">
+                            {formatInvoiceAmount(fp.collected, currency)}
+                          </td>
+                          <td className="text-right py-2 px-3 text-red-600">
+                            {formatInvoiceAmount(fp.paid, currency)}
+                          </td>
+                          <td
+                            className={`text-right py-2 px-3 font-bold ${
+                              fp.net >= 0
+                                ? "text-yellow-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {formatInvoiceAmount(Math.abs(fp.net), currency)}
+                            <span className="text-xs ml-1">
+                              {fp.net >= 0 ? "owed" : "credit"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 font-bold">
+                        <td className="py-2 px-3">Total</td>
+                        <td className="text-right py-2 px-3 text-green-600">
+                          {formatInvoiceAmount(data.taxCollected, currency)}
+                        </td>
+                        <td className="text-right py-2 px-3 text-red-600">
+                          {formatInvoiceAmount(data.taxPaid, currency)}
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          {formatInvoiceAmount(
+                            Math.abs(data.netTaxOwed),
+                            currency,
+                          )}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>

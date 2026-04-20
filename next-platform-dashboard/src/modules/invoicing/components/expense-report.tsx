@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -138,15 +138,153 @@ export function ExpenseReportView() {
         </Card>
       ) : (
         <>
-          {/* Total */}
-          <Card>
-            <CardContent className="pt-6 flex items-center justify-between">
-              <p className="text-lg font-medium">Total Expenses</p>
-              <p className="text-2xl font-bold text-red-600">
-                {formatInvoiceAmount(data.totalExpenses, currency)}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Total + Top Vendors */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardContent className="pt-6 flex items-center justify-between">
+                <p className="text-lg font-medium">Total Expenses</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {formatInvoiceAmount(data.totalExpenses, currency)}
+                </p>
+              </CardContent>
+            </Card>
+
+            {data.topVendors && data.topVendors.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Top Vendors
+                  </p>
+                  <div className="space-y-1">
+                    {data.topVendors.map((v) => (
+                      <div
+                        key={v.vendorId}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="truncate">{v.vendorName}</span>
+                        <span className="font-medium ml-2">
+                          {formatInvoiceAmount(v.amount, currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Budget vs Actual */}
+          {data.budgetComparison && data.budgetComparison.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Budget vs Actual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3">Category</th>
+                        <th className="text-right py-2 px-3">
+                          Monthly Budget
+                        </th>
+                        <th className="text-right py-2 px-3">Spent</th>
+                        <th className="text-right py-2 px-3">Remaining</th>
+                        <th className="text-right py-2 px-3">% Used</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.budgetComparison.map((bc) => (
+                        <tr
+                          key={bc.categoryId}
+                          className="border-b last:border-0 hover:bg-muted/50"
+                        >
+                          <td className="py-2 px-3 font-medium flex items-center gap-1">
+                            {bc.isOverBudget && (
+                              <AlertTriangle className="h-3 w-3 text-red-500" />
+                            )}
+                            {bc.categoryName}
+                          </td>
+                          <td className="text-right py-2 px-3">
+                            {formatInvoiceAmount(bc.monthlyBudget, currency)}
+                          </td>
+                          <td className="text-right py-2 px-3">
+                            {formatInvoiceAmount(bc.spent, currency)}
+                          </td>
+                          <td
+                            className={`text-right py-2 px-3 ${
+                              bc.remaining < 0
+                                ? "text-red-600 font-medium"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {formatInvoiceAmount(bc.remaining, currency)}
+                          </td>
+                          <td className="text-right py-2 px-3">
+                            <span
+                              className={`${
+                                bc.isOverBudget
+                                  ? "text-red-600 font-bold"
+                                  : bc.percentUsed > 80
+                                    ? "text-yellow-600 font-medium"
+                                    : ""
+                              }`}
+                            >
+                              {bc.percentUsed.toFixed(1)}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Year-over-Year Comparison */}
+          {data.yoyComparison && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Year-over-Year Comparison</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">
+                      Previous Year Total
+                    </p>
+                    <p className="text-lg font-bold">
+                      {formatInvoiceAmount(
+                        data.yoyComparison.previousYearTotal,
+                        currency,
+                      )}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">Change</p>
+                    <div className="flex items-center gap-1">
+                      {data.yoyComparison.changePercent <= 0 ? (
+                        <TrendingDown className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <TrendingUp className="h-4 w-4 text-red-600" />
+                      )}
+                      <span
+                        className={`text-lg font-bold ${
+                          data.yoyComparison.changePercent <= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {data.yoyComparison.changePercent > 0 ? "+" : ""}
+                        {data.yoyComparison.changePercent.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Chart */}
           {chartData.length > 0 && (

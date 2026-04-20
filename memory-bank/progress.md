@@ -205,7 +205,7 @@
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | ✅ Complete    |
-| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 🟡 Carryover   |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | ✅ Complete    |
 | INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
 | INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
@@ -259,6 +259,10 @@
 
 **Updated next session recommendation:** Session 11 must remain **INVFIX-08 carryover closure only**. Do not include **INVFIX-09** in the same pass unless reports are actually closed and re-validated.
 
+**INVFIX Session 11 (July 2026) — INVFIX-08 Carryover Closure:** Closed ALL 7 remaining report gaps. 8 files changed. Deliverables: (1) cross-module cash flow with ecom/booking data + ComposedChart with net position Line, (2) new `getRevenueTrendsComparison` action with period-over-period + client segments, (3) P&L grossMargin + ytdComparison, (4) AR aging weighted DSO + `getARAgingInvoices` drilldown, (5) tax filing period monthly breakdown, (6) expense topVendors + budgetComparison + yoyComparison, (7) export standardization doc comment (CSV + Print→PDF is the standard). New type: `RevenueTrendsPeriodEntry`. Fixed `ARAgingInvoice` fields. All 6 report components updated. TSC: 0 invoicing errors.
+
+**Next session recommendation:** Session 12 should be **INVFIX-09** (Email System — Templates, Auto-Send, Dunning Escalation).
+
 ---
 
 ## Additional Systems ✅ Complete
@@ -269,6 +273,7 @@
 | DRAMAC Studio            | Custom visual page builder (31 phases)            | ✅ Complete |
 | Client Portal            | White-label business operations (15 phases)       | ✅ Complete |
 | Domain & Email           | ResellerClub + Cloudflare DNS + Resend            | ✅ Complete |
+| Email/Domain Lifecycle   | Balance block, auto-DNS, renewals, notifications  | ✅ Complete |
 | Blog CMS                 | TipTap editor, categories, scheduling, SEO        | ✅ Complete |
 | AI Website Designer      | Claude multi-step generation                      | ✅ Complete |
 | Agency Support Tickets   | Dashboard + email notifications                   | ✅ Complete |

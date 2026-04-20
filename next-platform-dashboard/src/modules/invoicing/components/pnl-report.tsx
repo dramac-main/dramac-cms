@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -101,7 +101,7 @@ export function PnlReport() {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Total Income</p>
@@ -133,7 +133,111 @@ export function PnlReport() {
                 </p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Gross Margin</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    (data.grossMargin ?? 0) >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {formatInvoiceAmount(data.grossMargin ?? data.netProfit, currency)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(data.grossMarginPercent ?? data.netProfitMargin).toFixed(1)}%
+                  <span className="ml-1 italic">(service platform — no COGS)</span>
+                </p>
+              </CardContent>
+            </Card>
           </div>
+
+          {/* YTD Comparison */}
+          {data.ytdComparison && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Year-over-Year Comparison</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">
+                      Previous Year Income
+                    </p>
+                    <p className="text-lg font-bold">
+                      {formatInvoiceAmount(
+                        data.ytdComparison.previousYearIncome,
+                        currency,
+                      )}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {data.ytdComparison.incomeGrowthPercent >= 0 ? (
+                        <TrendingUp className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-red-600" />
+                      )}
+                      <span
+                        className={`text-xs font-medium ${
+                          data.ytdComparison.incomeGrowthPercent >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {data.ytdComparison.incomeGrowthPercent > 0 ? "+" : ""}
+                        {data.ytdComparison.incomeGrowthPercent.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">
+                      Previous Year Expenses
+                    </p>
+                    <p className="text-lg font-bold">
+                      {formatInvoiceAmount(
+                        data.ytdComparison.previousYearExpenses,
+                        currency,
+                      )}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {data.ytdComparison.expenseGrowthPercent <= 0 ? (
+                        <TrendingDown className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3 text-red-600" />
+                      )}
+                      <span
+                        className={`text-xs font-medium ${
+                          data.ytdComparison.expenseGrowthPercent <= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {data.ytdComparison.expenseGrowthPercent > 0 ? "+" : ""}
+                        {data.ytdComparison.expenseGrowthPercent.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">
+                      Previous Year Net Profit
+                    </p>
+                    <p
+                      className={`text-lg font-bold ${
+                        data.ytdComparison.previousYearNetProfit >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {formatInvoiceAmount(
+                        data.ytdComparison.previousYearNetProfit,
+                        currency,
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Chart */}
           <Card>

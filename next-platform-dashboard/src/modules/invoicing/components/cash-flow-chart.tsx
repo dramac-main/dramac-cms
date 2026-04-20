@@ -17,11 +17,13 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
+  ComposedChart,
 } from "recharts";
 
 interface CashFlowChartProps {
@@ -75,7 +77,13 @@ export function CashFlowChart({ siteId, dateRange }: CashFlowChartProps) {
     "Cash In": p.cashIn / 100,
     "Cash Out": p.cashOut / 100,
     Net: p.net / 100,
+    "Net Position": (p.runningPosition ?? 0) / 100,
   }));
+
+  // Check if we have multi-source data
+  const hasMultiSource = data.periods.some(
+    (p) => (p.ecommerceIn ?? 0) > 0 || (p.bookingIn ?? 0) > 0,
+  );
 
   return (
     <Card>
@@ -97,7 +105,7 @@ export function CashFlowChart({ siteId, dateRange }: CashFlowChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
+          <ComposedChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis dataKey="period" className="text-xs" />
             <YAxis
@@ -114,8 +122,50 @@ export function CashFlowChart({ siteId, dateRange }: CashFlowChartProps) {
             <Legend />
             <Bar dataKey="Cash In" fill="#22c55e" radius={[4, 4, 0, 0]} />
             <Bar dataKey="Cash Out" fill="#ef4444" radius={[4, 4, 0, 0]} />
-          </BarChart>
+            <Line
+              type="monotone"
+              dataKey="Net Position"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
+
+        {/* Source breakdown when multi-source data exists */}
+        {hasMultiSource && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">
+              Cash-In Sources
+            </p>
+            <div className="grid gap-2 grid-cols-3 text-xs">
+              {data.periods.map((p) => {
+                const inv = p.invoicingIn ?? p.cashIn;
+                const ecom = p.ecommerceIn ?? 0;
+                const book = p.bookingIn ?? 0;
+                if (inv === 0 && ecom === 0 && book === 0) return null;
+                return (
+                  <div key={p.period} className="p-2 rounded border">
+                    <p className="font-medium">{p.period}</p>
+                    <p className="text-green-700">
+                      Invoicing: {formatInvoiceAmount(inv)}
+                    </p>
+                    {ecom > 0 && (
+                      <p className="text-blue-700">
+                        E-commerce: {formatInvoiceAmount(ecom)}
+                      </p>
+                    )}
+                    {book > 0 && (
+                      <p className="text-purple-700">
+                        Bookings: {formatInvoiceAmount(book)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

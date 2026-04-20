@@ -13,9 +13,9 @@ import { Download, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getARAgingReport, exportReportCSV } from "../actions/report-actions";
+import { getARAgingReport, getARAgingInvoices, exportReportCSV } from "../actions/report-actions";
 import { formatInvoiceAmount } from "../lib/invoicing-utils";
-import type { ARAgingReport as ARAgingReportType } from "../types/report-types";
+import type { ARAgingReport as ARAgingReportType, ARAgingInvoice } from "../types/report-types";
 
 const BUCKET_COLORS: Record<string, string> = {
   current: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -32,6 +32,9 @@ export function ArAgingReport() {
   const siteId = params?.siteId as string;
   const [data, setData] = useState<ARAgingReportType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+  const [bucketInvoices, setBucketInvoices] = useState<ARAgingInvoice[]>([]);
+  const [bucketLoading, setBucketLoading] = useState(false);
   const currency = "ZMW";
 
   useEffect(() => {
@@ -42,6 +45,31 @@ export function ArAgingReport() {
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [siteId]);
+
+  const handleBucketClick = useCallback(
+    async (bucketKey: string) => {
+      if (!siteId) return;
+      if (selectedBucket === bucketKey) {
+        setSelectedBucket(null);
+        setBucketInvoices([]);
+        return;
+      }
+      setSelectedBucket(bucketKey);
+      setBucketLoading(true);
+      try {
+        const invoices = await getARAgingInvoices(
+          siteId,
+          bucketKey as "current" | "1-30" | "31-60" | "61-90" | "90+",
+        );
+        setBucketInvoices(invoices);
+      } catch {
+        setBucketInvoices([]);
+      } finally {
+        setBucketLoading(false);
+      }
+    },
+    [siteId, selectedBucket],
+  );
 
   const handleExport = useCallback(async () => {
     if (!siteId) return;
@@ -114,7 +142,15 @@ export function ArAgingReport() {
               },
               { label: "90+ Days", value: data.summary.days90plus, key: "90+" },
             ].map((bucket) => (
-              <Card key={bucket.key}>
+              <Card
+                key={bucket.key}
+                className={`cursor-pointer transition-shadow hover:shadow-md ${
+                  selectedBucket === bucket.key
+                    ? "ring-2 ring-primary"
+                    : ""
+                }`}
+                onClick={() => handleBucketClick(bucket.key)}
+              >
                 <CardContent className="pt-6">
                   <div
                     className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 ${BUCKET_COLORS[bucket.key]}`}
@@ -129,10 +165,75 @@ export function ArAgingReport() {
             ))}
           </div>
 
-          {/* Total */}
+          {/* Bucket Drilldown */}
+          {selectedBucket && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Invoices — {selectedBucket === "current" ? "Current" : `${selectedBucket} Days`}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {bucketLoading ? (
+                  <Skeleton className="h-24" />
+                ) : bucketInvoices.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No invoices in this bucket
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3">Invoice #</th>
+                          <th className="text-left py-2 px-3">Client</th>
+                          <th className="text-right py-2 px-3">Amount Due</th>
+                          <th className="text-right py-2 px-3">Due Date</th>
+                          <th className="text-right py-2 px-3">Days Overdue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bucketInvoices.map((inv) => (
+                          <tr
+                            key={inv.id}
+                            className="border-b last:border-0 hover:bg-muted/50"
+                          >
+                            <td className="py-2 px-3 font-medium">
+                              {inv.invoiceNumber}
+                            </td>
+                            <td className="py-2 px-3">{inv.clientName}</td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(inv.amountDue, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {inv.dueDate
+                                ? new Date(inv.dueDate).toLocaleDateString()
+                                : "—"}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {inv.daysOverdue}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Total + DSO */}
           <Card>
             <CardContent className="pt-6 flex items-center justify-between">
-              <p className="text-lg font-medium">Total Outstanding</p>
+              <div>
+                <p className="text-lg font-medium">Total Outstanding</p>
+                {(data.weightedDSO ?? 0) > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Weighted DSO: {data.weightedDSO?.toFixed(1)} days
+                  </p>
+                )}
+              </div>
               <p className="text-2xl font-bold">
                 {formatInvoiceAmount(data.summary.total, currency)}
               </p>
