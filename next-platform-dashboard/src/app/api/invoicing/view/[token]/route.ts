@@ -9,7 +9,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapRecord, mapRecords } from "@/lib/map-db-record";
 import { INV_TABLES } from "@/modules/invoicing/lib/invoicing-constants";
-import type { Invoice, InvoiceLineItem } from "@/modules/invoicing/types/invoice-types";
+import type {
+  Invoice,
+  InvoiceLineItem,
+} from "@/modules/invoicing/types/invoice-types";
 
 export async function GET(
   request: NextRequest,

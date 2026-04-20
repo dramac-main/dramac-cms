@@ -214,6 +214,16 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
               </p>
             </CardContent>
           </Card>
+          {vendor.vendorRating > 0 && (
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs text-muted-foreground">Vendor Rating</p>
+                <p className="text-lg font-semibold">
+                  {vendor.vendorRating.toFixed(1)} / 5.0
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -302,6 +312,14 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
                   <p className="text-muted-foreground ml-6">
                     Branch: {vendor.bankBranchCode}
                   </p>
+                )}
+                {vendor.preferredPaymentMethod && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    <span className="capitalize">
+                      {vendor.preferredPaymentMethod.replace("_", " ")}
+                    </span>
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -8,6 +8,7 @@ import { SiteBrandingSettings } from "@/components/sites/site-branding-settings"
 import { SiteDangerZone } from "@/components/sites/site-danger-zone";
 import { SiteModulesTab } from "@/components/sites/site-modules-tab";
 import { BackupList } from "@/components/sites/backup-list";
+import { DomainsManager } from "@/components/settings/domains-manager";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
@@ -75,7 +76,17 @@ export default async function SiteSettingsPage({ params, searchParams }: SiteSet
         </TabsContent>
 
         <TabsContent value="domains">
-          <SiteSettingsForm site={site} section="domains" />
+          <div className="space-y-6">
+            {/* Subdomain settings (editable) */}
+            <SiteSettingsForm site={site} section="domains" />
+            {/* Full custom domain management with DNS instructions, verification, health checks */}
+            <DomainsManager
+              siteId={site.id}
+              currentSubdomain={site.subdomain}
+              currentCustomDomain={site.custom_domain ?? null}
+              domainVerified={site.custom_domain_verified ?? false}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="seo">

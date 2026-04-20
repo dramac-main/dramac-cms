@@ -22,6 +22,8 @@ import type {
   Vendor,
   Bill,
   POStatus,
+  POReceipt,
+  ReceiptInput,
 } from "../types";
 
 // ─── Helpers ───────────────────────────────────────────────────
@@ -720,4 +722,223 @@ export async function cancelPurchaseOrder(
     "purchase_order_cancelled",
     `PO ${po.po_number} cancelled`,
   );
+}
+
+// ─── receivePurchaseOrder (INVFIX-06) ──────────────────────────
+
+export async function receivePurchaseOrder(
+  siteId: string,
+  poId: string,
+  receipts: ReceiptInput[],
+): Promise<{ receipts: POReceipt[]; newStatus: POStatus }> {
+  const supabase = await getModuleClient();
+
+  const { data: po } = await supabase
+    .from(INV_TABLES.purchaseOrders)
+    .select("*")
+    .eq("id", poId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (!po) throw new Error("Purchase order not found");
+
+  if (
+    !["sent", "acknowledged", "partially_received"].includes(po.status)
+  ) {
+    throw new Error("PO must be sent, acknowledged, or partially received to receive goods");
+  }
+
+  const lineItems: PurchaseOrderLineItem[] = po.metadata?.lineItems || [];
+  if (lineItems.length === 0) {
+    throw new Error("PO has no line items");
+  }
+
+  // Validate receipts
+  for (const r of receipts) {
+    if (r.lineIndex < 0 || r.lineIndex >= lineItems.length) {
+      throw new Error(`Invalid line index: ${r.lineIndex}`);
+    }
+    if (r.receivedQuantity <= 0) {
+      throw new Error(`Received quantity must be positive for line ${r.lineIndex}`);
+    }
+  }
+
+  // Insert receipt records
+  const now = new Date().toISOString();
+  const insertRows = receipts
+    .filter((r) => r.receivedQuantity > 0)
+    .map((r) => ({
+      site_id: siteId,
+      purchase_order_id: poId,
+      line_index: r.lineIndex,
+      received_quantity: r.receivedQuantity,
+      received_date: now,
+      notes: r.notes || null,
+    }));
+
+  const { data: inserted, error: insertErr } = await supabase
+    .from(INV_TABLES.poReceipts)
+    .insert(insertRows)
+    .select("*");
+
+  if (insertErr) throw new Error(`Failed to record receipts: ${insertErr.message}`);
+
+  // Calculate total received per line across all receipts
+  const { data: allReceipts } = await supabase
+    .from(INV_TABLES.poReceipts)
+    .select("line_index, received_quantity")
+    .eq("purchase_order_id", poId);
+
+  const receivedByLine: Record<number, number> = {};
+  for (const r of allReceipts || []) {
+    receivedByLine[r.line_index] =
+      (receivedByLine[r.line_index] || 0) + Number(r.received_quantity);
+  }
+
+  // Determine PO status: fully received vs partially
+  let allFullyReceived = true;
+  let anyReceived = false;
+  for (let i = 0; i < lineItems.length; i++) {
+    const ordered = lineItems[i].quantity;
+    const received = receivedByLine[i] || 0;
+    if (received > 0) anyReceived = true;
+    if (received < ordered) allFullyReceived = false;
+  }
+
+  const newStatus: POStatus = allFullyReceived
+    ? "received"
+    : anyReceived
+      ? "partially_received"
+      : po.status;
+
+  // Update PO status
+  const updateData: Record<string, unknown> = {
+    status: newStatus,
+    updated_at: now,
+  };
+  if (allFullyReceived) {
+    updateData.received_date = now;
+  }
+
+  await supabase
+    .from(INV_TABLES.purchaseOrders)
+    .update(updateData)
+    .eq("id", poId);
+
+  await logActivity(
+    supabase,
+    siteId,
+    poId,
+    allFullyReceived ? "purchase_order_received" : "purchase_order_partial_receipt",
+    `PO ${po.po_number}: ${receipts.length} line(s) received → ${newStatus}`,
+  );
+
+  if (allFullyReceived) {
+    try {
+      await emitAutomationEvent(
+        siteId,
+        "accounting.purchase_order.received",
+        {
+          poNumber: po.po_number,
+          vendorId: po.vendor_id,
+          totalAmountCents: po.total,
+          currency: po.currency,
+          purchaseOrderId: poId,
+        },
+      );
+    } catch {
+      // non-critical
+    }
+  }
+
+  return {
+    receipts: mapRecords<POReceipt>(inserted || []),
+    newStatus,
+  };
+}
+
+// ─── getPoReceipts (INVFIX-06) ─────────────────────────────────
+
+export async function getPoReceipts(
+  siteId: string,
+  poId: string,
+): Promise<POReceipt[]> {
+  const supabase = await getModuleClient();
+
+  const { data, error } = await supabase
+    .from(INV_TABLES.poReceipts)
+    .select("*")
+    .eq("purchase_order_id", poId)
+    .eq("site_id", siteId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(`Failed to fetch receipts: ${error.message}`);
+  return mapRecords<POReceipt>(data || []);
+}
+
+// ─── getThreeWayMatchData (INVFIX-06) ──────────────────────────
+
+export async function getThreeWayMatchData(
+  siteId: string,
+  billId: string,
+): Promise<{
+  poLineItems: PurchaseOrderLineItem[];
+  billLineItems: { name: string; quantity: number; unitPrice: number }[];
+  receivedByLine: Record<number, number>;
+  poNumber: string;
+  billNumber: string;
+} | null> {
+  const supabase = await getModuleClient();
+
+  // Get bill with its PO reference
+  const { data: bill } = await supabase
+    .from(INV_TABLES.bills)
+    .select("id, bill_number, purchase_order_id, site_id")
+    .eq("id", billId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (!bill || !bill.purchase_order_id) return null;
+
+  // Get PO
+  const { data: po } = await supabase
+    .from(INV_TABLES.purchaseOrders)
+    .select("id, po_number, metadata")
+    .eq("id", bill.purchase_order_id)
+    .single();
+
+  if (!po) return null;
+
+  const poLineItems: PurchaseOrderLineItem[] = po.metadata?.lineItems || [];
+
+  // Get bill line items
+  const { data: billLines } = await supabase
+    .from(INV_TABLES.billLineItems)
+    .select("name, quantity, unit_price")
+    .eq("bill_id", billId)
+    .order("sort_order", { ascending: true });
+
+  // Get all receipts for this PO
+  const { data: receipts } = await supabase
+    .from(INV_TABLES.poReceipts)
+    .select("line_index, received_quantity")
+    .eq("purchase_order_id", bill.purchase_order_id);
+
+  const receivedByLine: Record<number, number> = {};
+  for (const r of receipts || []) {
+    receivedByLine[r.line_index] =
+      (receivedByLine[r.line_index] || 0) + Number(r.received_quantity);
+  }
+
+  return {
+    poLineItems,
+    billLineItems: (billLines || []).map((bl: any) => ({
+      name: bl.name,
+      quantity: bl.quantity,
+      unitPrice: bl.unit_price,
+    })),
+    receivedByLine,
+    poNumber: po.po_number,
+    billNumber: bill.bill_number,
+  };
 }

@@ -6,41 +6,77 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Session 6 — INVFIX-04/05 Carryover Closure ✅
+## Latest: Session 7 — INVFIX-04/05 Closed + INVFIX-06 Complete ✅
 
-### Session 6: All Carryover Items Closed
+### Session 7 (July 2026)
 
-Session 6 completed the 7 required outcomes from the Session 6 Quick Agent Prompt, closing all INVFIX-04 and INVFIX-05 carryover items. No INVFIX-06 work was started. Architecture remains manual-collection only (no Stripe).
+**Phase 0: INVFIX-04/05 Production Closure — COMPLETE**
 
-**Files Modified (9):**
+Verified all six audit blockers are resolved:
 
-1. **migrations/invfix-04-05-payment-settings.sql** — Removed 3 Stripe columns (`stripe_enabled`, `stripe_publishable_key`, `stripe_secret_key`). Added `notify_before_generation BOOLEAN DEFAULT FALSE` to recurring_invoices table. Header updated to reflect manual-only architecture.
-2. **public-payment-form.tsx** — Gated payment form behind `onlinePaymentEnabled`: when disabled, shows AlertCircle notice directing clients to follow payment instructions. Wrapped form Card in conditional render. Fixed JSX TS2657 (missing Card wrapper in conditional).
-3. **pay/[token]/route.ts** — POST handler now fetches settings and checks `online_payment_enabled`, returns 403 if disabled. Payment number generation hardened from count-based to MAX-based sequence (`PAY-{year}-NNNN`), preventing duplicates from deletions/concurrency.
-4. **payment-actions.ts** — Both `generatePaymentNumber()` and `generateReceiptNumber()` converted from count-based to MAX-based sequence lookup per year prefix, resilient to deletions and year rollovers.
-5. **reconciliation-actions.ts** — Added `mapRecords` import. `getUnmatchedPayments()` and `getPartialInvoices()` now use `mapRecords<Payment>()` / `mapRecords<Invoice>()` for base mapping then project to custom types.
-6. **view/[token]/route.ts** — Replaced manual `mapLineItem` function and 25-line manual invoice mapping with `mapRecord<Invoice>()` + `mapRecords<InvoiceLineItem>()`. `clientCompany` accessed from raw DB row (`invoice.client_company`) since it's not on the TypeScript type.
-7. **recurring-types.ts** — Added `notifyBeforeGeneration` to `RecurringInvoice` and `CreateRecurringInput` interfaces.
-8. **recurring-actions.ts** — `createRecurringInvoice()` persists `notify_before_generation`. `updateRecurringInvoice()` fieldMap includes it. `generateInvoiceFromTemplate()` resolves storefront customer from `mod_ecommod01_customers` by `storefront_customer_id`.
-9. **recurring-form.tsx** — Wired `notifyBeforeGeneration` state to `handleSubmit()` payload (toggle UI already existed).
+1. **Live Supabase schema fully reconciled.** Direct SQL queries confirmed: Stripe columns dropped, `receipt_number` / `processing_started_at` / `notify_before_generation` all present, RPC functions (`generate_invmod01_payment_number`, `generate_invmod01_receipt_number`) live, unique indexes on `payment_number` and `receipt_number`. Migration `invfix-04-05-payment-settings.sql` was applied between the audit and this session.
 
-**Key Design Decisions:**
+2. **Payment/receipt numbering hardened.** RPC functions use `pg_advisory_xact_lock` for atomic generation. Unique constraints on `(site_id, payment_number)` and `(site_id, receipt_number)`. Fallback to MAX-based generation if RPC unavailable.
 
-- MAX-based sequence generators: query highest existing `PAY-{year}-NNNN` or `RCT-{year}-NNNN`, parse sequence, increment. Safe against deletions, concurrent inserts, and year boundaries.
-- `onlinePaymentEnabled` gates both frontend display AND backend POST acceptance (defense in depth).
-- Storefront customer resolution only overrides client name if no CRM contact/company was already linked.
-- `mapRecords()` used for base mapping then manual projection for custom types (UnmatchedPayment, PartialInvoice).
-- `clientCompany` accessed from raw DB row since `Invoice` TypeScript type doesn't include all DB columns.
+3. **Receipt identifier persisted at creation.** `recordPayment()` generates both `payment_number` and `receipt_number` at insert time. `getPaymentReceipt()` has self-healing backfill for edge cases. 0 legacy payment records in DB (no backfill needed).
 
-**TSC Result:** 0 invoicing-specific errors. 219 total errors (unchanged from baseline — all pre-existing marketing module errors).
+4. **Pre-generation notification implemented.** Added `sendPreGenerationNotice()` to `recurring-engine-service.ts`. Sends email when `notify_before_generation && client_email` are set. Uses `getEmailFrom()` (not hardcoded). Includes company branding, estimated total, frequency info.
 
-**Audit Verdict:** INVFIX-04 and INVFIX-05 carryover is **CLOSED**. Ready for INVFIX-06.
+5. **Email sender uses shared helper.** Verified `getEmailFrom()` already used in recurring engine (line ~297), not hardcoded.
+
+6. **TypeScript clean.** 0 invoicing-specific TSC errors. 219 baseline (all marketing module).
+
+**Phase 1: INVFIX-06 — PO Receive Tracking, Bill Payment, 3-Way Match, Vendor Enhancements — COMPLETE**
+
+All INVFIX-06 features implemented and verified:
+
+- **PO Receive Tracking**: `po-receive-form.tsx` (dialog with line-item quantity tracking), `receivePurchaseOrder()` action, `getPoReceipts()` action, `mod_invmod01_po_receipts` DB table, `received_date`/`received_by` columns on POs. Receipts displayed in PO detail history section.
+- **Bill Payment Recording**: `bill-payment-dialog.tsx` wired into `bill-detail.tsx` (visible when `canPay`), `recordBillPayment()` action with status transition + activity logging + automation events. Amounts cards (Total/Paid/Outstanding) on bill detail.
+- **Three-Way Match**: `three-way-match.tsx` dialog wired into bill-detail when `purchaseOrderId` exists, `getThreeWayMatchData()` action comparing PO/bill/receipt quantities with match status badges and variance display.
+- **Vendor Enhancements**: Bank details (name, account, branch), payment terms, preferred method, currency, vendor rating fields. `vendor-form.tsx` updated with bank/payment fields. `vendor-detail.tsx` updated with metrics display + banking card. `getVendorStats()` action.
+- **Migration**: `invfix-06-po-receive-vendor-enhance.sql` applied to live Supabase.
+- **Types**: `POReceipt`, `ReceiptInput`, `ThreeWayMatchLine`, `MatchStatus`, `VendorStats` added to `vendor-types.ts`.
+
+**Note on bill payment history:** Individual bill payments are not stored as separate records (no `bill_payments` table). `recordBillPayment()` updates aggregate `amount_paid`/`amount_due` on the bill. The amounts cards suffice for INVFIX-06 scope.
+
+### Files Modified/Created in Session 7
+
+**Modified (16):**
+1. `recurring-engine-service.ts` — Added `sendPreGenerationNotice()` function
+2. `purchase-order-detail.tsx` — Added "Goods Received" history section displaying receipts
+3. `bill-detail.tsx` — BillPaymentDialog + ThreeWayMatch wired into action bar
+4. `vendor-detail.tsx` — Metrics display, banking details card
+5. `vendor-form.tsx` — Bank details, payment terms, preferred method fields
+6. `vendor-types.ts` — POReceipt, ReceiptInput, ThreeWayMatchLine, MatchStatus, VendorStats types
+7. `purchase-order-actions.ts` — receivePurchaseOrder, getPoReceipts, getThreeWayMatchData
+8. `bill-actions.ts` — recordBillPayment (already existed, verified)
+9. `payment-actions.ts` — RPC-based numbering (already existed, verified)
+10. `pay/[token]/route.ts` — RPC-based numbering (already existed, verified)
+11. `view/[token]/route.ts` — Mapping improvements (from Session 6)
+12. `public-payment-form.tsx` — onlinePaymentEnabled gating (from Session 6)
+13. `invoicing-constants.ts` — PAYMENT_METHOD_LABELS added
+14. `migrations/invfix-04-05-payment-settings.sql` — Complete with DROP/ADD/RPC/indexes
+15. `memory-bank/activeContext.md` — This update
+16. `memory-bank/progress.md` — Status update
+
+**New (3):**
+1. `po-receive-form.tsx` — PO receive goods dialog
+2. `three-way-match.tsx` — 3-way match dialog
+3. `migrations/invfix-06-po-receive-vendor-enhance.sql` — PO receipts table, vendor columns
 
 ### Next Steps
 
-1. **INVFIX-06**: Vendors, Bills, and Purchase Orders — next session when user is ready.
-2. **Run migration** `invfix-04-05-payment-settings.sql` against live Supabase (3 Stripe column drops + notify_before_generation add).
-3. Consider addressing the 219 pre-existing TSC errors in marketing module separately.
+- **INVFIX-07**: Expenses — Approval Workflow, Receipt Viewer, Budgets (next session)
+- Do NOT start INVFIX-07 in this session
+- Do NOT reintroduce Stripe into the invoicing module
+
+**Audit Verdict:** Session 6 is **not fully closed**. A short production-closure pass is required before INVFIX-06 should begin.
+
+### Next Steps
+
+1. **Resolve the production blockers first**: schema mismatch, Stripe column cleanup, payment/receipt numbering safety, and receipt identifier persistence.
+2. **Only start INVFIX-06 after the above is verified clean**.
+3. Consider addressing the 219 pre-existing TSC errors in the marketing module separately.
 
 ## Previous: Invoicing Hotfix — Save, Display, and Money Bugs Fixed ⚠️
 

@@ -9,7 +9,7 @@ import {
   PurchasesDisabledError,
 } from './errors';
 import { SUPPORTED_TLDS, TLD_CATEGORIES, arePurchasesAllowed, getDomainCheckUrl } from './config';
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DOMAIN_CURRENCY } from '@/lib/locale-config'
 import type {
   DomainAvailability,
   DomainPrice,
@@ -287,7 +287,7 @@ export class DomainService {
           renew: renewPrices,
           transfer: this.extractPrice(pricingData, 'transferdomain', 1),
           restore: this.extractPrice(pricingData, 'restoredomain', 1),
-          currency: DEFAULT_CURRENCY,
+          currency: DOMAIN_CURRENCY,
         };
       }
     }

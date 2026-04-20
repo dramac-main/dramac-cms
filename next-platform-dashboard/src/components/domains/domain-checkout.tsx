@@ -8,7 +8,7 @@ import { DomainCartComponent } from "./domain-cart";
 import type { DomainCartItem } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
 type CheckoutStep = 'cart' | 'contact' | 'confirmation';
 
 interface DomainCheckoutProps {
@@ -67,7 +67,7 @@ export function DomainCheckout({
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     }).format(price);
   };
 

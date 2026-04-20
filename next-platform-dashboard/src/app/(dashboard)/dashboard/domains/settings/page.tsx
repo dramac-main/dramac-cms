@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getAgencyPricingConfig, getUsageSummary, getRevenueAnalytics } from "@/lib/actions/domain-billing";
 import { getDomains, getAgencyClientsForAssignment, getAgencySitesForAssignment } from "@/lib/actions/domains";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
 import { PLATFORM } from "@/lib/constants/platform";
 import { DomainClientAssignmentSection } from "./domain-client-assignment";
 
@@ -56,7 +56,7 @@ async function DomainSettingsContent() {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     }).format(price);
   };
   
@@ -228,6 +228,9 @@ async function DomainSettingsContent() {
             </Button>
             <Button variant="outline" asChild>
               <Link href="/dashboard/domains/search">Register New Domain</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/domains/transfer">Transfer Domain</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/dashboard/domains/settings/branding">Edit Branding</Link>

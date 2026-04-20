@@ -496,7 +496,7 @@ export function TransferWizard({ contacts = [] }: TransferWizardProps) {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button type="submit" disabled={isPending || !form.getValues('confirmTerms')}>
+              <Button type="submit" disabled={isPending || !form.watch('confirmTerms')}>
                 {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

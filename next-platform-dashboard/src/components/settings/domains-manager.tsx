@@ -121,15 +121,16 @@ export function DomainsManager({
     }
   }, []);
 
-  // Auto-poll DNS after domain is entered (up to 20 times = ~10 minutes)
+  // Auto-poll DNS after domain is saved (up to 20 times = ~10 minutes)
   useEffect(() => {
-    if (step !== "verifying" || !newDomain || pollCount >= 20) return;
+    if (step !== "verifying" || !customDomain || pollCount >= 20) return;
 
     const timer = setTimeout(async () => {
-      const result = await verifyDns(newDomain);
+      const result = await verifyDns(customDomain);
       if (result?.propagated) {
-        setStep("configuring");
-        handleAddDomain(newDomain);
+        setVerified(true);
+        setStep("complete");
+        toast.success("DNS verified! Your custom domain is fully active.");
       } else {
         setPollCount((c) => c + 1);
       }
@@ -137,9 +138,9 @@ export function DomainsManager({
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, newDomain, pollCount, verifyDns]);
+  }, [step, customDomain, pollCount, verifyDns]);
 
-  // Add/change custom domain via cascade API
+  // Add/change custom domain via cascade API — saves immediately, DNS verification happens after
   const handleAddDomain = async (domain: string) => {
     setStep("configuring");
     try {
@@ -155,12 +156,12 @@ export function DomainsManager({
       }
 
       setCustomDomain(domain);
-      setVerified(true);
-      setStep("complete");
+      setVerified(false); // Not yet verified — DNS needs to propagate
+      setStep("verifying"); // Move to verification polling
       setIsDialogOpen(false);
       setNewDomain("");
       setPollCount(0);
-      toast.success(`Domain ${domain} configured successfully!`);
+      toast.success(`Domain ${domain} saved! Configure your DNS records below.`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Failed to add domain";
       toast.error(message);
@@ -229,14 +230,15 @@ export function DomainsManager({
     toast.success("Copied to clipboard");
   };
 
-  // Manual DNS verify button
+  // Manual DNS verify button — for when domain is already saved
   const handleManualVerify = async () => {
-    if (!newDomain) return;
-    const result = await verifyDns(newDomain);
+    const domainToVerify = customDomain || newDomain;
+    if (!domainToVerify) return;
+    const result = await verifyDns(domainToVerify);
     if (result?.propagated) {
-      toast.success("DNS verified! Configuring domain...");
-      setStep("configuring");
-      await handleAddDomain(newDomain);
+      toast.success("DNS verified! Your custom domain is fully active.");
+      setVerified(true);
+      setStep("complete");
     } else {
       toast.info("DNS not propagated yet. This can take up to 48 hours.");
     }
@@ -518,50 +520,116 @@ export function DomainsManager({
                 </div>
 
                 <DialogFooter className="gap-2">
-                  {step !== "configuring" && step !== "complete" && (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={handleManualVerify}
-                        disabled={
-                          !newDomain ||
-                          isVerifying ||
-                          !validateDomain(newDomain)
-                        }
-                      >
-                        {isVerifying ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                        )}
-                        Verify DNS
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          if (!validateDomain(newDomain)) return;
-                          setStep("verifying");
-                          setPollCount(0);
-                          handleManualVerify();
-                        }}
-                        disabled={!newDomain || step === "verifying"}
-                      >
-                        {step === "verifying" ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Verifying...
-                          </>
-                        ) : (
-                          "Add Domain"
-                        )}
-                      </Button>
-                    </>
-                  )}
+                  {step === "configuring" ? (
+                    <Button disabled>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Saving...
+                    </Button>
+                  ) : step !== "complete" ? (
+                    <Button
+                      onClick={() => {
+                        if (!validateDomain(newDomain)) return;
+                        handleAddDomain(newDomain);
+                      }}
+                      disabled={!newDomain || step === "configuring"}
+                    >
+                      Add Domain
+                    </Button>
+                  ) : null}
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           )}
         </CardContent>
       </Card>
+
+      {/* DNS Configuration Instructions — shown when domain saved but not verified */}
+      {customDomain && !verified && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-5 w-5 text-amber-500" />
+              DNS Configuration Required
+            </CardTitle>
+            <CardDescription>
+              Your domain <strong>{customDomain}</strong> has been saved. Configure the DNS records below with your domain registrar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* CNAME instruction */}
+            <div className="rounded-md border bg-background p-3 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">
+                Option A: CNAME Record (recommended for www subdomains)
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-sm font-mono">
+                <div>
+                  <span className="text-xs text-muted-foreground">Type</span>
+                  <p>CNAME</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Name</span>
+                  <p>www</p>
+                </div>
+                <div className="flex items-end gap-1">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Value</span>
+                    <p className="truncate">{DOMAINS.VERCEL_CNAME}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copyToClipboard(DOMAINS.VERCEL_CNAME)}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* A record instruction */}
+            <div className="rounded-md border bg-background p-3 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">
+                Option B: A Record (for root domain @)
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-sm font-mono">
+                <div>
+                  <span className="text-xs text-muted-foreground">Type</span>
+                  <p>A</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Name</span>
+                  <p>@</p>
+                </div>
+                <div className="flex items-end gap-1">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Value</span>
+                    <p>{DOMAINS.VERCEL_A_RECORD}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copyToClipboard(DOMAINS.VERCEL_A_RECORD)}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Verification status */}
+            {step === "verifying" && (
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertTitle>Auto-checking DNS propagation</AlertTitle>
+                <AlertDescription>
+                  Checking every 30 seconds ({pollCount}/20 checks). DNS can take up to 48 hours to propagate.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button onClick={handleManualVerify} disabled={isVerifying} variant="outline" className="w-full">
+              {isVerifying ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {isVerifying ? "Checking DNS..." : "Verify DNS Now"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Domain Health Status */}
       {customDomain && verified && (

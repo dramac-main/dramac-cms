@@ -226,12 +226,21 @@ export async function getTransferById(transferId: string): Promise<{
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('agency_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.agency_id) return { success: false, error: 'No agency found' };
+
   try {
     // Use type assertion for domain_transfers table
     const { data, error } = await (supabase as unknown as AnyQueryBuilder)
       .from('domain_transfers')
       .select('*')
       .eq('id', transferId)
+      .eq('agency_id', profile.agency_id)
       .single();
 
     if (error) throw error;

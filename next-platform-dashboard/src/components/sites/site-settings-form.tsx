@@ -110,7 +110,7 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
           <Card>
             <CardHeader>
               <CardTitle>Domain Settings</CardTitle>
-              <CardDescription>Configure your site's URLs.</CardDescription>
+              <CardDescription>Configure your site&apos;s URLs.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -122,29 +122,11 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                     <FormControl>
                       <div className="flex items-center gap-2">
                         <Input {...field} />
-                        <span className="text-sm text-muted-foreground">.{getBaseDomain()}</span>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">.{getBaseDomain()}</span>
                       </div>
                     </FormControl>
                     <FormDescription>
                       Your free subdomain on {getBaseDomain()}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="custom_domain"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Custom Domain</FormLabel>
-                    <FormControl>
-                      <Input placeholder="example.com" {...field} value={field.value || ""} />
-                    </FormControl>
-                    <FormDescription>
-                      Point your domain&apos;s DNS to our servers to use a custom domain.
-                      Configuration instructions will appear after saving.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -52,6 +52,7 @@ export function VendorForm({ siteId, vendorId }: VendorFormProps) {
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankBranchCode, setBankBranchCode] = useState("");
+  const [preferredPaymentMethod, setPreferredPaymentMethod] = useState("");
   const [notes, setNotes] = useState("");
 
   // Load vendor for edit mode
@@ -74,6 +75,7 @@ export function VendorForm({ siteId, vendorId }: VendorFormProps) {
       setBankName(v.bankName || "");
       setBankAccountNumber(v.bankAccountNumber || "");
       setBankBranchCode(v.bankBranchCode || "");
+      setPreferredPaymentMethod(v.preferredPaymentMethod || "");
       setNotes(v.notes || "");
       setLoading(false);
     });
@@ -101,6 +103,7 @@ export function VendorForm({ siteId, vendorId }: VendorFormProps) {
       bankName: bankName.trim() || undefined,
       bankAccountNumber: bankAccountNumber.trim() || undefined,
       bankBranchCode: bankBranchCode.trim() || undefined,
+      preferredPaymentMethod: preferredPaymentMethod || undefined,
       notes: notes.trim() || undefined,
     };
 
@@ -301,6 +304,21 @@ export function VendorForm({ siteId, vendorId }: VendorFormProps) {
                   <SelectItem value="30">Net 30</SelectItem>
                   <SelectItem value="60">Net 60</SelectItem>
                   <SelectItem value="90">Net 90</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="preferredPaymentMethod">Preferred Payment Method</Label>
+              <Select value={preferredPaymentMethod} onValueChange={setPreferredPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

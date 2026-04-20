@@ -163,23 +163,46 @@ export async function POST(
     }
 
     // ── Manual payment flow ──────────────────────────────────
-    // Generate payment number (MAX-based to avoid gaps on deletes)
-    const year = new Date().getFullYear();
-    const prefix = `PAY-${year}-`;
-    const { data: lastPay } = await supabase
-      .from(INV_TABLES.payments)
-      .select("payment_number")
-      .eq("site_id", invoice.site_id)
-      .like("payment_number", `${prefix}%`)
-      .order("payment_number", { ascending: false })
-      .limit(1);
+    // Generate payment number via RPC (advisory-locked) with fallback
+    let paymentNumber: string;
+    try {
+      const { data: rpcNum, error: rpcErr } = await supabase.rpc(
+        "generate_invmod01_payment_number",
+        { p_site_id: invoice.site_id },
+      );
+      if (rpcErr || !rpcNum) throw new Error("RPC unavailable");
+      paymentNumber = rpcNum;
+    } catch {
+      // Fallback: MAX-based (unique constraint is the safety net)
+      const year = new Date().getFullYear();
+      const prefix = `PAY-${year}-`;
+      const { data: lastPay } = await supabase
+        .from(INV_TABLES.payments)
+        .select("payment_number")
+        .eq("site_id", invoice.site_id)
+        .like("payment_number", `${prefix}%`)
+        .order("payment_number", { ascending: false })
+        .limit(1);
 
-    let nextSeq = 1;
-    if (lastPay && lastPay.length > 0 && lastPay[0].payment_number) {
-      const match = lastPay[0].payment_number.match(/PAY-\d{4}-(\d+)/);
-      if (match) nextSeq = parseInt(match[1], 10) + 1;
+      let nextSeq = 1;
+      if (lastPay && lastPay.length > 0 && lastPay[0].payment_number) {
+        const match = lastPay[0].payment_number.match(/PAY-\d{4}-(\d+)/);
+        if (match) nextSeq = parseInt(match[1], 10) + 1;
+      }
+      paymentNumber = `${prefix}${String(nextSeq).padStart(4, "0")}`;
     }
-    const paymentNumber = `${prefix}${String(nextSeq).padStart(4, "0")}`;
+
+    // Generate receipt number via RPC
+    let receiptNumber: string | null = null;
+    try {
+      const { data: rctNum, error: rctErr } = await supabase.rpc(
+        "generate_invmod01_receipt_number",
+        { p_site_id: invoice.site_id },
+      );
+      if (!rctErr && rctNum) receiptNumber = rctNum;
+    } catch {
+      // Receipt number will be assigned when payment is confirmed
+    }
 
     // Create PENDING payment record (not completed — requires manual verification)
     const { data: payment, error: payError } = await supabase
@@ -188,6 +211,7 @@ export async function POST(
         invoice_id: invoice.id,
         site_id: invoice.site_id,
         payment_number: paymentNumber,
+        receipt_number: receiptNumber,
         amount: invoice.amount_due,
         currency: invoice.currency,
         exchange_rate: invoice.exchange_rate || 1,

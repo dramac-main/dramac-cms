@@ -6,7 +6,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DOMAIN_CURRENCY } from '@/lib/locale-config'
 import { getFallbackPrice } from '@/lib/domain-fallback-prices'
 import type { 
   AgencyDomainPricing, 
@@ -426,7 +426,7 @@ export async function createBillingRecord(params: {
       wholesale_amount: params.wholesale_amount,
       retail_amount: params.retail_amount,
       markup_amount: params.retail_amount - params.wholesale_amount,
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
       status: 'pending',
       metadata: params.metadata || {},
     })

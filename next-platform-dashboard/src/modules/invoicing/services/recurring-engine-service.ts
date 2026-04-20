@@ -5,7 +5,7 @@ import { INV_TABLES } from "../lib/invoicing-constants";
 import { calculateNextDate } from "../lib/invoicing-utils";
 import { _generateInvoiceFromTemplate } from "../actions/recurring-actions";
 import { emitAutomationEvent } from "@/modules/automation/lib/automation-engine";
-import { getResend, isEmailEnabled } from "@/lib/email/resend-client";
+import { getResend, isEmailEnabled, getEmailFrom } from "@/lib/email/resend-client";
 
 // ═══════════════════════════════════════════════════════════════
 // PROCESS RECURRING INVOICES (cron entry point)
@@ -132,6 +132,11 @@ export async function processRecurringInvoices(): Promise<RecurringProcessResult
       if (claimErr || !claimed) {
         result.skipped++;
         continue; // Another worker already claimed this
+      }
+
+      // Send pre-generation notification if configured
+      if (recurring.notify_before_generation && recurring.client_email) {
+        await sendPreGenerationNotice(supabase, recurring);
       }
 
       // Fetch template line items
@@ -294,7 +299,7 @@ async function sendCronAlertEmail(
     ].join(" | ");
 
     await resend.emails.send({
-      from: "DRAMAC CMS <noreply@dramac.net>",
+      from: getEmailFrom(),
       to: ownerEmail,
       subject: `[Alert] Recurring Invoice Errors — ${result.errors.length} failure(s)`,
       text: [
@@ -316,5 +321,77 @@ async function sendCronAlertEmail(
     });
   } catch {
     // Don't let alert email failure propagate
+  }
+}
+
+/**
+ * Send a pre-generation notification to the client before the invoice is created.
+ * This is triggered when notify_before_generation is true on the recurring template.
+ */
+async function sendPreGenerationNotice(
+  supabase: any,
+  recurring: any,
+) {
+  if (!isEmailEnabled()) return;
+
+  try {
+    const resend = getResend();
+    if (!resend) return;
+
+    // Fetch company branding for the email
+    const { data: settings } = await supabase
+      .from(INV_TABLES.settings)
+      .select("company_name, brand_color")
+      .eq("site_id", recurring.site_id)
+      .maybeSingle();
+
+    const companyName = settings?.company_name || "Our Company";
+    const brandColor = settings?.brand_color || "#1f2937";
+    const frequency = recurring.frequency || "monthly";
+    const currency = recurring.currency || "ZMW";
+
+    // Calculate approximate total from template
+    const { data: templateItems } = await supabase
+      .from(INV_TABLES.recurringLineItems)
+      .select("quantity, unit_price")
+      .eq("recurring_invoice_id", recurring.id);
+
+    const estimatedTotal = (templateItems || []).reduce(
+      (sum: number, item: any) => sum + (item.quantity || 0) * (item.unit_price || 0),
+      0,
+    );
+    const formattedTotal = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+    }).format(estimatedTotal / 100);
+
+    await resend.emails.send({
+      from: getEmailFrom(),
+      to: recurring.client_email,
+      subject: `Upcoming Invoice — ${recurring.name} (${companyName})`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: ${brandColor}; padding: 24px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">${companyName}</h1>
+          </div>
+          <div style="padding: 32px 24px;">
+            <p>Dear ${recurring.client_name || "Valued Client"},</p>
+            <p>This is a courtesy notice that a <strong>${frequency}</strong> invoice will be generated for you shortly.</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 24px 0;">
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Recurring Template</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${recurring.name}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Estimated Amount</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formattedTotal}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Frequency</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${frequency.charAt(0).toUpperCase() + frequency.slice(1)}</td></tr>
+            </table>
+            <p style="color: #6b7280; font-size: 14px;">The actual invoice with payment details will follow once generated.</p>
+          </div>
+          <div style="padding: 16px 24px; background: #f9fafb; text-align: center; font-size: 12px; color: #9ca3af;">
+            ${companyName}
+          </div>
+        </div>
+      `,
+    });
+  } catch {
+    // Pre-generation notice is best-effort — do not block invoice generation
   }
 }

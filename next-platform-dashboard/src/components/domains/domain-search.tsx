@@ -13,7 +13,7 @@ import { normalizeDomainKeyword } from "@/lib/domain-keyword";
 import { TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { DomainSearchResult } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
 
 const POPULAR_TLDS = [...TLD_CATEGORIES.popular];
 const ALL_CATEGORY_ENTRIES = Object.entries(TLD_CATEGORIES).filter(([key]) => key !== 'popular') as [string, readonly string[]][];
@@ -118,7 +118,7 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     }).format(price);
   };
   

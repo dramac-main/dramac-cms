@@ -47,6 +47,8 @@ export interface Vendor {
   taxId: string | null;
   currency: string;
   paymentTermsDays: number;
+  preferredPaymentMethod: string | null;
+  vendorRating: number;
   bankName: string | null;
   bankAccountNumber: string | null;
   bankBranchCode: string | null;
@@ -133,6 +135,8 @@ export interface PurchaseOrder {
   currency: string;
   issueDate: string;
   expectedDate: string | null;
+  receivedDate: string | null;
+  receivedBy: string | null;
   subtotal: number;
   taxAmount: number;
   total: number;
@@ -166,6 +170,7 @@ export interface CreateVendorInput {
   taxId?: string | null;
   currency?: string;
   paymentTermsDays?: number;
+  preferredPaymentMethod?: string | null;
   bankName?: string | null;
   bankAccountNumber?: string | null;
   bankBranchCode?: string | null;
@@ -256,4 +261,42 @@ export interface BillStats {
   partialCount: number;
   paidCount: number;
   totalCount: number;
+}
+
+// ============================================================================
+// PO RECEIPT TRACKING (INVFIX-06)
+// ============================================================================
+
+export interface POReceipt {
+  id: string;
+  siteId: string;
+  purchaseOrderId: string;
+  lineIndex: number;
+  receivedQuantity: number;
+  receivedDate: string;
+  receivedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface ReceiptInput {
+  lineIndex: number;
+  receivedQuantity: number;
+  notes?: string | null;
+}
+
+// ============================================================================
+// THREE-WAY MATCH (INVFIX-06)
+// ============================================================================
+
+export type MatchStatus = "full_match" | "partial_match" | "unmatched";
+
+export interface ThreeWayMatchLine {
+  lineIndex: number;
+  itemName: string;
+  orderedQty: number;
+  billedQty: number;
+  receivedQty: number;
+  matchStatus: MatchStatus;
+  variance: number;
 }

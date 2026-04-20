@@ -20,24 +20,29 @@ As of April 17, 2026:
 4. Later sessions shift by one so INVFIX-06 does not start until Session 7.
 5. If a session has a dedicated prompt file, follow that prompt over the generic phase mapping.
 
+Post-session audit update:
+
+6. A deeper audit on April 18, 2026 found that Session 6 landed major code progress, but production closure is still blocked by live schema mismatch and number-sequencing hardening work.
+7. Session 7 should therefore begin with a strict production-closure pass for INVFIX-04/05 before continuing into INVFIX-06.
+
 ---
 
 ## Session-to-Phase Mapping
 
-| Session        | Phases                      | Focus                                                                      | Priority    |
-| -------------- | --------------------------- | -------------------------------------------------------------------------- | ----------- |
-| **Session 1**  | INVFIX-01                   | Settings auto-populate from site branding + invoice form UX                | 🔴 Critical |
-| **Session 2**  | INVFIX-02                   | Calculation engine fix, line item validation, live preview                 | 🔴 Critical |
-| **Session 3**  | INVFIX-03                   | CRM deep integration, e-commerce item import, catalog picker               | 🔴 Critical |
-| **Session 4**  | INVFIX-04                   | Payments foundation work landed, but closure still pending                 | 🟠 High     |
-| **Session 5**  | INVFIX-05                   | Recurring lifecycle work landed, but closure still pending                 | 🟠 High     |
-| **Session 6**  | INVFIX-04 + INVFIX-05       | Carryover closure only: manual payment flow, receipts, reconciliation, recurring robustness | 🔴 Critical |
-| **Session 7**  | INVFIX-06                   | Vendors, bills, purchase orders, receive tracking, 3-way match             | 🟠 High     |
-| **Session 8**  | INVFIX-07 + INVFIX-08       | Expenses approval + reports overhaul                                       | 🟡 Medium   |
-| **Session 9**  | INVFIX-09                   | Email templates, auto-send, dunning escalation                             | 🟠 High     |
-| **Session 10** | INVFIX-10                   | Client portal — full invoice experience, pay, statements                   | 🟠 High     |
-| **Session 11** | INVFIX-11                   | Ask Chiko — portal expansion, sticky widget, data scoping                  | 🟡 Medium   |
-| **Session 12** | INVFIX-12                   | Delivery notes, route cleanup, admin dashboard, final polish               | 🟡 Medium   |
+| Session        | Phases                | Focus                                                                                       | Priority    |
+| -------------- | --------------------- | ------------------------------------------------------------------------------------------- | ----------- |
+| **Session 1**  | INVFIX-01             | Settings auto-populate from site branding + invoice form UX                                 | 🔴 Critical |
+| **Session 2**  | INVFIX-02             | Calculation engine fix, line item validation, live preview                                  | 🔴 Critical |
+| **Session 3**  | INVFIX-03             | CRM deep integration, e-commerce item import, catalog picker                                | 🔴 Critical |
+| **Session 4**  | INVFIX-04             | Payments foundation work landed, but closure still pending                                  | 🟠 High     |
+| **Session 5**  | INVFIX-05             | Recurring lifecycle work landed, but closure still pending                                  | 🟠 High     |
+| **Session 6**  | INVFIX-04 + INVFIX-05 | Carryover closure only: manual payment flow, receipts, reconciliation, recurring robustness | 🔴 Critical |
+| **Session 7**  | INVFIX-06             | Vendors, bills, purchase orders, receive tracking, 3-way match                              | 🟠 High     |
+| **Session 8**  | INVFIX-07 + INVFIX-08 | Expenses approval + reports overhaul                                                        | 🟡 Medium   |
+| **Session 9**  | INVFIX-09             | Email templates, auto-send, dunning escalation                                              | 🟠 High     |
+| **Session 10** | INVFIX-10             | Client portal — full invoice experience, pay, statements                                    | 🟠 High     |
+| **Session 11** | INVFIX-11             | Ask Chiko — portal expansion, sticky widget, data scoping                                   | 🟡 Medium   |
+| **Session 12** | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, final polish                                | 🟡 Medium   |
 
 ---
 
@@ -47,12 +52,13 @@ Use a dedicated session prompt whenever one exists.
 
 - Session 6 authoritative prompt: `phases/PHASE-INVFIX-SESSION-06-PROMPT.md`
 - Session 6 quick handoff version: `phases/PHASE-INVFIX-SESSION-06-QUICK-PROMPT.md`
+- Session 7 authoritative prompt: `phases/PHASE-INVFIX-SESSION-07-PROMPT.md`
 
 Rules:
 
 1. Read the dedicated prompt after the memory bank and master guide.
 2. Treat dedicated prompt instructions as the source of truth for that session's scope and done criteria.
-3. Do not rely on the generic historical mapping if the dedicated prompt says the session is carryover-only.
+3. Do not rely on the generic historical mapping if the dedicated prompt says the session must begin with a carryover or production-closure pass.
 
 ---
 
@@ -121,24 +127,24 @@ After every session:
 
 ## Key Files Quick Reference
 
-| Category        | Path                                                           |
-| --------------- | -------------------------------------------------------------- |
-| Master Guide    | `phases/PHASE-INVFIX-MASTER-GUIDE.md`                          |
-| Session Brief   | `phases/PHASE-INVFIX-SESSION-BRIEF.md`                         |
-| Session 6 Prompt| `phases/PHASE-INVFIX-SESSION-06-PROMPT.md`                     |
-| Module Root     | `next-platform-dashboard/src/modules/invoicing/`               |
-| Types           | `src/modules/invoicing/types/`                                 |
-| Actions         | `src/modules/invoicing/actions/`                               |
-| Components      | `src/modules/invoicing/components/`                            |
-| Services        | `src/modules/invoicing/services/`                              |
-| Utils           | `src/modules/invoicing/lib/invoicing-utils.ts`                 |
-| Constants       | `src/modules/invoicing/lib/invoicing-constants.ts`             |
-| Bootstrap       | `src/modules/invoicing/lib/invoicing-bootstrap.ts`             |
-| Settings Form   | `src/modules/invoicing/components/invoicing-settings-form.tsx` |
-| Invoice Form    | `src/modules/invoicing/components/invoice-form.tsx`            |
-| Dashboard Pages | `src/app/(dashboard)/dashboard/sites/[siteId]/invoicing/`      |
-| Portal Pages    | `src/app/portal/sites/[siteId]/invoicing/`                     |
-| API Routes      | `src/app/api/invoicing/`                                       |
+| Category         | Path                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| Master Guide     | `phases/PHASE-INVFIX-MASTER-GUIDE.md`                          |
+| Session Brief    | `phases/PHASE-INVFIX-SESSION-BRIEF.md`                         |
+| Session 6 Prompt | `phases/PHASE-INVFIX-SESSION-06-PROMPT.md`                     |
+| Module Root      | `next-platform-dashboard/src/modules/invoicing/`               |
+| Types            | `src/modules/invoicing/types/`                                 |
+| Actions          | `src/modules/invoicing/actions/`                               |
+| Components       | `src/modules/invoicing/components/`                            |
+| Services         | `src/modules/invoicing/services/`                              |
+| Utils            | `src/modules/invoicing/lib/invoicing-utils.ts`                 |
+| Constants        | `src/modules/invoicing/lib/invoicing-constants.ts`             |
+| Bootstrap        | `src/modules/invoicing/lib/invoicing-bootstrap.ts`             |
+| Settings Form    | `src/modules/invoicing/components/invoicing-settings-form.tsx` |
+| Invoice Form     | `src/modules/invoicing/components/invoice-form.tsx`            |
+| Dashboard Pages  | `src/app/(dashboard)/dashboard/sites/[siteId]/invoicing/`      |
+| Portal Pages     | `src/app/portal/sites/[siteId]/invoicing/`                     |
+| API Routes       | `src/app/api/invoicing/`                                       |
 
 ---
 

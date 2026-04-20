@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { Save, Percent, Coins, Tag, Loader2 } from "lucide-react";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
+import { DOMAIN_CURRENCY_SYMBOL } from "@/lib/locale-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,8 +136,8 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
               {markupType === 'percentage' 
                 ? 'Markup Percentage' 
                 : markupType === 'fixed'
-                  ? `Fixed Amount (${DEFAULT_CURRENCY_SYMBOL})`
-                  : `Custom Price (${DEFAULT_CURRENCY_SYMBOL})`}
+                  ? `Fixed Amount (${DOMAIN_CURRENCY_SYMBOL})`
+                  : `Custom Price (${DOMAIN_CURRENCY_SYMBOL})`}
             </Label>
             <div className="flex items-center gap-2">
               <Input

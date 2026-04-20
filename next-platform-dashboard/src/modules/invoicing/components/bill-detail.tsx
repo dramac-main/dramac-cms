@@ -11,6 +11,7 @@ import {
   deleteBill,
 } from "../actions/bill-actions";
 import { BillPaymentDialog } from "./bill-payment-dialog";
+import { ThreeWayMatch } from "./three-way-match";
 import { AmountDisplay } from "./amount-display";
 import { BILL_STATUS_CONFIG } from "../lib/invoicing-constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,6 +177,13 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
               amountDue={bill.amountDue}
               currency={bill.currency}
               onSuccess={loadBill}
+            />
+          )}
+          {bill.purchaseOrderId && (
+            <ThreeWayMatch
+              siteId={siteId}
+              billId={billId}
+              currency={bill.currency}
             />
           )}
           {canVoid && (

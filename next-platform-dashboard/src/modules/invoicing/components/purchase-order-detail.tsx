@@ -8,6 +8,7 @@ import type {
   PurchaseOrderLineItem,
   Bill,
   Vendor,
+  POReceipt,
 } from "../types";
 import {
   getPurchaseOrder,
@@ -17,8 +18,10 @@ import {
   convertToBill,
   cancelPurchaseOrder,
   deletePurchaseOrder,
+  getPoReceipts,
 } from "../actions/purchase-order-actions";
 import { AmountDisplay } from "./amount-display";
+import { POReceiveForm } from "./po-receive-form";
 import { PO_STATUS_LABELS, PO_STATUS_CONFIG } from "../lib/invoicing-constants";
 import {
   Table,
@@ -72,11 +75,18 @@ export function PurchaseOrderDetail({
   >(null);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [receipts, setReceipts] = useState<POReceipt[]>([]);
 
   const fetchPO = () => {
     setLoading(true);
-    getPurchaseOrder(purchaseOrderId)
-      .then(setPo)
+    Promise.all([
+      getPurchaseOrder(purchaseOrderId),
+      getPoReceipts(siteId, purchaseOrderId),
+    ])
+      .then(([poData, rcpts]) => {
+        setPo(poData);
+        setReceipts(rcpts);
+      })
       .catch(() => toast.error("Failed to load purchase order"))
       .finally(() => setLoading(false));
   };
@@ -242,37 +252,26 @@ export function PurchaseOrderDetail({
                 <CheckCircle2 className="h-4 w-4 mr-1.5" />
                 Mark Acknowledged
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isPending}
-                onClick={() =>
-                  handleAction(
-                    () => markAsReceived(purchaseOrderId),
-                    "PO marked as received",
-                  )
-                }
-              >
-                <Package className="h-4 w-4 mr-1.5" />
-                Mark Received
-              </Button>
+              <POReceiveForm
+                siteId={siteId}
+                purchaseOrderId={purchaseOrderId}
+                lineItems={lineItems}
+                currency={po.currency}
+                existingReceipts={receipts}
+                onSuccess={fetchPO}
+              />
             </>
           )}
 
-          {po.status === "acknowledged" && (
-            <Button
-              size="sm"
-              disabled={isPending}
-              onClick={() =>
-                handleAction(
-                  () => markAsReceived(purchaseOrderId),
-                  "PO marked as received",
-                )
-              }
-            >
-              <Package className="h-4 w-4 mr-1.5" />
-              Mark Received
-            </Button>
+          {(po.status === "acknowledged" || po.status === "partially_received") && (
+            <POReceiveForm
+              siteId={siteId}
+              purchaseOrderId={purchaseOrderId}
+              lineItems={lineItems}
+              currency={po.currency}
+              existingReceipts={receipts}
+              onSuccess={fetchPO}
+            />
           )}
 
           {(po.status === "received" || po.status === "acknowledged") &&
@@ -449,6 +448,51 @@ export function PurchaseOrderDetail({
               </div>
             </CardContent>
           </Card>
+
+          {/* Goods Received History */}
+          {receipts.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Goods Received ({receipts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-center">Qty Received</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {receipts.map((r) => {
+                      const item = lineItems[r.lineIndex];
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell className="text-sm">
+                            {new Date(r.receivedDate).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {item?.name || `Line ${r.lineIndex + 1}`}
+                          </TableCell>
+                          <TableCell className="text-center font-medium">
+                            {r.receivedQuantity}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {r.notes || "—"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Linked Bills */}
           {po.linkedBills.length > 0 && (

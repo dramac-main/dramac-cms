@@ -52,15 +52,29 @@ async function logActivity(
   });
 }
 
-/** Generate a payment number: PAY-{YYYY}-{NNNN} */
+/**
+ * Generate a payment number: PAY-{YYYY}-{NNNN}
+ * Uses a DB RPC function with advisory lock for concurrency safety.
+ * Falls back to MAX-based approach if RPC is unavailable.
+ */
 async function generatePaymentNumber(
   supabase: any,
   siteId: string,
 ): Promise<string> {
+  // Try RPC-based atomic generation first
+  try {
+    const { data, error } = await supabase.rpc(
+      "generate_invmod01_payment_number",
+      { p_site_id: siteId },
+    );
+    if (!error && data) return data;
+  } catch {
+    // Fallback below
+  }
+
+  // Fallback: MAX-based (unique constraint is the safety net)
   const year = new Date().getFullYear();
   const prefix = `PAY-${year}-`;
-
-  // Find the highest existing sequence for this year
   const { data } = await supabase
     .from(INV_TABLES.payments)
     .select("payment_number")
@@ -744,12 +758,28 @@ export async function getPaymentSummary(
 // GENERATE RECEIPT NUMBER
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Generate a receipt number: RCT-{YYYY}-{NNNN}
+ * Uses a DB RPC function with advisory lock for concurrency safety.
+ * Falls back to MAX-based approach if RPC is unavailable.
+ */
 export async function generateReceiptNumber(siteId: string): Promise<string> {
   const supabase = await getModuleClient();
+
+  // Try RPC-based atomic generation first
+  try {
+    const { data, error } = await supabase.rpc(
+      "generate_invmod01_receipt_number",
+      { p_site_id: siteId },
+    );
+    if (!error && data) return data;
+  } catch {
+    // Fallback below
+  }
+
+  // Fallback: MAX-based (unique constraint is the safety net)
   const year = new Date().getFullYear();
   const prefix = `RCT-${year}-`;
-
-  // Find the highest existing receipt sequence for this year
   const { data } = await supabase
     .from(INV_TABLES.payments)
     .select("receipt_number")
@@ -829,11 +859,20 @@ export async function getPaymentReceipt(
     .single();
 
   // Use persisted receipt number, or generate fallback from payment number
-  const receiptNumber =
-    payment.receipt_number ||
-    (payment.payment_number
+  let receiptNumber = payment.receipt_number;
+  if (!receiptNumber) {
+    // Legacy: derive from payment number and backfill
+    receiptNumber = payment.payment_number
       ? payment.payment_number.replace("PAY-", "RCT-")
-      : `RCT-${paymentId.slice(0, 8).toUpperCase()}`);
+      : `RCT-${paymentId.slice(0, 8).toUpperCase()}`;
+
+    // Self-heal: persist the derived receipt number for future lookups
+    await supabase
+      .from(INV_TABLES.payments)
+      .update({ receipt_number: receiptNumber })
+      .eq("id", paymentId)
+      .eq("site_id", siteId);
+  }
 
   return {
     payment: mapRecord<Payment>(payment),

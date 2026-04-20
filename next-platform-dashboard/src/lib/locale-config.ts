@@ -21,6 +21,16 @@ export const DEFAULT_CURRENCY = 'ZMW'
 /** Default currency symbol */
 export const DEFAULT_CURRENCY_SYMBOL = 'K'
 
+/**
+ * Domain registrar currency — always USD
+ * ResellerClub prices and domain fallback prices are all in USD.
+ * Use this for all domain search, billing, and pricing displays.
+ */
+export const DOMAIN_CURRENCY = 'USD'
+
+/** Domain currency symbol */
+export const DOMAIN_CURRENCY_SYMBOL = '$'
+
 /** Default timezone */
 export const DEFAULT_TIMEZONE = 'Africa/Lusaka'
 

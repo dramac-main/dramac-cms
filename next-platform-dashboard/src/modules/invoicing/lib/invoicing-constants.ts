@@ -43,6 +43,7 @@ export const INV_TABLES = {
   bills: "mod_invmod01_bills",
   billLineItems: "mod_invmod01_bill_line_items",
   purchaseOrders: "mod_invmod01_purchase_orders",
+  poReceipts: "mod_invmod01_po_receipts",
   invoiceActivity: "mod_invmod01_invoice_activity",
 } as const;
 

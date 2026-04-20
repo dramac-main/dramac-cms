@@ -212,121 +212,121 @@ export function PublicPaymentForm({
 
         {/* Manual Payment Form — only shown when online payment is enabled */}
         {onlinePaymentEnabled && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Confirm Your Payment
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleManualSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="method">Payment Method</Label>
-                <Select value={method} onValueChange={setMethod}>
-                  <SelectTrigger id="method">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bank_transfer">
-                      <span className="flex items-center gap-2">
-                        <Banknote className="h-3.5 w-3.5" />
-                        Bank Transfer
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="mobile_money">
-                      <span className="flex items-center gap-2">
-                        <Smartphone className="h-3.5 w-3.5" />
-                        Mobile Money
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Method-specific instructions */}
-              {methodInstructions && (
-                <div
-                  className="rounded-lg p-4 text-sm whitespace-pre-line border"
-                  style={{
-                    backgroundColor: `${effectiveBrand}08`,
-                    borderColor: `${effectiveBrand}20`,
-                  }}
-                >
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    {method === "bank_transfer"
-                      ? "Bank Transfer Details"
-                      : "Mobile Money Details"}
-                  </p>
-                  {methodInstructions}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                Confirm Your Payment
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleManualSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="method">Payment Method</Label>
+                  <Select value={method} onValueChange={setMethod}>
+                    <SelectTrigger id="method">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bank_transfer">
+                        <span className="flex items-center gap-2">
+                          <Banknote className="h-3.5 w-3.5" />
+                          Bank Transfer
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="mobile_money">
+                        <span className="flex items-center gap-2">
+                          <Smartphone className="h-3.5 w-3.5" />
+                          Mobile Money
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="reference">
-                  Transaction Reference / Receipt Number *
-                </Label>
-                <Input
-                  id="reference"
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  placeholder="e.g. TXN123456789"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter the reference number from your payment confirmation
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes (optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any additional information about the payment..."
-                  rows={3}
-                />
-              </div>
-
-              {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              <Separator />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={submitting}
-                style={{ backgroundColor: effectiveBrand }}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Confirm Payment
-                  </>
+                {/* Method-specific instructions */}
+                {methodInstructions && (
+                  <div
+                    className="rounded-lg p-4 text-sm whitespace-pre-line border"
+                    style={{
+                      backgroundColor: `${effectiveBrand}08`,
+                      borderColor: `${effectiveBrand}20`,
+                    }}
+                  >
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                      {method === "bank_transfer"
+                        ? "Bank Transfer Details"
+                        : "Mobile Money Details"}
+                    </p>
+                    {methodInstructions}
+                  </div>
                 )}
-              </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Your payment will be verified before being applied to the
-                invoice.
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="reference">
+                    Transaction Reference / Receipt Number *
+                  </Label>
+                  <Input
+                    id="reference"
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    placeholder="e.g. TXN123456789"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the reference number from your payment confirmation
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Additional Notes (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any additional information about the payment..."
+                    rows={3}
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <Separator />
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={submitting}
+                  style={{ backgroundColor: effectiveBrand }}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Confirm Payment
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Your payment will be verified before being applied to the
+                  invoice.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

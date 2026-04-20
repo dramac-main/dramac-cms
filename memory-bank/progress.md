@@ -203,7 +203,7 @@
 | INVFIX-03 | CRM Deep Integration, E-Commerce Item Import, Catalog Picker | ✅ Complete    |
 | INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | ✅ Complete    |
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
-| INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | 📋 Not Started |
+| INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | 📋 Not Started |
 | INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 📋 Not Started |
 | INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
@@ -221,7 +221,9 @@
 
 **April 2026 hotfix note:** The follow-up debugging pass confirmed three real runtime bugs and fixed them in code: invoicing settings save was broken by a nonexistent `stripe_secret_key` column mapping, invoice reads/writes were returning raw snake_case rows instead of mapped camelCase records, and the item catalog price editor was storing user-entered display values as cents directly. Stripe was removed from the active invoicing module surface so invoice collection is manual-only and consistent with Paddle being the platform billing provider. Public invoice view totals were also corrected to use `discount_amount` and `tax_amount`. Global TSC still has unrelated portal/automation/live-chat errors, but no invoicing-specific errors were introduced by this hotfix.
 
-**Session 6 — INVFIX-04/05 Carryover Closure (July 2026):** All 9 carryover items closed. Migration cleaned (3 Stripe columns removed, `notify_before_generation` added). Public payment form gated by `onlinePaymentEnabled` (frontend + backend 403). Payment/receipt number generators hardened to MAX-based sequences. Reconciliation and view routes use `mapRecords()`. Recurring notification toggle persisted. Storefront customer resolution wired in `generateInvoiceFromTemplate()`. TSC: 0 invoicing errors, 219 total (unchanged baseline). INVFIX-04 and INVFIX-05 are now **CLOSED**.
+**Session 6 post-audit note (April 18, 2026):** The code pass improved INVFIX-04/05 substantially, but a deeper audit found the work was not fully production-closed yet. **Resolved in Session 7** — see below.
+
+**Session 7 (July 2026):** Closed all 6 INVFIX-04/05 audit blockers: live schema verified complete (Stripe dropped, new columns/RPCs/indexes present), payment/receipt numbering hardened with advisory locks + unique constraints, receipt identifiers persisted at creation, pre-generation notification implemented in recurring engine, email sender uses shared `getEmailFrom()`. Then completed INVFIX-06: PO receive tracking (form + actions + receipt history display), bill payment recording (dialog + action + amounts cards), 3-way match (dialog + action + variance display), vendor enhancements (bank details + stats + rating). Migration `invfix-06-po-receive-vendor-enhance.sql` applied. 0 invoicing TSC errors, 219 baseline. 19 files modified/created.
 
 ---
 

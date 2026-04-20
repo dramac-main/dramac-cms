@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { DomainCartItem, DomainCart } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
 interface DomainCartProps {
   items: DomainCartItem[];
   onUpdateItem: (index: number, updates: Partial<DomainCartItem>) => void;
@@ -33,7 +33,7 @@ export function DomainCartComponent({
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     }).format(price);
   };
   
@@ -70,7 +70,7 @@ export function DomainCartComponent({
       subtotal,
       tax,
       total,
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     };
   };
   

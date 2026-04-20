@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
 export function DomainSearchClient() {
   const router = useRouter();
   const [cart, setCart] = useState<DomainCartItem[]>([]);
@@ -69,7 +69,7 @@ export function DomainSearchClient() {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: DOMAIN_CURRENCY,
     }).format(price);
   };
 
