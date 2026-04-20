@@ -9,7 +9,13 @@
 
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { Download, Printer, TrendingUp, TrendingDown, Users } from "lucide-react";
+import {
+  Download,
+  Printer,
+  TrendingUp,
+  TrendingDown,
+  Users,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,8 +39,9 @@ export function RevenueTrendsReport() {
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());
   const [sourceData, setSourceData] = useState<CrossModuleRevenue | null>(null);
   const [sourceLoading, setSourceLoading] = useState(true);
-  const [comparison, setComparison] =
-    useState<RevenueTrendsComparison | null>(null);
+  const [comparison, setComparison] = useState<RevenueTrendsComparison | null>(
+    null,
+  );
   const [compLoading, setCompLoading] = useState(true);
   const currency = "ZMW";
 
@@ -149,17 +156,13 @@ export function RevenueTrendsReport() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="p-3 rounded-lg border">
-                <p className="text-sm text-muted-foreground">
-                  Current Period
-                </p>
+                <p className="text-sm text-muted-foreground">Current Period</p>
                 <p className="text-lg font-bold">
                   {formatInvoiceAmount(comparison.currentTotal, currency)}
                 </p>
               </div>
               <div className="p-3 rounded-lg border">
-                <p className="text-sm text-muted-foreground">
-                  Previous Period
-                </p>
+                <p className="text-sm text-muted-foreground">Previous Period</p>
                 <p className="text-lg font-bold">
                   {formatInvoiceAmount(comparison.previousTotal, currency)}
                 </p>

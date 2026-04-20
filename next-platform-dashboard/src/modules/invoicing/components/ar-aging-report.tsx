@@ -13,9 +13,16 @@ import { Download, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getARAgingReport, getARAgingInvoices, exportReportCSV } from "../actions/report-actions";
+import {
+  getARAgingReport,
+  getARAgingInvoices,
+  exportReportCSV,
+} from "../actions/report-actions";
 import { formatInvoiceAmount } from "../lib/invoicing-utils";
-import type { ARAgingReport as ARAgingReportType, ARAgingInvoice } from "../types/report-types";
+import type {
+  ARAgingReport as ARAgingReportType,
+  ARAgingInvoice,
+} from "../types/report-types";
 
 const BUCKET_COLORS: Record<string, string> = {
   current: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -145,9 +152,7 @@ export function ArAgingReport() {
               <Card
                 key={bucket.key}
                 className={`cursor-pointer transition-shadow hover:shadow-md ${
-                  selectedBucket === bucket.key
-                    ? "ring-2 ring-primary"
-                    : ""
+                  selectedBucket === bucket.key ? "ring-2 ring-primary" : ""
                 }`}
                 onClick={() => handleBucketClick(bucket.key)}
               >
@@ -170,7 +175,10 @@ export function ArAgingReport() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Invoices — {selectedBucket === "current" ? "Current" : `${selectedBucket} Days`}
+                  Invoices —{" "}
+                  {selectedBucket === "current"
+                    ? "Current"
+                    : `${selectedBucket} Days`}
                 </CardTitle>
               </CardHeader>
               <CardContent>

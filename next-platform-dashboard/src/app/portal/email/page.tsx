@@ -99,7 +99,7 @@ export default async function PortalEmailPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                Log in to your email inbox through Titan Mail webmail
+                Log in to your email inbox through webmail
               </p>
               <Button asChild>
                 <a 
@@ -188,7 +188,7 @@ export default async function PortalEmailPage() {
             </p>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>Contact your agency for IMAP/SMTP settings</li>
-              <li>Or use the webmail interface at app.titan.email</li>
+              <li>Or use the webmail link above to access your inbox</li>
             </ul>
           </div>
 

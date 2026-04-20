@@ -26,9 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  createBusinessEmailOrder,
-} from "@/lib/actions/business-email";
+import { createBusinessEmailOrder } from "@/lib/actions/business-email";
 import { useEmailPricing } from "@/hooks/use-email-pricing";
 import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
@@ -416,7 +414,12 @@ export function EmailPurchaseWizard() {
   const [isPending, startTransition] = useTransition();
 
   // Pricing via React Query — cached for 5 min, so re-visits are instant
-  const { data: pricingResult, isLoading: pricingLoading, error: pricingQueryError, refetch: refetchPricing } = useEmailPricing();
+  const {
+    data: pricingResult,
+    isLoading: pricingLoading,
+    error: pricingQueryError,
+    refetch: refetchPricing,
+  } = useEmailPricing();
 
   // Pricing state — keyed by plan key (dynamically populated from the API)
   const [allPricing, setAllPricing] = useState<
@@ -633,7 +636,11 @@ export function EmailPurchaseWizard() {
                   {pricingError}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => refetchPricing()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchPricing()}
+              >
                 <RefreshCw className="h-3.5 w-3.5 mr-2" />
                 Try Again
               </Button>
@@ -667,7 +674,7 @@ export function EmailPurchaseWizard() {
                   type="button"
                   onClick={() => setSelectedPlan(key)}
                   className={cn(
-                    "group relative text-left rounded-xl border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden",
+                    "group relative text-left rounded-xl border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden bg-card",
                     isSelected
                       ? "border-primary shadow-md shadow-primary/10"
                       : "border-border hover:border-primary/40 hover:shadow-sm",

@@ -954,10 +954,12 @@ async function handleDomainEmailPurchaseCompleted(
       // NOTIFY USER — Provisioning succeeded
       // =====================================================================
       try {
-        const { createNotification } = await import("@/lib/services/notifications");
-        const domainName = (purchase.purchase_data as any)?.domain_name || "unknown";
+        const { createNotification } =
+          await import("@/lib/services/notifications");
+        const domainName =
+          (purchase.purchase_data as any)?.domain_name || "unknown";
         const userId = purchase.user_id as string;
-        
+
         if (purchaseType === "email_order") {
           await createNotification({
             userId,
@@ -967,7 +969,11 @@ async function handleDomainEmailPurchaseCompleted(
             link: `/dashboard/email`,
           });
         } else {
-          const action = purchaseType.includes("register") ? "registered" : purchaseType.includes("renew") ? "renewed" : "transferred";
+          const action = purchaseType.includes("register")
+            ? "registered"
+            : purchaseType.includes("renew")
+              ? "renewed"
+              : "transferred";
           await createNotification({
             userId,
             type: "domain_provisioned",
@@ -977,7 +983,10 @@ async function handleDomainEmailPurchaseCompleted(
           });
         }
       } catch (notifyErr) {
-        console.warn("[Paddle Webhook] Failed to send success notification:", notifyErr);
+        console.warn(
+          "[Paddle Webhook] Failed to send success notification:",
+          notifyErr,
+        );
       }
     } else {
       console.error(
@@ -1007,19 +1016,33 @@ async function handleDomainEmailPurchaseCompleted(
 
           // Notify user about the failed provisioning + refund
           try {
-            const { createNotification } = await import("@/lib/services/notifications");
-            const domainName = (purchase.purchase_data as any)?.domain_name || "unknown";
-            const notifType = purchaseType === "email_order" ? "email_provisioning_failed" : "domain_provisioning_failed";
+            const { createNotification } =
+              await import("@/lib/services/notifications");
+            const domainName =
+              (purchase.purchase_data as any)?.domain_name || "unknown";
+            const notifType =
+              purchaseType === "email_order"
+                ? "email_provisioning_failed"
+                : "domain_provisioning_failed";
             await createNotification({
               userId: purchase.user_id as string,
               type: notifType as any,
               title: "Order could not be fulfilled — refund issued",
               message: `We were unable to provision ${domainName}. A full refund has been issued to your payment method. This may take a few business days to appear.`,
-              link: purchaseType === "email_order" ? `/dashboard/email` : `/dashboard/domains`,
-              metadata: { transactionId, adjustmentId: refundResult.adjustmentId },
+              link:
+                purchaseType === "email_order"
+                  ? `/dashboard/email`
+                  : `/dashboard/domains`,
+              metadata: {
+                transactionId,
+                adjustmentId: refundResult.adjustmentId,
+              },
             });
           } catch (notifyErr) {
-            console.warn("[Paddle Webhook] Failed to send refund notification:", notifyErr);
+            console.warn(
+              "[Paddle Webhook] Failed to send refund notification:",
+              notifyErr,
+            );
           }
         } else {
           // CRITICAL: Refund failed — needs manual intervention

@@ -516,13 +516,23 @@ export async function getCashFlowReport(
   // Group into monthly periods
   const periodMap = new Map<
     string,
-    { invoicingIn: number; ecommerceIn: number; bookingIn: number; cashOut: number }
+    {
+      invoicingIn: number;
+      ecommerceIn: number;
+      bookingIn: number;
+      cashOut: number;
+    }
   >();
 
   for (const pay of payments || []) {
     const d = new Date(pay.payment_date);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    const existing = periodMap.get(key) || {
+      invoicingIn: 0,
+      ecommerceIn: 0,
+      bookingIn: 0,
+      cashOut: 0,
+    };
     existing.invoicingIn += pay.amount || 0;
     periodMap.set(key, existing);
   }
@@ -530,7 +540,12 @@ export async function getCashFlowReport(
   for (const o of ecomOrders || []) {
     const d = new Date(o.created_at);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    const existing = periodMap.get(key) || {
+      invoicingIn: 0,
+      ecommerceIn: 0,
+      bookingIn: 0,
+      cashOut: 0,
+    };
     existing.ecommerceIn += o.total || 0;
     periodMap.set(key, existing);
   }
@@ -538,7 +553,12 @@ export async function getCashFlowReport(
   for (const b of bookings || []) {
     const d = new Date(b.start_time);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    const existing = periodMap.get(key) || {
+      invoicingIn: 0,
+      ecommerceIn: 0,
+      bookingIn: 0,
+      cashOut: 0,
+    };
     existing.bookingIn += b.payment_amount || 0;
     periodMap.set(key, existing);
   }
@@ -546,7 +566,12 @@ export async function getCashFlowReport(
   for (const exp of expenses || []) {
     const d = new Date(exp.date);
     const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-    const existing = periodMap.get(key) || { invoicingIn: 0, ecommerceIn: 0, bookingIn: 0, cashOut: 0 };
+    const existing = periodMap.get(key) || {
+      invoicingIn: 0,
+      ecommerceIn: 0,
+      bookingIn: 0,
+      cashOut: 0,
+    };
     existing.cashOut += exp.amount || 0;
     periodMap.set(key, existing);
   }

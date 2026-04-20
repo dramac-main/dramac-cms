@@ -1,9 +1,9 @@
 // src/lib/paddle/transactions.ts
 // Paddle One-Time Transactions for Domain/Email Purchases
 
-import { paddle, isPaddleConfigured } from './client';
-import { createAdminClient } from '@/lib/supabase/admin';
-import type { Transaction } from '@paddle/paddle-node-sdk';
+import { paddle, isPaddleConfigured } from "./client";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Transaction } from "@paddle/paddle-node-sdk";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
@@ -27,10 +27,10 @@ export async function checkResellerBalance(wholesaleAmount: number): Promise<{
   shortfall: number;
 }> {
   try {
-    const { getResellerClubClient } = await import('@/lib/resellerclub');
+    const { getResellerClubClient } = await import("@/lib/resellerclub");
     const client = getResellerClubClient();
     const { balance, currency } = await client.getBalance();
-    
+
     const sufficient = balance >= wholesaleAmount;
     return {
       sufficient,
@@ -40,7 +40,7 @@ export async function checkResellerBalance(wholesaleAmount: number): Promise<{
       shortfall: sufficient ? 0 : wholesaleAmount - balance,
     };
   } catch (error) {
-    console.error('[Paddle] Failed to check RC balance:', error);
+    console.error("[Paddle] Failed to check RC balance:", error);
     // If we can't check balance, allow the transaction but log a warning.
     // The provisioning step will catch insufficient funds and the auto-refund
     // mechanism will handle it.
@@ -48,7 +48,7 @@ export async function checkResellerBalance(wholesaleAmount: number): Promise<{
       sufficient: true, // fail-open: don't block checkout if RC is unreachable
       balance: -1,
       required: wholesaleAmount,
-      currency: 'USD',
+      currency: "USD",
       shortfall: 0,
     };
   }
@@ -68,51 +68,58 @@ export async function checkResellerBalance(wholesaleAmount: number): Promise<{
 export async function autoRefundTransaction(
   paddleTransactionId: string,
   reason: string,
-  pendingPurchaseId?: string
+  pendingPurchaseId?: string,
 ): Promise<{ success: boolean; adjustmentId?: string; error?: string }> {
   if (!paddle) {
-    return { success: false, error: 'Paddle not configured' };
+    return { success: false, error: "Paddle not configured" };
   }
 
   try {
-    console.log(`[Paddle] Issuing auto-refund for transaction ${paddleTransactionId}: ${reason}`);
+    console.log(
+      `[Paddle] Issuing auto-refund for transaction ${paddleTransactionId}: ${reason}`,
+    );
 
     // Paddle Billing uses "Adjustments" for refunds
     // type: 'full' = refund the entire transaction amount (no items array needed)
     // action: 'refund' = returns money to customer's payment method
     const adjustment = await paddle.adjustments.create({
-      action: 'refund',
+      action: "refund",
       transactionId: paddleTransactionId,
       reason: reason.substring(0, 255), // Paddle limits reason length
-      type: 'full', // Full refund — no items array needed
+      type: "full", // Full refund — no items array needed
     });
 
     const adjustmentId = adjustment.id;
-    console.log(`[Paddle] Auto-refund created: ${adjustmentId} for transaction ${paddleTransactionId}`);
+    console.log(
+      `[Paddle] Auto-refund created: ${adjustmentId} for transaction ${paddleTransactionId}`,
+    );
 
     // Update the pending purchase status
     // Use 'failed' as fallback status if migration dm-12b hasn't added 'refunded' yet
     if (pendingPurchaseId) {
       const admin = createAdminClient() as SupabaseClient;
-      
+
       // Try 'refunded' first (requires dm-12b migration)
       const { error: updateError } = await admin
-        .from('pending_purchases')
+        .from("pending_purchases")
         .update({
-          status: 'refunded',
+          status: "refunded",
           refund_reason: reason,
           paddle_refund_id: adjustmentId,
           refunded_at: new Date().toISOString(),
         })
-        .eq('id', pendingPurchaseId);
-      
+        .eq("id", pendingPurchaseId);
+
       // Fallback: if 'refunded' status violates CHECK constraint, use 'failed' + error_details
       if (updateError) {
-        console.warn(`[Paddle] Could not set status='refunded', falling back to 'failed':`, updateError.message);
+        console.warn(
+          `[Paddle] Could not set status='refunded', falling back to 'failed':`,
+          updateError.message,
+        );
         await admin
-          .from('pending_purchases')
+          .from("pending_purchases")
           .update({
-            status: 'failed',
+            status: "failed",
             error_message: `Auto-refunded: ${reason}`,
             error_details: {
               refunded: true,
@@ -121,14 +128,17 @@ export async function autoRefundTransaction(
               refunded_at: new Date().toISOString(),
             },
           })
-          .eq('id', pendingPurchaseId);
+          .eq("id", pendingPurchaseId);
       }
     }
 
     return { success: true, adjustmentId };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[Paddle] Auto-refund FAILED for ${paddleTransactionId}:`, errorMsg);
+    console.error(
+      `[Paddle] Auto-refund FAILED for ${paddleTransactionId}:`,
+      errorMsg,
+    );
     // Don't throw — log for manual intervention
     return { success: false, error: errorMsg };
   }
@@ -138,7 +148,7 @@ export interface CreateDomainPurchaseParams {
   agencyId: string;
   userId: string;
   clientId?: string;
-  purchaseType: 'domain_register' | 'domain_renew' | 'domain_transfer';
+  purchaseType: "domain_register" | "domain_renew" | "domain_transfer";
   domainName: string;
   years: number;
   tld: string;
@@ -182,7 +192,7 @@ function generateIdempotencyKey(
   agencyId: string,
   purchaseType: string,
   identifier: string,
-  amountCents?: number
+  amountCents?: number,
 ): string {
   // Format: {agencyId}:{purchaseType}:{identifier}[:{amountCents}]
   // For multi-domain purchases, identifier should be a sorted, joined list
@@ -197,14 +207,14 @@ function generateIdempotencyKey(
  * Create a domain purchase with Paddle transaction
  */
 export async function createDomainPurchase(
-  params: CreateDomainPurchaseParams
+  params: CreateDomainPurchaseParams,
 ): Promise<PendingPurchase> {
   if (!isPaddleConfigured || !paddle) {
-    throw new Error('Paddle not configured');
+    throw new Error("Paddle not configured");
   }
-  
+
   const admin = createAdminClient() as SupabaseClient;
-  
+
   // Generate idempotency key — includes years + amount so price/year changes
   // create a fresh transaction instead of reusing a stale one
   const retailCents = Math.round(params.retailAmount * 100);
@@ -212,19 +222,22 @@ export async function createDomainPurchase(
     params.agencyId,
     params.purchaseType,
     `${params.domainName}-${params.years}yr`,
-    retailCents
+    retailCents,
   );
-  
+
   // Check if purchase already exists (maybeSingle avoids error if not found)
   const { data: existing } = await admin
-    .from('pending_purchases')
-    .select('*')
-    .eq('idempotency_key', idempotencyKey)
+    .from("pending_purchases")
+    .select("*")
+    .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
-  
+
   if (existing) {
     // Return existing purchase if still valid (pending and not expired)
-    if (existing.status === 'pending_payment' && new Date(existing.expires_at) > new Date()) {
+    if (
+      existing.status === "pending_payment" &&
+      new Date(existing.expires_at) > new Date()
+    ) {
       return {
         id: existing.id,
         idempotencyKey: existing.idempotency_key,
@@ -234,41 +247,41 @@ export async function createDomainPurchase(
       };
     }
     // If existing purchase is failed, cancelled, or expired — delete it so we can retry
-    if (['failed', 'cancelled'].includes(existing.status) || new Date(existing.expires_at) <= new Date()) {
-      await admin
-        .from('pending_purchases')
-        .delete()
-        .eq('id', existing.id);
+    if (
+      ["failed", "cancelled"].includes(existing.status) ||
+      new Date(existing.expires_at) <= new Date()
+    ) {
+      await admin.from("pending_purchases").delete().eq("id", existing.id);
     }
   }
-  
+
   // Also clean up any OLD pending purchases for the same domain(s) that have
   // a different idempotency key (e.g. user changed years or price was corrected).
   // This prevents orphaned pending_purchases from accumulating.
   try {
     const domainIdentifier = `${params.domainName}`;
     await admin
-      .from('pending_purchases')
+      .from("pending_purchases")
       .delete()
-      .eq('agency_id', params.agencyId)
-      .eq('purchase_type', params.purchaseType)
-      .eq('status', 'pending_payment')
-      .neq('idempotency_key', idempotencyKey)
-      .like('idempotency_key', `%:${domainIdentifier}%`);
+      .eq("agency_id", params.agencyId)
+      .eq("purchase_type", params.purchaseType)
+      .eq("status", "pending_payment")
+      .neq("idempotency_key", idempotencyKey)
+      .like("idempotency_key", `%:${domainIdentifier}%`);
   } catch {
     // Non-critical — just cleanup, don't block checkout
   }
-  
+
   try {
     // =========================================================================
     // PRE-FLIGHT BALANCE CHECK — BLOCK when balance is confirmed insufficient
     //
     // Strategy: If we can successfully confirm that the RC balance is too low,
-    // BLOCK the checkout and tell the agency owner to top up. This prevents 
+    // BLOCK the checkout and tell the agency owner to top up. This prevents
     // the frustrating flow where the client pays, provisioning fails, and they
     // receive a delayed refund email from Paddle.
     //
-    // Fail-open ONLY when the balance API is unreachable (network error, 
+    // Fail-open ONLY when the balance API is unreachable (network error,
     // timeout, auth failure). In that case the auto-refund safety net still
     // covers us, but at least legitimate insufficient-balance scenarios are
     // caught before payment.
@@ -279,39 +292,39 @@ export async function createDomainPurchase(
         // Balance API responded successfully but funds are too low → BLOCK
         console.error(
           `[Paddle] PRE-FLIGHT BLOCKED: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
-          `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
-          `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`
+            `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
+            `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`,
         );
         throw new Error(
-          `Insufficient provider balance to fulfill this order. ` +
-          `Please top up your ResellerClub account (shortfall: $${balanceCheck.shortfall.toFixed(2)}) and try again.`
+          `This service is temporarily unavailable due to a provisioning capacity issue. ` +
+            `Please contact your platform administrator or try again later.`,
         );
       }
       // balance === -1 → API failed, fail-open with auto-refund safety
       console.warn(
         `[Paddle] PRE-FLIGHT WARNING: Could not verify RC balance for ${params.domainName}. ` +
-        `Allowing checkout to proceed — auto-refund will handle provisioning failure.`
+          `Allowing checkout to proceed — auto-refund will handle provisioning failure.`,
       );
     } else if (balanceCheck.balance > 0) {
       console.log(
         `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
-        `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName}`
+          `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName}`,
       );
     }
 
     // Create Paddle transaction with custom non-catalog item
-    const description = `${params.purchaseType.replace('domain_', 'Domain ')} - ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})${params.privacy ? ' + Privacy Protection' : ''}`;
-    
+    const description = `${params.purchaseType.replace("domain_", "Domain ")} - ${params.domainName} (${params.years} year${params.years > 1 ? "s" : ""})${params.privacy ? " + Privacy Protection" : ""}`;
+
     const transaction: Transaction = await paddle.transactions.create({
       items: [
         {
           quantity: 1,
           price: {
             description,
-            name: `${params.domainName} (${params.years} Year${params.years > 1 ? 's' : ''})`,
+            name: `${params.domainName} (${params.years} Year${params.years > 1 ? "s" : ""})`,
             unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
-              currencyCode: (params.currency || 'USD') as any,
+              currencyCode: (params.currency || "USD") as any,
             },
             // Lock quantity to exactly 1 — prevents Paddle checkout from showing
             // a quantity stepper that confuses users (they think it's years, not items)
@@ -320,14 +333,14 @@ export async function createDomainPurchase(
               maximum: 1,
             },
             product: {
-              name: `Domain ${params.purchaseType.split('_')[1]} - ${params.years}yr`,
-              taxCategory: 'standard',
-              description: `${params.purchaseType.replace('_', ' ')} for ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})`,
+              name: `Domain ${params.purchaseType.split("_")[1]} - ${params.years}yr`,
+              taxCategory: "standard",
+              description: `${params.purchaseType.replace("_", " ")} for ${params.domainName} (${params.years} year${params.years > 1 ? "s" : ""})`,
             },
           },
         },
       ],
-      currencyCode: (params.currency || 'USD') as any,
+      currencyCode: (params.currency || "USD") as any,
       customData: {
         purchase_type: params.purchaseType,
         agency_id: params.agencyId,
@@ -335,10 +348,10 @@ export async function createDomainPurchase(
         idempotency_key: idempotencyKey,
       },
     });
-    
+
     // Create pending purchase record
     const { data: purchase, error } = await admin
-      .from('pending_purchases')
+      .from("pending_purchases")
       .insert({
         agency_id: params.agencyId,
         user_id: params.userId,
@@ -354,19 +367,19 @@ export async function createDomainPurchase(
         },
         wholesale_amount: params.wholesaleAmount,
         retail_amount: params.retailAmount,
-        currency: params.currency || 'USD',
+        currency: params.currency || "USD",
         paddle_transaction_id: transaction.id,
         paddle_checkout_url: transaction.checkout?.url || null,
-        status: 'pending_payment',
+        status: "pending_payment",
         idempotency_key: idempotencyKey,
       })
       .select()
       .single();
-    
+
     if (error) {
       throw new Error(`Failed to create pending purchase: ${error.message}`);
     }
-    
+
     return {
       id: purchase.id,
       idempotencyKey: purchase.idempotency_key,
@@ -375,7 +388,7 @@ export async function createDomainPurchase(
       status: purchase.status,
     };
   } catch (error) {
-    console.error('[Paddle] Failed to create domain purchase:', error);
+    console.error("[Paddle] Failed to create domain purchase:", error);
     throw error;
   }
 }
@@ -384,36 +397,39 @@ export async function createDomainPurchase(
  * Create an email purchase with Paddle transaction
  */
 export async function createEmailPurchase(
-  params: CreateEmailPurchaseParams
+  params: CreateEmailPurchaseParams,
 ): Promise<PendingPurchase> {
   if (!isPaddleConfigured || !paddle) {
-    throw new Error('Paddle not configured');
+    throw new Error("Paddle not configured");
   }
-  
+
   const admin = createAdminClient() as SupabaseClient;
-  
+
   // Generate idempotency key — includes months + amount
   const idempotencyKey = generateIdempotencyKey(
     params.agencyId,
-    'email_order',
+    "email_order",
     `${params.domainName}-${params.months}mo`,
-    Math.round(params.retailAmount * 100)
+    Math.round(params.retailAmount * 100),
   );
-  
+
   // Check if purchase already exists (use maybeSingle to avoid errors if not found)
   const { data: existing, error: existingError } = await admin
-    .from('pending_purchases')
-    .select('*')
-    .eq('idempotency_key', idempotencyKey)
+    .from("pending_purchases")
+    .select("*")
+    .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
-  
+
   if (existingError) {
-    console.error('[Paddle] Error checking existing purchase:', existingError);
+    console.error("[Paddle] Error checking existing purchase:", existingError);
   }
-  
+
   if (existing) {
     // Return existing purchase if still valid (pending and not expired)
-    if (existing.status === 'pending_payment' && new Date(existing.expires_at) > new Date()) {
+    if (
+      existing.status === "pending_payment" &&
+      new Date(existing.expires_at) > new Date()
+    ) {
       return {
         id: existing.id,
         idempotencyKey: existing.idempotency_key,
@@ -423,29 +439,29 @@ export async function createEmailPurchase(
       };
     }
     // If existing purchase is failed, cancelled, or expired — delete it so we can retry
-    if (['failed', 'cancelled'].includes(existing.status) || new Date(existing.expires_at) <= new Date()) {
-      await admin
-        .from('pending_purchases')
-        .delete()
-        .eq('id', existing.id);
+    if (
+      ["failed", "cancelled"].includes(existing.status) ||
+      new Date(existing.expires_at) <= new Date()
+    ) {
+      await admin.from("pending_purchases").delete().eq("id", existing.id);
     }
   }
-  
+
   // Clean up stale pending purchases for the same domain email
   // (e.g. user changed months or number of accounts)
   try {
     await admin
-      .from('pending_purchases')
+      .from("pending_purchases")
       .delete()
-      .eq('agency_id', params.agencyId)
-      .eq('purchase_type', 'email_order')
-      .eq('status', 'pending_payment')
-      .neq('idempotency_key', idempotencyKey)
-      .like('idempotency_key', `%:${params.domainName}%`);
+      .eq("agency_id", params.agencyId)
+      .eq("purchase_type", "email_order")
+      .eq("status", "pending_payment")
+      .neq("idempotency_key", idempotencyKey)
+      .like("idempotency_key", `%:${params.domainName}%`);
   } catch {
     // Non-critical — just cleanup, don't block checkout
   }
-  
+
   try {
     // =========================================================================
     // PRE-FLIGHT BALANCE CHECK — BLOCK when balance is confirmed insufficient
@@ -459,29 +475,32 @@ export async function createEmailPurchase(
         // Balance API responded successfully but funds are too low → BLOCK
         console.error(
           `[Paddle] PRE-FLIGHT BLOCKED: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
-          `may be insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
-          `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`
+            `may be insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
+            `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`,
         );
         throw new Error(
-          `Insufficient provider balance to fulfill this order. ` +
-          `Please top up your ResellerClub account (shortfall: $${balanceCheck.shortfall.toFixed(2)}) and try again.`
+          `This service is temporarily unavailable due to a provisioning capacity issue. ` +
+            `Please contact your platform administrator or try again later.`,
         );
       }
       // balance === -1 → API failed, fail-open with auto-refund safety
       console.warn(
         `[Paddle] PRE-FLIGHT WARNING: Could not verify RC balance for ${params.domainName} email. ` +
-        `Allowing checkout to proceed — auto-refund will handle provisioning failure.`
+          `Allowing checkout to proceed — auto-refund will handle provisioning failure.`,
       );
     } else if (balanceCheck.balance > 0) {
       console.log(
         `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
-        `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName} email`
+          `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName} email`,
       );
     }
 
     // Create Paddle transaction with custom non-catalog item
-    const planName = resolveEmailPlanDisplayName(params.productKey, params.planId);
-    const description = `${planName} - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? 's' : ''}, ${params.months} month${params.months > 1 ? 's' : ''})`;
+    const planName = resolveEmailPlanDisplayName(
+      params.productKey,
+      params.planId,
+    );
+    const description = `${planName} - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? "s" : ""}, ${params.months} month${params.months > 1 ? "s" : ""})`;
 
     const transaction: Transaction = await paddle.transactions.create({
       items: [
@@ -492,7 +511,7 @@ export async function createEmailPurchase(
             name: `${params.domainName} ${planName} - ${params.months}mo`,
             unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
-              currencyCode: (params.currency || 'USD') as any,
+              currencyCode: (params.currency || "USD") as any,
             },
             // Lock quantity to exactly 1 — prevents checkout quantity editing
             quantity: {
@@ -501,52 +520,52 @@ export async function createEmailPurchase(
             },
             product: {
               name: planName,
-              taxCategory: 'standard',
+              taxCategory: "standard",
               description: `${planName} for ${params.domainName}`,
             },
           },
         },
       ],
-      currencyCode: (params.currency || 'USD') as any,
+      currencyCode: (params.currency || "USD") as any,
       customData: {
-        purchase_type: 'email_order',
+        purchase_type: "email_order",
         agency_id: params.agencyId,
         user_id: params.userId,
         idempotency_key: idempotencyKey,
       },
     });
-    
+
     // Create pending purchase record
     const { data: purchase, error } = await admin
-      .from('pending_purchases')
+      .from("pending_purchases")
       .insert({
         agency_id: params.agencyId,
         user_id: params.userId,
         client_id: params.clientId,
-        purchase_type: 'email_order',
+        purchase_type: "email_order",
         purchase_data: {
           domain_id: params.domainId,
           domain_name: params.domainName,
           number_of_accounts: params.numberOfAccounts,
           months: params.months,
-          product_key: params.productKey || 'eeliteus',
+          product_key: params.productKey || "eeliteus",
           plan_id: params.planId || null,
         },
         wholesale_amount: params.wholesaleAmount,
         retail_amount: params.retailAmount,
-        currency: params.currency || 'USD',
+        currency: params.currency || "USD",
         paddle_transaction_id: transaction.id,
         paddle_checkout_url: transaction.checkout?.url || null,
-        status: 'pending_payment',
+        status: "pending_payment",
         idempotency_key: idempotencyKey,
       })
       .select()
       .single();
-    
+
     if (error) {
       throw new Error(`Failed to create pending purchase: ${error.message}`);
     }
-    
+
     return {
       id: purchase.id,
       idempotencyKey: purchase.idempotency_key,
@@ -555,7 +574,7 @@ export async function createEmailPurchase(
       status: purchase.status,
     };
   } catch (error) {
-    console.error('[Paddle] Failed to create email purchase:', error);
+    console.error("[Paddle] Failed to create email purchase:", error);
     throw error;
   }
 }
@@ -564,21 +583,21 @@ export async function createEmailPurchase(
  * Get pending purchase by ID
  */
 export async function getPendingPurchase(
-  purchaseId: string
+  purchaseId: string,
 ): Promise<Record<string, unknown> | null> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   const { data, error } = await admin
-    .from('pending_purchases')
-    .select('*')
-    .eq('id', purchaseId)
+    .from("pending_purchases")
+    .select("*")
+    .eq("id", purchaseId)
     .single();
-  
+
   if (error) {
-    console.error('[Paddle] Failed to get pending purchase:', error);
+    console.error("[Paddle] Failed to get pending purchase:", error);
     return null;
   }
-  
+
   return data;
 }
 
@@ -586,21 +605,21 @@ export async function getPendingPurchase(
  * Get pending purchase by Paddle transaction ID
  */
 export async function getPendingPurchaseByTransaction(
-  transactionId: string
+  transactionId: string,
 ): Promise<Record<string, unknown> | null> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   const { data, error } = await admin
-    .from('pending_purchases')
-    .select('*')
-    .eq('paddle_transaction_id', transactionId)
+    .from("pending_purchases")
+    .select("*")
+    .eq("paddle_transaction_id", transactionId)
     .single();
-  
+
   if (error) {
-    console.error('[Paddle] Failed to get pending purchase:', error);
+    console.error("[Paddle] Failed to get pending purchase:", error);
     return null;
   }
-  
+
   return data;
 }
 
@@ -610,21 +629,21 @@ export async function getPendingPurchaseByTransaction(
 export async function updatePendingPurchaseStatus(
   purchaseId: string,
   status: string,
-  updates?: Record<string, unknown>
+  updates?: Record<string, unknown>,
 ): Promise<void> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   const { error } = await admin
-    .from('pending_purchases')
+    .from("pending_purchases")
     .update({
       status,
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', purchaseId);
-  
+    .eq("id", purchaseId);
+
   if (error) {
-    console.error('[Paddle] Failed to update pending purchase:', error);
+    console.error("[Paddle] Failed to update pending purchase:", error);
     throw error;
   }
 }
@@ -634,13 +653,20 @@ export async function updatePendingPurchaseStatus(
  * Handles legacy keys (eeliteus, enterpriseemailus), Titan Mail plan IDs,
  * and synthetic flattened keys (titanmailglobal_1762).
  */
-function resolveEmailPlanDisplayName(productKey?: string, planId?: number): string {
+function resolveEmailPlanDisplayName(
+  productKey?: string,
+  planId?: number,
+): string {
   // Titan Mail plan IDs → name mapping
   const PLAN_ID_NAMES: Record<number, string> = {
-    1762: 'Professional Email', 1761: 'Professional Email',
-    1756: 'Business Email',     1758: 'Business Email',
-    1757: 'Enterprise Email',   1759: 'Enterprise Email',
-    1755: 'Business Email (Trial)', 1760: 'Business Email (Trial)',
+    1762: "Professional Email",
+    1761: "Professional Email",
+    1756: "Business Email",
+    1758: "Business Email",
+    1757: "Enterprise Email",
+    1759: "Enterprise Email",
+    1755: "Business Email (Trial)",
+    1760: "Business Email (Trial)",
   };
 
   if (planId && PLAN_ID_NAMES[planId]) return PLAN_ID_NAMES[planId];
@@ -654,10 +680,10 @@ function resolveEmailPlanDisplayName(productKey?: string, planId?: number): stri
     }
 
     // Legacy keys
-    if (productKey.startsWith('enterpriseemail')) return 'Enterprise Email';
-    if (productKey.startsWith('eelite')) return 'Business Email';
-    if (productKey.startsWith('titanmail')) return 'Email';
+    if (productKey.startsWith("enterpriseemail")) return "Enterprise Email";
+    if (productKey.startsWith("eelite")) return "Business Email";
+    if (productKey.startsWith("titanmail")) return "Email";
   }
 
-  return 'Email';
+  return "Email";
 }

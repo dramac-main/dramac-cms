@@ -720,25 +720,29 @@ export async function getBusinessEmailPricing(): Promise<{
 
       if (customerPricing) {
         // Serve cache immediately, refresh in background
-        businessEmailApi.getCustomerPricing(customerId).then((live) => {
-          pricingCacheService
-            .refreshEmailPricing(customerId!, ["customer"])
-            .catch((err) => {
-              console.error(
-                "[BusinessEmail] Background cache refresh failed:",
-                err,
-              );
-            });
-        }).catch((err) => {
-          console.error(
-            "[BusinessEmail] Background live fetch failed (cache served):",
-            err,
-          );
-        });
+        businessEmailApi
+          .getCustomerPricing(customerId)
+          .then((live) => {
+            pricingCacheService
+              .refreshEmailPricing(customerId!, ["customer"])
+              .catch((err) => {
+                console.error(
+                  "[BusinessEmail] Background cache refresh failed:",
+                  err,
+                );
+              });
+          })
+          .catch((err) => {
+            console.error(
+              "[BusinessEmail] Background live fetch failed (cache served):",
+              err,
+            );
+          });
       } else {
         // No cache available — must wait for live fetch
         try {
-          customerPricing = await businessEmailApi.getCustomerPricing(customerId);
+          customerPricing =
+            await businessEmailApi.getCustomerPricing(customerId);
 
           // Populate cache for next time
           pricingCacheService

@@ -143,11 +143,17 @@ export function PnlReport() {
                       : "text-red-600"
                   }`}
                 >
-                  {formatInvoiceAmount(data.grossMargin ?? data.netProfit, currency)}
+                  {formatInvoiceAmount(
+                    data.grossMargin ?? data.netProfit,
+                    currency,
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {(data.grossMarginPercent ?? data.netProfitMargin).toFixed(1)}%
-                  <span className="ml-1 italic">(service platform — no COGS)</span>
+                  {(data.grossMarginPercent ?? data.netProfitMargin).toFixed(1)}
+                  %
+                  <span className="ml-1 italic">
+                    (service platform — no COGS)
+                  </span>
                 </p>
               </CardContent>
             </Card>

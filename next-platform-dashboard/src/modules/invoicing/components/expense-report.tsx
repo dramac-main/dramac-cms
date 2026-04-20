@@ -8,7 +8,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download, Printer, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import {
+  Download,
+  Printer,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -185,9 +191,7 @@ export function ExpenseReportView() {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-2 px-3">Category</th>
-                        <th className="text-right py-2 px-3">
-                          Monthly Budget
-                        </th>
+                        <th className="text-right py-2 px-3">Monthly Budget</th>
                         <th className="text-right py-2 px-3">Spent</th>
                         <th className="text-right py-2 px-3">Remaining</th>
                         <th className="text-right py-2 px-3">% Used</th>

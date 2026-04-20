@@ -35,8 +35,8 @@ function getPlanDisplayName(productKey: string): string {
     eeliteuk: "Business Email",
     enterpriseemailus: "Enterprise Email",
     enterpriseemailin: "Enterprise Email",
-    titanmailglobal: "Titan Email",
-    titanmailindia: "Titan Email",
+    titanmailglobal: "Business Email",
+    titanmailindia: "Business Email",
   };
   // Check for Titan Mail plan IDs
   const titanMatch = productKey.match(/^titanmail(?:global|india)_(\d+)$/);
@@ -52,7 +52,7 @@ function getPlanDisplayName(productKey: string): string {
       1755: "Business Email (Trial)",
       1760: "Business Email (Trial)",
     };
-    return TITAN_NAMES[planId] || "Titan Email";
+    return TITAN_NAMES[planId] || "Business Email";
   }
   return PLAN_NAMES[productKey] || "Business Email";
 }

@@ -2,9 +2,9 @@
 // ResellerClub Provisioning Service
 // Handles actual domain/email provisioning after payment
 
-import { createAdminClient } from '@/lib/supabase/admin';
-import { domainService } from './domains';
-import { customerService } from './customers';
+import { createAdminClient } from "@/lib/supabase/admin";
+import { domainService } from "./domains";
+import { customerService } from "./customers";
 
 /**
  * Helper: Ensure agency has a ResellerClub customer ID.
@@ -15,39 +15,52 @@ import { customerService } from './customers';
 async function ensureResellerClubCustomerForProvisioning(
   admin: any,
   agencyId: string,
-  userId: string
+  userId: string,
 ): Promise<string | null> {
-  console.log(`[Provisioning] ensureResellerClubCustomerForProvisioning called for agency=${agencyId}, user=${userId}`);
-  
+  console.log(
+    `[Provisioning] ensureResellerClubCustomerForProvisioning called for agency=${agencyId}, user=${userId}`,
+  );
+
   // Check if already set
   const { data: agency } = await admin
-    .from('agencies')
-    .select('id, name, resellerclub_customer_id')
-    .eq('id', agencyId)
+    .from("agencies")
+    .select("id, name, resellerclub_customer_id")
+    .eq("id", agencyId)
     .maybeSingle();
 
   const existingRcId = agency?.resellerclub_customer_id;
   // Guard against stringified falsy values ("undefined", "null", "") that got stored in DB
-  const isValidRcId = existingRcId && existingRcId !== 'undefined' && existingRcId !== 'null' && existingRcId.trim() !== '';
-  
+  const isValidRcId =
+    existingRcId &&
+    existingRcId !== "undefined" &&
+    existingRcId !== "null" &&
+    existingRcId.trim() !== "";
+
   if (isValidRcId) {
-    console.log(`[Provisioning] Agency already has RC customer: ${existingRcId}`);
+    console.log(
+      `[Provisioning] Agency already has RC customer: ${existingRcId}`,
+    );
     return existingRcId as string;
   }
-  
+
   // If we had a bogus value, clear it from the DB
   if (existingRcId && !isValidRcId) {
-    console.warn(`[Provisioning] Clearing invalid RC customer ID "${existingRcId}" for agency ${agencyId}`);
-    await admin.from('agencies').update({ resellerclub_customer_id: null }).eq('id', agencyId);
+    console.warn(
+      `[Provisioning] Clearing invalid RC customer ID "${existingRcId}" for agency ${agencyId}`,
+    );
+    await admin
+      .from("agencies")
+      .update({ resellerclub_customer_id: null })
+      .eq("id", agencyId);
   }
 
   console.log(`[Provisioning] Agency has NO RC customer ID, creating one...`);
 
   // Get user email for RC customer creation
   const { data: profile } = await admin
-    .from('profiles')
-    .select('email')
-    .eq('id', userId)
+    .from("profiles")
+    .select("email")
+    .eq("id", userId)
     .maybeSingle();
 
   // Also try auth.users if profiles doesn't have email
@@ -58,7 +71,10 @@ async function ensureResellerClubCustomerForProvisioning(
   }
 
   if (!userEmail) {
-    console.error('[Provisioning] Cannot create RC customer: no email found for user', userId);
+    console.error(
+      "[Provisioning] Cannot create RC customer: no email found for user",
+      userId,
+    );
     return null;
   }
 
@@ -66,36 +82,38 @@ async function ensureResellerClubCustomerForProvisioning(
     const customer = await customerService.createOrGet({
       username: userEmail,
       password: customerService.generatePassword(),
-      name: (agency?.name as string) || 'Agency',
-      company: (agency?.name as string) || 'Agency',
+      name: (agency?.name as string) || "Agency",
+      company: (agency?.name as string) || "Agency",
       email: userEmail,
-      addressLine1: 'Not Provided',
-      city: 'Lusaka',
-      state: 'Lusaka',
-      country: 'ZM',
-      zipcode: '10101',
-      phoneCountryCode: '260',
-      phone: '955000000',
-      languagePreference: 'en',
+      addressLine1: "Not Provided",
+      city: "Lusaka",
+      state: "Lusaka",
+      country: "ZM",
+      zipcode: "10101",
+      phoneCountryCode: "260",
+      phone: "955000000",
+      languagePreference: "en",
     });
 
     // Save to DB
     await admin
-      .from('agencies')
+      .from("agencies")
       .update({ resellerclub_customer_id: String(customer.customerId) })
-      .eq('id', agencyId);
+      .eq("id", agencyId);
 
-    console.log(`[Provisioning] Auto-created RC customer ${customer.customerId} for agency ${agencyId}`);
+    console.log(
+      `[Provisioning] Auto-created RC customer ${customer.customerId} for agency ${agencyId}`,
+    );
     return String(customer.customerId);
   } catch (error) {
-    console.error('[Provisioning] Failed to auto-create RC customer:', error);
+    console.error("[Provisioning] Failed to auto-create RC customer:", error);
     return null;
   }
 }
-import { contactService } from './contacts';
-import { emailOrderService } from './email';
-import { transferService } from './transfers';
-import { updatePendingPurchaseStatus } from '@/lib/paddle/transactions';
+import { contactService } from "./contacts";
+import { emailOrderService } from "./email";
+import { transferService } from "./transfers";
+import { updatePendingPurchaseStatus } from "@/lib/paddle/transactions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
@@ -105,23 +123,83 @@ type SupabaseClient = any;
  * ResellerClub requires phone-cc as a separate field (without the + prefix)
  */
 const COUNTRY_PHONE_CODES: Record<string, string> = {
-  ZM: '260', ZA: '27', KE: '254', NG: '234', GH: '233', TZ: '255', UG: '256',
-  ZW: '263', BW: '267', MW: '265', MZ: '258', NA: '264', RW: '250', CD: '243',
-  US: '1', CA: '1', MX: '52', BR: '55', AR: '54', GB: '44', DE: '49', FR: '33',
-  IT: '39', ES: '34', NL: '31', AU: '61', NZ: '64', IN: '91', CN: '86', JP: '81',
-  SG: '65', AE: '971', SA: '966', IL: '972', TR: '90', EG: '20', MA: '212',
-  TH: '66', MY: '60', PH: '63', ID: '62', VN: '84', PK: '92', BD: '880',
-  HK: '852', TW: '886', KR: '82', SE: '46', NO: '47', DK: '45', FI: '358',
-  PL: '48', IE: '353', PT: '351', CH: '41', AT: '43', BE: '32', CZ: '420',
-  RO: '40', GR: '30', HU: '36', CO: '57', PE: '51', CL: '56', EC: '593',
-  QA: '974', KW: '965', BH: '973', OM: '968', JO: '962',
+  ZM: "260",
+  ZA: "27",
+  KE: "254",
+  NG: "234",
+  GH: "233",
+  TZ: "255",
+  UG: "256",
+  ZW: "263",
+  BW: "267",
+  MW: "265",
+  MZ: "258",
+  NA: "264",
+  RW: "250",
+  CD: "243",
+  US: "1",
+  CA: "1",
+  MX: "52",
+  BR: "55",
+  AR: "54",
+  GB: "44",
+  DE: "49",
+  FR: "33",
+  IT: "39",
+  ES: "34",
+  NL: "31",
+  AU: "61",
+  NZ: "64",
+  IN: "91",
+  CN: "86",
+  JP: "81",
+  SG: "65",
+  AE: "971",
+  SA: "966",
+  IL: "972",
+  TR: "90",
+  EG: "20",
+  MA: "212",
+  TH: "66",
+  MY: "60",
+  PH: "63",
+  ID: "62",
+  VN: "84",
+  PK: "92",
+  BD: "880",
+  HK: "852",
+  TW: "886",
+  KR: "82",
+  SE: "46",
+  NO: "47",
+  DK: "45",
+  FI: "358",
+  PL: "48",
+  IE: "353",
+  PT: "351",
+  CH: "41",
+  AT: "43",
+  BE: "32",
+  CZ: "420",
+  RO: "40",
+  GR: "30",
+  HU: "36",
+  CO: "57",
+  PE: "51",
+  CL: "56",
+  EC: "593",
+  QA: "974",
+  KW: "965",
+  BH: "973",
+  OM: "968",
+  JO: "962",
 };
 
 /**
  * Extract phone country code from a 2-letter country code
  */
 function extractPhoneCountryCode(countryCode: string): string {
-  return COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || '260';
+  return COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || "260";
 }
 
 /**
@@ -129,19 +207,19 @@ function extractPhoneCountryCode(countryCode: string): string {
  * ResellerClub expects phone WITHOUT the country code prefix
  */
 function stripPhoneCountryCode(phone: string, countryCode: string): string {
-  if (!phone) return '955000000';
+  if (!phone) return "955000000";
   // Remove leading +, spaces, dashes
-  let cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  const cc = COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || '';
+  let cleaned = phone.replace(/[\s\-\(\)]/g, "");
+  const cc = COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || "";
   // Strip leading + followed by country code
-  if (cleaned.startsWith('+' + cc)) {
+  if (cleaned.startsWith("+" + cc)) {
     cleaned = cleaned.substring(cc.length + 1);
   } else if (cleaned.startsWith(cc) && cleaned.length > cc.length + 5) {
     cleaned = cleaned.substring(cc.length);
   }
   // Strip leading + if still present
-  if (cleaned.startsWith('+')) cleaned = cleaned.substring(1);
-  return cleaned || '955000000';
+  if (cleaned.startsWith("+")) cleaned = cleaned.substring(1);
+  return cleaned || "955000000";
 }
 
 export interface ProvisioningResult {
@@ -162,103 +240,130 @@ export interface ProvisioningResult {
  * Provision a domain registration after payment
  */
 export async function provisionDomainRegistration(
-  pendingPurchaseId: string
+  pendingPurchaseId: string,
 ): Promise<ProvisioningResult> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   try {
     // Get pending purchase
     const { data: purchase, error: fetchError } = await admin
-      .from('pending_purchases')
-      .select('*')
-      .eq('id', pendingPurchaseId)
+      .from("pending_purchases")
+      .select("*")
+      .eq("id", pendingPurchaseId)
       .single();
-    
+
     if (fetchError || !purchase) {
-      throw new Error('Pending purchase not found');
+      throw new Error("Pending purchase not found");
     }
-    
+
     // Check if already provisioned
-    if (purchase.status === 'completed' && purchase.provisioned_resource_id) {
+    if (purchase.status === "completed" && purchase.provisioned_resource_id) {
       return {
         success: true,
         resourceId: purchase.provisioned_resource_id,
         resellerclubOrderId: purchase.resellerclub_order_id,
       };
     }
-    
+
     // Update status to provisioning
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'provisioning');
-    
+    await updatePendingPurchaseStatus(pendingPurchaseId, "provisioning");
+
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
-    
+
     // Check if this is a multi-domain purchase (from cart)
-    const domains = purchaseData.domains as Array<{
-      domainName: string;
-      years: number;
-      tld?: string;
-      privacy?: boolean;
-      autoRenew?: boolean;
-    }> | undefined;
-    
+    const domains = purchaseData.domains as
+      | Array<{
+          domainName: string;
+          years: number;
+          tld?: string;
+          privacy?: boolean;
+          autoRenew?: boolean;
+        }>
+      | undefined;
+
     // If domains array exists, provision multiple domains
     if (domains && domains.length > 0) {
-      return await provisionMultipleDomains(pendingPurchaseId, purchase, domains);
+      return await provisionMultipleDomains(
+        pendingPurchaseId,
+        purchase,
+        domains,
+      );
     }
-    
+
     // Single domain provisioning (legacy flow)
     const domainName = purchaseData.domain_name as string;
     const years = purchaseData.years as number;
     const tld = purchaseData.tld as string;
     const privacy = purchaseData.privacy as boolean | undefined;
     const autoRenew = purchaseData.auto_renew as boolean | undefined;
-    const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
-    
+    const contactInfo = purchaseData.contact_info as
+      | Record<string, unknown>
+      | undefined;
+
     // Get or auto-create ResellerClub customer ID
     // This is a critical fallback — normally ensureResellerClubCustomer() runs at checkout time,
     // but if it failed or was skipped, we MUST create the customer now to avoid permanent failure.
     const customerId = await ensureResellerClubCustomerForProvisioning(
       admin,
       purchase.agency_id,
-      purchase.user_id
+      purchase.user_id,
     );
-    
+
     if (!customerId) {
-      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
+      throw new Error(
+        "Failed to create ResellerClub customer for this agency. Please contact support.",
+      );
     }
-    
+
     // Get user email for contact creation
     const { data: userProfile } = await admin
-      .from('profiles')
-      .select('email')
-      .eq('id', purchase.user_id)
+      .from("profiles")
+      .select("email")
+      .eq("id", purchase.user_id)
       .maybeSingle();
-    const userEmail = userProfile?.email || '';
-    
+    const userEmail = userProfile?.email || "";
+
     // Create or get contact
     const contact = await contactService.createOrUpdate({
-      name: (contactInfo?.name as string) || 'Domain Admin',
-      company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || userEmail || purchase.user_id + '@agency.local',
-      addressLine1: (contactInfo?.address as string) || 'Not Provided',
-      city: (contactInfo?.city as string) || 'Lusaka',
-      state: (contactInfo?.state as string) || 'Lusaka',
-      country: (contactInfo?.country as string) || 'ZM',
-      zipcode: (contactInfo?.zipcode as string) || '10101',
-      phoneCountryCode: extractPhoneCountryCode((contactInfo?.country as string) || 'ZM'),
-      phone: stripPhoneCountryCode((contactInfo?.phone as string) || '955000000', (contactInfo?.country as string) || 'ZM'),
+      name: (contactInfo?.name as string) || "Domain Admin",
+      company: (contactInfo?.company as string) || "Agency",
+      email:
+        (contactInfo?.email as string) ||
+        userEmail ||
+        purchase.user_id + "@agency.local",
+      addressLine1: (contactInfo?.address as string) || "Not Provided",
+      city: (contactInfo?.city as string) || "Lusaka",
+      state: (contactInfo?.state as string) || "Lusaka",
+      country: (contactInfo?.country as string) || "ZM",
+      zipcode: (contactInfo?.zipcode as string) || "10101",
+      phoneCountryCode: extractPhoneCountryCode(
+        (contactInfo?.country as string) || "ZM",
+      ),
+      phone: stripPhoneCountryCode(
+        (contactInfo?.phone as string) || "955000000",
+        (contactInfo?.country as string) || "ZM",
+      ),
       customerId: customerId,
-      type: 'Contact',
+      type: "Contact",
     });
-    
+
     const contactId = String(contact.contactId);
-    
+
     // GUARD: Ensure contactId is valid before calling RC registration API
-    if (!contactId || contactId === 'undefined' || contactId === 'null' || contactId === '') {
-      throw new Error(`[Provisioning] Invalid contactId="${contactId}" — cannot register domain without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`);
+    if (
+      !contactId ||
+      contactId === "undefined" ||
+      contactId === "null" ||
+      contactId === ""
+    ) {
+      throw new Error(
+        `[Provisioning] Invalid contactId="${contactId}" — cannot register domain without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`,
+      );
     }
-    console.log(`[Provisioning] Using RC contact ${contactId} for domain ${domainName}`);
-    
+    console.log(
+      `[Provisioning] Using RC contact ${contactId} for domain ${domainName}`,
+    );
+
     // Register domain via ResellerClub
     const result = await domainService.register({
       domainName,
@@ -269,37 +374,37 @@ export async function provisionDomainRegistration(
       techContactId: contactId,
       billingContactId: contactId,
       purchasePrivacy: privacy ?? true,
-      nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+      nameservers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
     });
-    
+
     const orderId = result.orderId;
-    
+
     // Calculate expiry date
     const now = new Date();
     const expiryDate = new Date(now);
     expiryDate.setFullYear(expiryDate.getFullYear() + years);
-    
+
     // Create domain record in database
     const { data: domain, error: insertError } = await admin
-      .from('domains')
+      .from("domains")
       .insert({
         agency_id: purchase.agency_id,
         client_id: purchase.client_id,
         domain_name: domainName.toLowerCase(),
         tld,
-        sld: domainName.split('.').slice(0, -1).join('.'),
+        sld: domainName.split(".").slice(0, -1).join("."),
         resellerclub_order_id: orderId,
         resellerclub_customer_id: customerId,
         registration_date: now.toISOString(),
         expiry_date: expiryDate.toISOString(),
-        status: 'active',
+        status: "active",
         auto_renew: autoRenew ?? true,
         whois_privacy: privacy ?? true,
         registrant_contact_id: contactId,
         admin_contact_id: contactId,
         tech_contact_id: contactId,
         billing_contact_id: contactId,
-        nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+        nameservers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
         registered_via_api: true,
         wholesale_price: purchase.wholesale_amount,
         retail_price: purchase.retail_amount,
@@ -307,19 +412,19 @@ export async function provisionDomainRegistration(
       })
       .select()
       .single();
-    
+
     if (insertError) {
       throw new Error(`Failed to create domain record: ${insertError.message}`);
     }
-    
+
     const domainId = domain.id;
 
     // Auto-create Cloudflare zone so DNS management works immediately (non-fatal)
     try {
-      const { zoneService } = await import('@/lib/cloudflare');
+      const { zoneService } = await import("@/lib/cloudflare");
       const zone = await zoneService.getOrCreateZone(domainName);
 
-      await admin.from('cloudflare_zones').insert({
+      await admin.from("cloudflare_zones").insert({
         domain_id: domainId,
         zone_id: zone.id,
         name: zone.name,
@@ -328,27 +433,38 @@ export async function provisionDomainRegistration(
         original_nameservers: zone.originalNameServers,
       });
 
-      await admin.from('domains').update({
-        cloudflare_zone_id: zone.id,
-        nameservers: zone.nameServers,
-      }).eq('id', domainId);
+      await admin
+        .from("domains")
+        .update({
+          cloudflare_zone_id: zone.id,
+          nameservers: zone.nameServers,
+        })
+        .eq("id", domainId);
 
       try {
         await zoneService.applySecurityDefaults(zone.id);
       } catch (secErr) {
-        console.warn('[Provisioning] CF security defaults failed (non-fatal):', secErr);
+        console.warn(
+          "[Provisioning] CF security defaults failed (non-fatal):",
+          secErr,
+        );
       }
 
-      console.log(`[Provisioning] Cloudflare zone ${zone.id} auto-created for ${domainName}`);
+      console.log(
+        `[Provisioning] Cloudflare zone ${zone.id} auto-created for ${domainName}`,
+      );
     } catch (zoneErr) {
-      console.warn('[Provisioning] Failed to auto-create Cloudflare zone (non-fatal):', zoneErr);
+      console.warn(
+        "[Provisioning] Failed to auto-create Cloudflare zone (non-fatal):",
+        zoneErr,
+      );
     }
 
     // Create domain order record
-    await admin.from('domain_orders').insert({
+    await admin.from("domain_orders").insert({
       agency_id: purchase.agency_id,
       domain_id: domainId,
-      order_type: 'registration',
+      order_type: "registration",
       domain_name: domainName,
       years,
       wholesale_price: purchase.wholesale_amount,
@@ -356,59 +472,73 @@ export async function provisionDomainRegistration(
       currency: purchase.currency,
       resellerclub_order_id: orderId,
       paddle_transaction_id: purchase.paddle_transaction_id,
-      status: 'completed',
-      payment_status: 'paid',
+      status: "completed",
+      payment_status: "paid",
       completed_at: new Date().toISOString(),
       pending_purchase_id: pendingPurchaseId,
       idempotency_key: purchase.idempotency_key,
     });
-    
+
     // Update pending purchase to completed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+    await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
       resellerclub_order_id: orderId,
       provisioned_resource_id: domainId,
       provisioned_at: new Date().toISOString(),
     });
-    
+
     // Create billing record for revenue tracking
     try {
-      await admin.from('domain_billing_records').insert({
+      await admin.from("domain_billing_records").insert({
         agency_id: purchase.agency_id,
         domain_id: domainId,
-        billing_type: 'registration',
-        description: `Domain registration: ${domainName} (${years} year${years > 1 ? 's' : ''})`,
+        billing_type: "registration",
+        description: `Domain registration: ${domainName} (${years} year${years > 1 ? "s" : ""})`,
         wholesale_amount: purchase.wholesale_amount,
         retail_amount: purchase.retail_amount,
-        profit_amount: (purchase.retail_amount || 0) - (purchase.wholesale_amount || 0),
-        currency: purchase.currency || 'USD',
-        payment_status: 'paid',
+        profit_amount:
+          (purchase.retail_amount || 0) - (purchase.wholesale_amount || 0),
+        currency: purchase.currency || "USD",
+        payment_status: "paid",
         paddle_transaction_id: purchase.paddle_transaction_id,
         billing_period_start: now.toISOString(),
         billing_period_end: expiryDate.toISOString(),
       });
     } catch (billingErr) {
-      console.warn('[Provisioning] Failed to create billing record (non-fatal):', billingErr);
+      console.warn(
+        "[Provisioning] Failed to create billing record (non-fatal):",
+        billingErr,
+      );
     }
-    
+
     return {
       success: true,
       resourceId: domainId,
       resellerclubOrderId: orderId,
     };
   } catch (error) {
-    console.error('[Provisioning] Domain registration failed:', error);
-    
+    console.error("[Provisioning] Domain registration failed:", error);
+
     // Update pending purchase to failed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-      error_message: error instanceof Error ? error.message : 'Unknown error',
-      error_details: error instanceof Error ? { name: error.name, stack: error.stack } : error,
-      retry_count: ((await admin.from('pending_purchases').select('retry_count').eq('id', pendingPurchaseId).single()).data?.retry_count || 0) + 1,
+    await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+      error_message: error instanceof Error ? error.message : "Unknown error",
+      error_details:
+        error instanceof Error
+          ? { name: error.name, stack: error.stack }
+          : error,
+      retry_count:
+        ((
+          await admin
+            .from("pending_purchases")
+            .select("retry_count")
+            .eq("id", pendingPurchaseId)
+            .single()
+        ).data?.retry_count || 0) + 1,
       last_retry_at: new Date().toISOString(),
     });
-    
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       errorDetails: error,
     };
   }
@@ -428,7 +558,7 @@ async function provisionMultipleDomains(
     autoRenew?: boolean;
     wholesale?: number;
     retail?: number;
-  }>
+  }>,
 ): Promise<ProvisioningResult> {
   const admin = createAdminClient() as SupabaseClient;
   const results: Array<{
@@ -437,56 +567,77 @@ async function provisionMultipleDomains(
     resourceId?: string;
     error?: string;
   }> = [];
-  
+
   let firstDomainId: string | undefined;
-  
+
   try {
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
-    const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
-    
+    const contactInfo = purchaseData.contact_info as
+      | Record<string, unknown>
+      | undefined;
+
     // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
     const customerId = await ensureResellerClubCustomerForProvisioning(
       admin,
       purchase.agency_id,
-      purchase.user_id
+      purchase.user_id,
     );
-    
+
     if (!customerId) {
-      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
+      throw new Error(
+        "Failed to create ResellerClub customer for this agency. Please contact support.",
+      );
     }
-    
+
     // Get user email for contact creation
     const { data: userProfile } = await admin
-      .from('profiles')
-      .select('email')
-      .eq('id', purchase.user_id)
+      .from("profiles")
+      .select("email")
+      .eq("id", purchase.user_id)
       .maybeSingle();
-    const userEmail = userProfile?.email || '';
-    
+    const userEmail = userProfile?.email || "";
+
     // Create or get contact (reuse for all domains)
     const contact = await contactService.createOrUpdate({
-      name: (contactInfo?.name as string) || 'Domain Admin',
-      company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || userEmail || purchase.user_id + '@agency.local',
-      addressLine1: (contactInfo?.address as string) || 'Not Provided',
-      city: (contactInfo?.city as string) || 'Lusaka',
-      state: (contactInfo?.state as string) || 'Lusaka',
-      country: (contactInfo?.country as string) || 'ZM',
-      zipcode: (contactInfo?.zipcode as string) || '10101',
-      phoneCountryCode: extractPhoneCountryCode((contactInfo?.country as string) || 'ZM'),
-      phone: stripPhoneCountryCode((contactInfo?.phone as string) || '955000000', (contactInfo?.country as string) || 'ZM'),
+      name: (contactInfo?.name as string) || "Domain Admin",
+      company: (contactInfo?.company as string) || "Agency",
+      email:
+        (contactInfo?.email as string) ||
+        userEmail ||
+        purchase.user_id + "@agency.local",
+      addressLine1: (contactInfo?.address as string) || "Not Provided",
+      city: (contactInfo?.city as string) || "Lusaka",
+      state: (contactInfo?.state as string) || "Lusaka",
+      country: (contactInfo?.country as string) || "ZM",
+      zipcode: (contactInfo?.zipcode as string) || "10101",
+      phoneCountryCode: extractPhoneCountryCode(
+        (contactInfo?.country as string) || "ZM",
+      ),
+      phone: stripPhoneCountryCode(
+        (contactInfo?.phone as string) || "955000000",
+        (contactInfo?.country as string) || "ZM",
+      ),
       customerId: customerId,
-      type: 'Contact',
+      type: "Contact",
     });
-    
+
     const contactId = String(contact.contactId);
-    
+
     // GUARD: Ensure contactId is valid before calling RC registration API
-    if (!contactId || contactId === 'undefined' || contactId === 'null' || contactId === '') {
-      throw new Error(`[Provisioning] Invalid contactId="${contactId}" — cannot register domains without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`);
+    if (
+      !contactId ||
+      contactId === "undefined" ||
+      contactId === "null" ||
+      contactId === ""
+    ) {
+      throw new Error(
+        `[Provisioning] Invalid contactId="${contactId}" — cannot register domains without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`,
+      );
     }
-    console.log(`[Provisioning] Using RC contact ${contactId} for ${domains.length} domain(s)`);
-    
+    console.log(
+      `[Provisioning] Using RC contact ${contactId} for ${domains.length} domain(s)`,
+    );
+
     // Process each domain sequentially
     for (const domainConfig of domains) {
       try {
@@ -499,35 +650,39 @@ async function provisionMultipleDomains(
           adminContactId: contactId,
           techContactId: contactId,
           billingContactId: contactId,
-          nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+          nameservers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
           purchasePrivacy: domainConfig.privacy ?? true,
-          invoiceOption: 'NoInvoice',
+          invoiceOption: "NoInvoice",
         });
-        
+
         const orderId = String(result.orderId);
-        
+
         // Create domain record in our database
         const { data: domain, error: insertError } = await admin
-          .from('domains')
+          .from("domains")
           .insert({
             agency_id: purchase.agency_id,
             client_id: purchase.client_id,
             domain_name: domainConfig.domainName.toLowerCase(),
-            tld: domainConfig.tld || ('.' + domainConfig.domainName.split('.').slice(1).join('.')),
-            sld: domainConfig.domainName.split('.')[0],
-            status: 'active',
+            tld:
+              domainConfig.tld ||
+              "." + domainConfig.domainName.split(".").slice(1).join("."),
+            sld: domainConfig.domainName.split(".")[0],
+            status: "active",
             resellerclub_order_id: orderId,
             resellerclub_customer_id: customerId,
             registration_years: domainConfig.years,
             registration_date: new Date().toISOString(),
-            expiry_date: new Date(Date.now() + domainConfig.years * 365.25 * 24 * 60 * 60 * 1000).toISOString(),
+            expiry_date: new Date(
+              Date.now() + domainConfig.years * 365.25 * 24 * 60 * 60 * 1000,
+            ).toISOString(),
             auto_renew: domainConfig.autoRenew ?? true,
             whois_privacy: domainConfig.privacy ?? true,
             registrant_contact_id: contactId,
             admin_contact_id: contactId,
             tech_contact_id: contactId,
             billing_contact_id: contactId,
-            nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+            nameservers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
             registered_via_api: true,
             wholesale_price: domainConfig.wholesale || 0,
             retail_price: domainConfig.retail || 0,
@@ -535,11 +690,13 @@ async function provisionMultipleDomains(
           })
           .select()
           .single();
-        
+
         if (insertError || !domain) {
-          throw new Error(`Failed to create domain record: ${insertError?.message || 'Unknown error'}`);
+          throw new Error(
+            `Failed to create domain record: ${insertError?.message || "Unknown error"}`,
+          );
         }
-        
+
         const domainId = domain.id;
         if (!firstDomainId) {
           firstDomainId = domainId;
@@ -547,10 +704,12 @@ async function provisionMultipleDomains(
 
         // Auto-create Cloudflare zone (non-fatal)
         try {
-          const { zoneService } = await import('@/lib/cloudflare');
-          const zone = await zoneService.getOrCreateZone(domainConfig.domainName);
+          const { zoneService } = await import("@/lib/cloudflare");
+          const zone = await zoneService.getOrCreateZone(
+            domainConfig.domainName,
+          );
 
-          await admin.from('cloudflare_zones').insert({
+          await admin.from("cloudflare_zones").insert({
             domain_id: domainId,
             zone_id: zone.id,
             name: zone.name,
@@ -559,25 +718,34 @@ async function provisionMultipleDomains(
             original_nameservers: zone.originalNameServers,
           });
 
-          await admin.from('domains').update({
-            cloudflare_zone_id: zone.id,
-            nameservers: zone.nameServers,
-          }).eq('id', domainId);
+          await admin
+            .from("domains")
+            .update({
+              cloudflare_zone_id: zone.id,
+              nameservers: zone.nameServers,
+            })
+            .eq("id", domainId);
 
           try {
             await zoneService.applySecurityDefaults(zone.id);
           } catch (secErr) {
-            console.warn('[Provisioning] CF security defaults failed (non-fatal):', secErr);
+            console.warn(
+              "[Provisioning] CF security defaults failed (non-fatal):",
+              secErr,
+            );
           }
         } catch (zoneErr) {
-          console.warn(`[Provisioning] CF zone auto-create failed for ${domainConfig.domainName} (non-fatal):`, zoneErr);
+          console.warn(
+            `[Provisioning] CF zone auto-create failed for ${domainConfig.domainName} (non-fatal):`,
+            zoneErr,
+          );
         }
 
         // Create domain order record
-        await admin.from('domain_orders').insert({
+        await admin.from("domain_orders").insert({
           agency_id: purchase.agency_id,
           domain_id: domainId,
-          order_type: 'registration',
+          order_type: "registration",
           domain_name: domainConfig.domainName,
           years: domainConfig.years,
           wholesale_price: domainConfig.wholesale || 0,
@@ -585,82 +753,86 @@ async function provisionMultipleDomains(
           currency: purchase.currency,
           resellerclub_order_id: orderId,
           paddle_transaction_id: purchase.paddle_transaction_id,
-          status: 'completed',
-          payment_status: 'paid',
+          status: "completed",
+          payment_status: "paid",
           completed_at: new Date().toISOString(),
           pending_purchase_id: pendingPurchaseId,
           idempotency_key: `${purchase.idempotency_key}-${domainConfig.domainName}`,
         });
-        
+
         results.push({
           domainName: domainConfig.domainName,
           success: true,
           resourceId: domainId,
         });
       } catch (error) {
-        console.error(`[Provisioning] Failed to provision ${domainConfig.domainName}:`, error);
+        console.error(
+          `[Provisioning] Failed to provision ${domainConfig.domainName}:`,
+          error,
+        );
         results.push({
           domainName: domainConfig.domainName,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
-    
+
     // Update pending purchase status based on results
-    const allSucceeded = results.every(r => r.success);
-    const allFailed = results.every(r => !r.success);
-    
+    const allSucceeded = results.every((r) => r.success);
+    const allFailed = results.every((r) => !r.success);
+
     if (allSucceeded) {
-      await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+      await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
         provisioned_resource_id: firstDomainId,
         provisioned_at: new Date().toISOString(),
         error_details: { multi_domain_results: results },
       });
-      
+
       return {
         success: true,
         resourceId: firstDomainId,
         multiDomainResults: results,
       };
     } else if (allFailed) {
-      await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-        error_message: 'All domain registrations failed',
+      await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+        error_message: "All domain registrations failed",
         error_details: { multi_domain_results: results },
       });
-      
+
       return {
         success: false,
-        error: 'All domain registrations failed',
+        error: "All domain registrations failed",
         multiDomainResults: results,
       };
     } else {
       // Partial success
-      await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+      await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
         provisioned_resource_id: firstDomainId,
         provisioned_at: new Date().toISOString(),
-        error_message: 'Some domains failed to provision',
+        error_message: "Some domains failed to provision",
         error_details: { multi_domain_results: results },
       });
-      
+
       return {
         success: true,
         resourceId: firstDomainId,
         multiDomainResults: results,
-        error: 'Some domains failed to provision',
+        error: "Some domains failed to provision",
       };
     }
   } catch (error) {
-    console.error('[Provisioning] Multi-domain provisioning failed:', error);
-    
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-      error_message: error instanceof Error ? error.message : 'Unknown error',
+    console.error("[Provisioning] Multi-domain provisioning failed:", error);
+
+    await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+      error_message: error instanceof Error ? error.message : "Unknown error",
       error_details: { error, multi_domain_results: results },
     });
-    
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to provision domains',
+      error:
+        error instanceof Error ? error.message : "Failed to provision domains",
       multiDomainResults: results,
     };
   }
@@ -670,75 +842,75 @@ async function provisionMultipleDomains(
  * Provision a domain renewal after payment
  */
 export async function provisionDomainRenewal(
-  pendingPurchaseId: string
+  pendingPurchaseId: string,
 ): Promise<ProvisioningResult> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   try {
     // Get pending purchase
     const { data: purchase, error: fetchError } = await admin
-      .from('pending_purchases')
-      .select('*')
-      .eq('id', pendingPurchaseId)
+      .from("pending_purchases")
+      .select("*")
+      .eq("id", pendingPurchaseId)
       .single();
-    
+
     if (fetchError || !purchase) {
-      throw new Error('Pending purchase not found');
+      throw new Error("Pending purchase not found");
     }
-    
+
     // Check if already provisioned
-    if (purchase.status === 'completed') {
+    if (purchase.status === "completed") {
       return {
         success: true,
         resourceId: purchase.provisioned_resource_id,
         resellerclubOrderId: purchase.resellerclub_order_id,
       };
     }
-    
+
     // Update status to provisioning
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'provisioning');
-    
+    await updatePendingPurchaseStatus(pendingPurchaseId, "provisioning");
+
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
     const domainName = purchaseData.domain_name as string;
     const years = purchaseData.years as number;
-    
+
     // Find domain in database
     const { data: domain } = await admin
-      .from('domains')
-      .select('*')
-      .eq('domain_name', domainName)
-      .eq('agency_id', purchase.agency_id)
+      .from("domains")
+      .select("*")
+      .eq("domain_name", domainName)
+      .eq("agency_id", purchase.agency_id)
       .single();
-    
+
     if (!domain || !domain.resellerclub_order_id) {
-      throw new Error('Domain not found or not registered via ResellerClub');
+      throw new Error("Domain not found or not registered via ResellerClub");
     }
-    
+
     // Renew domain via ResellerClub
     await domainService.renew({
       orderId: domain.resellerclub_order_id,
       years,
     });
-    
+
     // Calculate new expiry date
     const currentExpiry = new Date(domain.expiry_date);
     const newExpiry = new Date(currentExpiry);
     newExpiry.setFullYear(newExpiry.getFullYear() + years);
-    
+
     // Update domain in database
     await admin
-      .from('domains')
+      .from("domains")
       .update({
         expiry_date: newExpiry.toISOString(),
         last_renewed_at: new Date().toISOString(),
       })
-      .eq('id', domain.id);
-    
+      .eq("id", domain.id);
+
     // Create domain order record
-    await admin.from('domain_orders').insert({
+    await admin.from("domain_orders").insert({
       agency_id: purchase.agency_id,
       domain_id: domain.id,
-      order_type: 'renewal',
+      order_type: "renewal",
       domain_name: domainName,
       years,
       wholesale_price: purchase.wholesale_amount,
@@ -746,37 +918,40 @@ export async function provisionDomainRenewal(
       currency: purchase.currency,
       resellerclub_order_id: domain.resellerclub_order_id,
       paddle_transaction_id: purchase.paddle_transaction_id,
-      status: 'completed',
-      payment_status: 'paid',
+      status: "completed",
+      payment_status: "paid",
       completed_at: new Date().toISOString(),
       pending_purchase_id: pendingPurchaseId,
       idempotency_key: purchase.idempotency_key,
     });
-    
+
     // Update pending purchase to completed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+    await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
       resellerclub_order_id: domain.resellerclub_order_id,
       provisioned_resource_id: domain.id,
       provisioned_at: new Date().toISOString(),
     });
-    
+
     return {
       success: true,
       resourceId: domain.id,
       resellerclubOrderId: domain.resellerclub_order_id,
     };
   } catch (error) {
-    console.error('[Provisioning] Domain renewal failed:', error);
-    
+    console.error("[Provisioning] Domain renewal failed:", error);
+
     // Update pending purchase to failed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-      error_message: error instanceof Error ? error.message : 'Unknown error',
-      error_details: error instanceof Error ? { name: error.name, stack: error.stack } : error,
+    await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+      error_message: error instanceof Error ? error.message : "Unknown error",
+      error_details:
+        error instanceof Error
+          ? { name: error.name, stack: error.stack }
+          : error,
     });
-    
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       errorDetails: error,
     };
   }
@@ -786,54 +961,58 @@ export async function provisionDomainRenewal(
  * Provision an email order after payment
  */
 export async function provisionEmailOrder(
-  pendingPurchaseId: string
+  pendingPurchaseId: string,
 ): Promise<ProvisioningResult> {
   const admin = createAdminClient() as SupabaseClient;
-  
+
   try {
     // Get pending purchase
     const { data: purchase, error: fetchError } = await admin
-      .from('pending_purchases')
-      .select('*')
-      .eq('id', pendingPurchaseId)
+      .from("pending_purchases")
+      .select("*")
+      .eq("id", pendingPurchaseId)
       .single();
-    
+
     if (fetchError || !purchase) {
-      throw new Error('Pending purchase not found');
+      throw new Error("Pending purchase not found");
     }
-    
+
     // Check if already provisioned
-    if (purchase.status === 'completed' && purchase.provisioned_resource_id) {
+    if (purchase.status === "completed" && purchase.provisioned_resource_id) {
       return {
         success: true,
         resourceId: purchase.provisioned_resource_id,
         resellerclubOrderId: purchase.resellerclub_order_id,
       };
     }
-    
+
     // Update status to provisioning
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'provisioning');
-    
+    await updatePendingPurchaseStatus(pendingPurchaseId, "provisioning");
+
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
     const domainName = purchaseData.domain_name as string;
     const numberOfAccounts = purchaseData.number_of_accounts as number;
     const months = purchaseData.months as number;
-    const productKey = (purchaseData.product_key as string) || 'eeliteus';
+    const productKey = (purchaseData.product_key as string) || "eeliteus";
     const domainId = purchaseData.domain_id as string | undefined;
-    
+
     // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
     const customerId = await ensureResellerClubCustomerForProvisioning(
       admin,
       purchase.agency_id,
-      purchase.user_id
+      purchase.user_id,
     );
-    
+
     if (!customerId) {
-      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
+      throw new Error(
+        "Failed to create ResellerClub customer for this agency. Please contact support.",
+      );
     }
-    
-    console.log(`[Provisioning] Email order: domain=${domainName}, accounts=${numberOfAccounts}, months=${months}, product=${productKey}, customerId=${customerId}`);
-    
+
+    console.log(
+      `[Provisioning] Email order: domain=${domainName}, accounts=${numberOfAccounts}, months=${months}, product=${productKey}, customerId=${customerId}`,
+    );
+
     // Create email order via ResellerClub
     const order = await emailOrderService.createOrder({
       agencyId: purchase.agency_id,
@@ -847,19 +1026,19 @@ export async function provisionEmailOrder(
       currency: purchase.currency,
       productKey, // routes to Titan Mail REST API for titanmailglobal_* keys
     });
-    
+
     const emailOrderId = order.id;
     const rcOrderId = order.resellerclub_order_id;
-    
+
     // Update email_orders with pending_purchase reference
     await admin
-      .from('email_orders')
+      .from("email_orders")
       .update({
         pending_purchase_id: pendingPurchaseId,
         idempotency_key: purchase.idempotency_key,
       })
-      .eq('id', emailOrderId);
-    
+      .eq("id", emailOrderId);
+
     // =========================================================================
     // AUTO-CONFIGURE DNS — Make email "just work" after purchase
     //
@@ -871,49 +1050,64 @@ export async function provisionEmailOrder(
     if (domainId) {
       try {
         const { data: domainRecord } = await admin
-          .from('domains')
-          .select('cloudflare_zone_id')
-          .eq('id', domainId)
+          .from("domains")
+          .select("cloudflare_zone_id")
+          .eq("id", domainId)
           .single();
-        
+
         if (domainRecord?.cloudflare_zone_id) {
-          console.log(`[Provisioning] Auto-configuring DNS for email order ${emailOrderId} (zone: ${domainRecord.cloudflare_zone_id})`);
-          await emailOrderService.configureDns(emailOrderId, domainRecord.cloudflare_zone_id);
-          console.log(`[Provisioning] DNS auto-configured successfully for ${domainName}`);
+          console.log(
+            `[Provisioning] Auto-configuring DNS for email order ${emailOrderId} (zone: ${domainRecord.cloudflare_zone_id})`,
+          );
+          await emailOrderService.configureDns(
+            emailOrderId,
+            domainRecord.cloudflare_zone_id,
+          );
+          console.log(
+            `[Provisioning] DNS auto-configured successfully for ${domainName}`,
+          );
         } else {
-          console.log(`[Provisioning] Skipping DNS auto-config — domain ${domainName} has no Cloudflare zone`);
+          console.log(
+            `[Provisioning] Skipping DNS auto-config — domain ${domainName} has no Cloudflare zone`,
+          );
         }
       } catch (dnsError) {
         // DNS config failure should NOT fail the overall provisioning.
         // The email order is already created; the user can configure DNS manually.
-        console.warn(`[Provisioning] DNS auto-config failed for ${domainName} (non-fatal):`, dnsError);
+        console.warn(
+          `[Provisioning] DNS auto-config failed for ${domainName} (non-fatal):`,
+          dnsError,
+        );
       }
     }
-    
+
     // Update pending purchase to completed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+    await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
       resellerclub_order_id: rcOrderId,
       provisioned_resource_id: emailOrderId,
       provisioned_at: new Date().toISOString(),
     });
-    
+
     return {
       success: true,
       resourceId: emailOrderId,
       resellerclubOrderId: rcOrderId,
     };
   } catch (error) {
-    console.error('[Provisioning] Email order failed:', error);
-    
+    console.error("[Provisioning] Email order failed:", error);
+
     // Update pending purchase to failed
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-      error_message: error instanceof Error ? error.message : 'Unknown error',
-      error_details: error instanceof Error ? { name: error.name, stack: error.stack } : error,
+    await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+      error_message: error instanceof Error ? error.message : "Unknown error",
+      error_details:
+        error instanceof Error
+          ? { name: error.name, stack: error.stack }
+          : error,
     });
-    
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       errorDetails: error,
     };
   }
@@ -924,24 +1118,24 @@ export async function provisionEmailOrder(
  * Called by the Paddle webhook when a domain_transfer transaction completes.
  */
 export async function provisionDomainTransfer(
-  pendingPurchaseId: string
+  pendingPurchaseId: string,
 ): Promise<ProvisioningResult> {
   const admin = createAdminClient() as SupabaseClient;
 
   try {
     // Get pending purchase
     const { data: purchase, error: fetchError } = await admin
-      .from('pending_purchases')
-      .select('*')
-      .eq('id', pendingPurchaseId)
+      .from("pending_purchases")
+      .select("*")
+      .eq("id", pendingPurchaseId)
       .single();
 
     if (fetchError || !purchase) {
-      throw new Error('Pending purchase not found');
+      throw new Error("Pending purchase not found");
     }
 
     // Check if already provisioned
-    if (purchase.status === 'completed' && purchase.provisioned_resource_id) {
+    if (purchase.status === "completed" && purchase.provisioned_resource_id) {
       return {
         success: true,
         resourceId: purchase.provisioned_resource_id,
@@ -950,48 +1144,60 @@ export async function provisionDomainTransfer(
     }
 
     // Update status to provisioning
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'provisioning');
+    await updatePendingPurchaseStatus(pendingPurchaseId, "provisioning");
 
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
     const domainName = purchaseData.domain_name as string;
     const authCode = purchaseData.auth_code as string;
     const privacy = purchaseData.privacy as boolean | undefined;
     const autoRenew = purchaseData.auto_renew as boolean | undefined;
-    const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
+    const contactInfo = purchaseData.contact_info as
+      | Record<string, unknown>
+      | undefined;
 
     // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
     const customerId = await ensureResellerClubCustomerForProvisioning(
       admin,
       purchase.agency_id,
-      purchase.user_id
+      purchase.user_id,
     );
 
     if (!customerId) {
-      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
+      throw new Error(
+        "Failed to create ResellerClub customer for this agency. Please contact support.",
+      );
     }
 
     // Get user email for contact creation
     const { data: userProfileT } = await admin
-      .from('profiles')
-      .select('email')
-      .eq('id', purchase.user_id)
+      .from("profiles")
+      .select("email")
+      .eq("id", purchase.user_id)
       .maybeSingle();
-    const userEmailT = userProfileT?.email || '';
+    const userEmailT = userProfileT?.email || "";
 
     // Create or get contact for the transfer
     const contact = await contactService.createOrUpdate({
-      name: (contactInfo?.name as string) || 'Domain Admin',
-      company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || userEmailT || purchase.user_id + '@agency.local',
-      addressLine1: (contactInfo?.address as string) || 'Not Provided',
-      city: (contactInfo?.city as string) || 'Lusaka',
-      state: (contactInfo?.state as string) || 'Lusaka',
-      country: (contactInfo?.country as string) || 'ZM',
-      zipcode: (contactInfo?.zipcode as string) || '10101',
-      phoneCountryCode: extractPhoneCountryCode((contactInfo?.country as string) || 'ZM'),
-      phone: stripPhoneCountryCode((contactInfo?.phone as string) || '955000000', (contactInfo?.country as string) || 'ZM'),
+      name: (contactInfo?.name as string) || "Domain Admin",
+      company: (contactInfo?.company as string) || "Agency",
+      email:
+        (contactInfo?.email as string) ||
+        userEmailT ||
+        purchase.user_id + "@agency.local",
+      addressLine1: (contactInfo?.address as string) || "Not Provided",
+      city: (contactInfo?.city as string) || "Lusaka",
+      state: (contactInfo?.state as string) || "Lusaka",
+      country: (contactInfo?.country as string) || "ZM",
+      zipcode: (contactInfo?.zipcode as string) || "10101",
+      phoneCountryCode: extractPhoneCountryCode(
+        (contactInfo?.country as string) || "ZM",
+      ),
+      phone: stripPhoneCountryCode(
+        (contactInfo?.phone as string) || "955000000",
+        (contactInfo?.country as string) || "ZM",
+      ),
       customerId: customerId,
-      type: 'Contact',
+      type: "Contact",
     });
 
     const contactId = String(contact.contactId);
@@ -999,7 +1205,7 @@ export async function provisionDomainTransfer(
     // Initiate transfer via ResellerClub
     const result = await transferService.initiateTransferIn({
       domainName,
-      authCode: authCode || '',
+      authCode: authCode || "",
       customerId,
       registrantContactId: contactId,
       adminContactId: contactId,
@@ -1012,12 +1218,12 @@ export async function provisionDomainTransfer(
     const orderId = result.orderId;
 
     // Create transfer record in domain_transfers table
-    await admin.from('domain_transfers').insert({
+    await admin.from("domain_transfers").insert({
       agency_id: purchase.agency_id,
       domain_name: domainName,
-      transfer_type: 'in',
+      transfer_type: "in",
       resellerclub_order_id: orderId,
-      status: 'in-progress',
+      status: "in-progress",
       current_step: 1,
       total_steps: 5,
       registrant_contact_id: contactId,
@@ -1027,9 +1233,9 @@ export async function provisionDomainTransfer(
     });
 
     // Create domain order record
-    await admin.from('domain_orders').insert({
+    await admin.from("domain_orders").insert({
       agency_id: purchase.agency_id,
-      order_type: 'transfer',
+      order_type: "transfer",
       domain_name: domainName,
       years: 1,
       wholesale_price: purchase.wholesale_amount,
@@ -1037,14 +1243,14 @@ export async function provisionDomainTransfer(
       currency: purchase.currency,
       resellerclub_order_id: orderId,
       paddle_transaction_id: purchase.paddle_transaction_id,
-      status: 'in-progress',
-      payment_status: 'paid',
+      status: "in-progress",
+      payment_status: "paid",
       pending_purchase_id: pendingPurchaseId,
       idempotency_key: purchase.idempotency_key,
     });
 
     // Update pending purchase to completed (transfer is in-progress but payment is done)
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
+    await updatePendingPurchaseStatus(pendingPurchaseId, "completed", {
       resellerclub_order_id: orderId,
       provisioned_resource_id: orderId,
       provisioned_at: new Date().toISOString(),
@@ -1056,16 +1262,19 @@ export async function provisionDomainTransfer(
       resellerclubOrderId: orderId,
     };
   } catch (error) {
-    console.error('[Provisioning] Domain transfer failed:', error);
+    console.error("[Provisioning] Domain transfer failed:", error);
 
-    await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
-      error_message: error instanceof Error ? error.message : 'Unknown error',
-      error_details: error instanceof Error ? { name: error.name, stack: error.stack } : error,
+    await updatePendingPurchaseStatus(pendingPurchaseId, "failed", {
+      error_message: error instanceof Error ? error.message : "Unknown error",
+      error_details:
+        error instanceof Error
+          ? { name: error.name, stack: error.stack }
+          : error,
     });
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       errorDetails: error,
     };
   }

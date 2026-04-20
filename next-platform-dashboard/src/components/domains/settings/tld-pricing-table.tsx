@@ -164,7 +164,7 @@ export function TldPricingTable({
             <TableRow className="bg-muted/50">
               <TableHead className="w-24">TLD</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="text-right">Wholesale</TableHead>
+              <TableHead className="text-right">Cost</TableHead>
               <TableHead className="text-right">Markup</TableHead>
               <TableHead className="text-right">Retail</TableHead>
               <TableHead className="text-center">Status</TableHead>

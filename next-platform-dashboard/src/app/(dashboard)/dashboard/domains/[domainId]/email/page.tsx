@@ -200,7 +200,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">Titan Email (via ResellerClub)</p>
+                  <p className="font-medium">Titan Email</p>
                   {getStatusBadge()}
                 </div>
                 <p className="text-sm text-muted-foreground">

@@ -293,7 +293,7 @@ export function DomainSearch({
             {results.length} checked
             {searchSource === "resellerclub" && (
               <span className="text-green-600 dark:text-green-400 ml-2">
-                (Live from ResellerClub)
+                (Live availability)
               </span>
             )}
             {results.some((r) => r.unverified) &&

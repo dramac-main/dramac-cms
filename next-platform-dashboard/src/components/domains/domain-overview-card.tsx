@@ -49,7 +49,7 @@ export function DomainOverviewCard({ domain, onRenew }: DomainOverviewCardProps)
                 </a>
               </div>
               <p className="text-xs text-muted-foreground">
-                {domain.tld} • Registered via ResellerClub
+                {domain.tld} • Registered
               </p>
             </div>
           </div>

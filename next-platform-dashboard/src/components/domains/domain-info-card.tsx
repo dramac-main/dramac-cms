@@ -111,7 +111,7 @@ export function DomainInfoCard({ domain }: DomainInfoCardProps) {
             </div>
             {domain.resellerclub_order_id && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Order ID</span>
+                <span className="text-muted-foreground">Registration ID</span>
                 <span className="font-mono text-xs">
                   {domain.resellerclub_order_id}
                 </span>

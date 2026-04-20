@@ -218,9 +218,7 @@ export function TaxSummaryReport() {
                           </td>
                           <td
                             className={`text-right py-2 px-3 font-bold ${
-                              fp.net >= 0
-                                ? "text-yellow-600"
-                                : "text-green-600"
+                              fp.net >= 0 ? "text-yellow-600" : "text-green-600"
                             }`}
                           >
                             {formatInvoiceAmount(Math.abs(fp.net), currency)}

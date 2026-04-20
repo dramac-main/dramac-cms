@@ -16,7 +16,7 @@ export function EmailWebmailLink({ domain }: EmailWebmailLinkProps) {
         href={webmailUrl}
         target="_blank" 
         rel="noopener noreferrer"
-        aria-label={domain ? `Open webmail for ${domain}` : "Open Titan webmail"}
+        aria-label={domain ? `Open webmail for ${domain}` : "Open webmail"}
       >
         <ExternalLink className="h-4 w-4 mr-2" />
         Open Webmail
