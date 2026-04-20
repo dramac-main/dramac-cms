@@ -98,7 +98,7 @@ const PAYMENT_VARIABLES: TemplateVariable[] = [
 // DEFAULT TEMPLATES
 // ═══════════════════════════════════════════════════════════════
 
-export const DEFAULT_TEMPLATES: EmailTemplate[] = [
+const DEFAULT_TEMPLATES: EmailTemplate[] = [
   // ─── Invoicing ─────────────────────────────────────────
   {
     type: "invoice_sent",
