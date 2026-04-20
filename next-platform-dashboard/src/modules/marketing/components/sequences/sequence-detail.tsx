@@ -116,7 +116,7 @@ export function SequenceDetail({
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const seq = sequence as Record<string, unknown>;
+  const seq = sequence as unknown as Record<string, unknown>;
   const status = (String(seq.status || "draft")) as SequenceStatus;
   const steps = (Array.isArray(seq.steps) ? seq.steps : []) as SequenceStep[];
   const transitions = VALID_SEQUENCE_TRANSITIONS[status] || [];
@@ -156,7 +156,7 @@ export function SequenceDetail({
                 {SEQUENCE_STATUS_LABELS[status] || status}
               </Badge>
             </div>
-            {seq.description && (
+            {Boolean(seq.description) && (
               <p className="text-muted-foreground mt-1">{String(seq.description)}</p>
             )}
             <p className="text-muted-foreground mt-1 text-sm">
@@ -379,7 +379,7 @@ export function SequenceDetail({
                         className="border-b last:border-0"
                       >
                         <td className="px-4 py-3 font-mono text-xs">
-                          {enrollment.subscriber_id?.slice(0, 8)}...
+                          {enrollment.subscriberId?.slice(0, 8)}...
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="secondary" className="text-xs">
@@ -387,17 +387,17 @@ export function SequenceDetail({
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-xs">
-                          {enrollment.current_step_id
+                          {enrollment.currentStepId
                             ? steps.find(
-                                (s) => s.id === enrollment.current_step_id,
+                                (s) => s.id === enrollment.currentStepId,
                               )?.name || "Step"
                             : "—"}
                         </td>
                         <td className="text-muted-foreground px-4 py-3 text-xs">
-                          {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                          {new Date(enrollment.enrolledAt).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-xs">
-                          {(enrollment.steps_completed || []).length}
+                          {(enrollment.stepsCompleted || []).length}
                         </td>
                       </tr>
                     ))}

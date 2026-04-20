@@ -134,7 +134,7 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
         });
 
         if (sendImmediately) {
-          const result = await sendCampaignNow(siteId, (campaign as Record<string, unknown>).id as string);
+          const result = await sendCampaignNow(siteId, (campaign as unknown as Record<string, unknown>).id as string);
           if (!result.success) {
             setError(result.error || "Failed to send campaign");
             return;
@@ -144,7 +144,7 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
           toast.success("Campaign saved as draft");
         }
 
-        const campaignId = (campaign as Record<string, unknown>).id as string;
+        const campaignId = (campaign as unknown as Record<string, unknown>).id as string;
         router.push(
           `/dashboard/sites/${siteId}/marketing/campaigns/${campaignId}`,
         );

@@ -637,7 +637,7 @@ export async function changePortalPassword(
  * Get notification preferences for the current portal client.
  * Stored as JSON in clients.notes field.
  */
-export async function getClientNotifications(): Promise<{
+export async function getClientNotificationPreferences(): Promise<{
   emailNotifications: boolean;
   ticketUpdates: boolean;
   siteAlerts: boolean;

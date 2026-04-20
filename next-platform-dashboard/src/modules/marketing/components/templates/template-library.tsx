@@ -218,9 +218,9 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
             >
               {/* Preview Thumbnail */}
               <div className="bg-muted relative h-36 overflow-hidden">
-                {template.content_html ? (
+                {template.contentHtml ? (
                   <iframe
-                    srcDoc={template.content_html}
+                    srcDoc={template.contentHtml}
                     sandbox=""
                     title={`Preview of ${template.name}`}
                     className="pointer-events-none h-full w-full origin-top-left scale-[0.25]"
@@ -248,7 +248,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      {template.is_system && (
+                      {template.isSystem && (
                         <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
                       )}
                       <span className="truncate">{template.name}</span>
@@ -284,7 +284,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                         <Copy className="mr-2 h-4 w-4" />
                         Duplicate
                       </DropdownMenuItem>
-                      {!template.is_system && (
+                      {!template.isSystem && (
                         <>
                           <DropdownMenuSeparator />
                           <AlertDialog>
@@ -339,7 +339,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                     ] || template.category}
                   </Badge>
                   <span className="text-muted-foreground">
-                    Used {template.usage_count || 0} times
+                    Used {template.usageCount || 0} times
                   </span>
                 </div>
               </CardContent>
@@ -357,9 +357,9 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
           <DialogHeader>
             <DialogTitle>{previewTemplate?.name}</DialogTitle>
           </DialogHeader>
-          {previewTemplate?.content_html ? (
+          {previewTemplate?.contentHtml ? (
             <iframe
-              srcDoc={previewTemplate.content_html}
+              srcDoc={previewTemplate.contentHtml}
               sandbox=""
               title={`Full preview of ${previewTemplate.name}`}
               className="h-[60vh] w-full rounded border"

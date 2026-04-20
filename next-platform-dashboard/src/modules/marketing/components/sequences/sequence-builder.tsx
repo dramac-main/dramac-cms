@@ -109,26 +109,26 @@ export function SequenceBuilder({
   const isEdit = !!existingSequence;
 
   // Sequence metadata
-  const [name, setName] = useState(existingSequence?.name || "");
+  const [name, setName] = useState((existingSequence?.name as string) || "");
   const [description, setDescription] = useState(
-    existingSequence?.description || "",
+    (existingSequence?.description as string) || "",
   );
   const [triggerType, setTriggerType] = useState<SequenceTriggerType>(
-    existingSequence?.trigger_type || "manual",
+    (existingSequence?.trigger_type as SequenceTriggerType) || "manual",
   );
   const [triggerConfig, setTriggerConfig] = useState<Record<string, unknown>>(
-    existingSequence?.trigger_config || {},
+    (existingSequence?.trigger_config as Record<string, unknown>) || {},
   );
   const [enrollmentLimit, setEnrollmentLimit] = useState<string>(
-    existingSequence?.enrollment_limit?.toString() || "",
+    ((existingSequence?.enrollment_limit as number | null)?.toString()) || "",
   );
   const [reEnrollment, setReEnrollment] = useState<boolean>(
-    existingSequence?.re_enrollment || false,
+    Boolean(existingSequence?.re_enrollment),
   );
 
   // Steps
   const [steps, setSteps] = useState<SequenceStep[]>(
-    existingSequence?.steps || [],
+    (existingSequence?.steps as SequenceStep[]) || [],
   );
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
@@ -138,13 +138,13 @@ export function SequenceBuilder({
 
   // Conversion goal
   const [goalType, setGoalType] = useState(
-    existingSequence?.conversion_goal?.type || "",
+    ((existingSequence?.conversion_goal as ConversionGoal | null)?.type) || "",
   );
   const [goalEvent, setGoalEvent] = useState(
-    existingSequence?.conversion_goal?.targetEvent || "",
+    ((existingSequence?.conversion_goal as ConversionGoal | null)?.targetEvent) || "",
   );
   const [goalHours, setGoalHours] = useState<string>(
-    existingSequence?.conversion_goal?.windowHours?.toString() || "72",
+    ((existingSequence?.conversion_goal as ConversionGoal | null)?.windowHours?.toString()) || "72",
   );
 
   // ============================================================================

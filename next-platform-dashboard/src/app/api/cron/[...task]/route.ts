@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 type RouteHandler = {
-  GET: (req: NextRequest | Request) => Promise<Response>;
+  GET: (req: NextRequest) => Promise<Response>;
 };
 
 const handlers: Record<string, () => Promise<RouteHandler>> = {

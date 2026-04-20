@@ -932,7 +932,7 @@ export async function getSitePublicInfo(siteId: string): Promise<{
     .single();
 
   return data
-    ? { subdomain: data.subdomain, isPublished: data.published }
+    ? { subdomain: data.subdomain, isPublished: data.published ?? false }
     : null;
 }
 

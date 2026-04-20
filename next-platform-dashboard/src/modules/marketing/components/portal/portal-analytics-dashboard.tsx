@@ -71,7 +71,7 @@ export function PortalAnalyticsDashboard({
         };
 
         for (const c of campaigns) {
-          const camp = c as Record<string, unknown>;
+          const camp = c as unknown as Record<string, unknown>;
           agg.totalSent += Number(camp.totalSent) || 0;
           agg.totalDelivered += Number(camp.totalDelivered) || 0;
           agg.totalOpened += Number(camp.totalOpened) || 0;

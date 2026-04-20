@@ -42,20 +42,15 @@ type DomainRecord = {
 };
 
 // Helper type for Supabase query builder
+type EqChain = {
+  single: () => Promise<{ data: unknown; error: unknown }>;
+  order: (col: string, opts: { ascending: boolean }) => Promise<{ data: unknown[]; error: unknown }>;
+  eq: (col: string, val: string) => EqChain;
+};
+
 type AnyQueryBuilder = {
   from: (table: string) => {
-    select: (cols: string) => {
-      eq: (
-        col: string,
-        val: string,
-      ) => {
-        single: () => Promise<{ data: unknown; error: unknown }>;
-        order: (
-          col: string,
-          opts: { ascending: boolean },
-        ) => Promise<{ data: unknown[]; error: unknown }>;
-      };
-    };
+    select: (cols: string) => EqChain;
     insert: (data: Record<string, unknown>) => {
       select: () => {
         single: () => Promise<{ data: unknown; error: unknown }>;

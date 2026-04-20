@@ -92,7 +92,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
   const [activeTab, setActiveTab] = useState("overview");
 
   // Campaign fields - safe access with typed defaults
-  const c = campaign as Record<string, unknown>;
+  const c = campaign as unknown as Record<string, unknown>;
   const status = (c.status as CampaignStatus) || "draft";
   const config = CAMPAIGN_STATUS_CONFIG[status];
   const validTransitions = VALID_CAMPAIGN_TRANSITIONS[status] || [];
@@ -196,12 +196,12 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
               {config?.label || status}
             </Badge>
           </div>
-          {c.subject_line && (
+          {Boolean(c.subject_line) && (
             <p className="text-sm text-muted-foreground mt-1 truncate">
               Subject: {String(c.subject_line)}
             </p>
           )}
-          {c.description && (
+          {Boolean(c.description) && (
             <p className="text-sm text-muted-foreground mt-1">
               {String(c.description)}
             </p>
@@ -366,7 +366,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     {formatDate(c.created_at) || "Unknown"}
                   </p>
                 </div>
-                {c.scheduled_at && (
+                {Boolean(c.scheduled_at) && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Scheduled For
@@ -376,7 +376,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     </p>
                   </div>
                 )}
-                {c.completed_at && (
+                {Boolean(c.completed_at) && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Completed At
@@ -472,7 +472,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     {(Number(c.total_recipients) || 0).toLocaleString()}
                   </p>
                 </div>
-                {c.audience_id && (
+                {Boolean(c.audience_id) && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Audience ID
@@ -480,7 +480,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     <p className="text-sm font-mono">{String(c.audience_id)}</p>
                   </div>
                 )}
-                {c.segment_id && (
+                {Boolean(c.segment_id) && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Segment ID

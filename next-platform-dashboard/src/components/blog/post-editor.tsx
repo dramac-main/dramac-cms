@@ -622,10 +622,11 @@ export function PostEditor({
           siteId={siteId}
           fileType="image"
           title="Select Image"
-          onSelect={(files: MediaFile[]) => {
+          onSelect={(selection) => {
+            const files = Array.isArray(selection) ? selection : [selection];
             if (files.length > 0 && editor) {
               for (const file of files) {
-                editor.chain().focus().setImage({ src: file.url, alt: file.alt_text || file.original_name || "" }).run();
+                editor.chain().focus().setImage({ src: file.publicUrl, alt: file.altText || file.originalName || "" }).run();
               }
             }
             setShowMediaPicker(false);

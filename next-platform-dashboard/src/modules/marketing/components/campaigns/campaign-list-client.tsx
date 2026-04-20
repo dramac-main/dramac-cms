@@ -198,7 +198,7 @@ export function CampaignListClient({
           {campaigns.map((campaign) => {
             const status = (campaign.status as CampaignStatus) || "draft";
             const config = CAMPAIGN_STATUS_CONFIG[status];
-            const c = campaign as Record<string, unknown>;
+            const c = campaign as unknown as Record<string, unknown>;
             const totalSent = Number(c.total_sent) || 0;
             const totalOpened = Number(c.total_opened) || 0;
             return (

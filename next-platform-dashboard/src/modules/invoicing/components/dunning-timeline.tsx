@@ -206,21 +206,21 @@ export function DunningTimeline({
                         <span className="text-sm font-medium">
                           {config.label}
                         </span>
-                        {parsedNew?.stage && (
+                        {Boolean(parsedNew?.stage) && (
                           <Badge variant="outline" className="text-[10px]">
-                            Stage {String(parsedNew.stage)}
+                            Stage {String(parsedNew?.stage)}
                           </Badge>
                         )}
-                        {parsedNew?.type && (
+                        {Boolean(parsedNew?.type) && (
                           <Badge
                             variant={
-                              (parsedNew.type as string) === "writeoff"
+                              (parsedNew?.type as string) === "writeoff"
                                 ? "destructive"
                                 : "secondary"
                             }
                             className="text-[10px]"
                           >
-                            {String(parsedNew.type)}
+                            {String(parsedNew?.type)}
                           </Badge>
                         )}
                       </div>

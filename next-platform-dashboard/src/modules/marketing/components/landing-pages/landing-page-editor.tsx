@@ -143,9 +143,9 @@ export function LandingPageEditor({
   }, [blocks, seoConfig, styleConfig, title]);
 
   useEffect(() => {
-    clearTimeout(previewTimerRef.current);
+    clearTimeout(previewTimerRef.current ?? undefined);
     previewTimerRef.current = setTimeout(fetchPreview, 600);
-    return () => clearTimeout(previewTimerRef.current);
+    return () => clearTimeout(previewTimerRef.current ?? undefined);
   }, [fetchPreview]);
 
   // Warn before navigating away with unsaved work

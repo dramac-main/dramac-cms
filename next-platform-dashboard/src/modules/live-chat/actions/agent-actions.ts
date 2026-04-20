@@ -120,7 +120,7 @@ export async function getPortalTeamMembersForSite(
   clientId: string,
 ): Promise<{ members: AgencyMember[]; error: string | null }> {
   try {
-    const admin = createAdminClient();
+    const admin: any = createAdminClient();
 
     // Verify this site belongs to the client
     const { data: site, error: siteError } = await admin

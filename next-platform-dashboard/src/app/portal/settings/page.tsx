@@ -20,7 +20,7 @@ import {
   updateClientSettings,
   changePortalPassword,
   getClientSettings,
-  getClientNotifications,
+  getClientNotificationPreferences,
   updateClientNotifications,
 } from "@/lib/portal/portal-auth";
 import { PageHeader } from "@/components/layout/page-header";
@@ -70,7 +70,7 @@ export default function PortalSettingsPage() {
       try {
         const [settings, notifPrefs] = await Promise.all([
           getClientSettings(),
-          getClientNotifications(),
+          getClientNotificationPreferences(),
         ]);
         if (settings) {
           setFormData({

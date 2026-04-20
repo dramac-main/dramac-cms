@@ -652,7 +652,7 @@ export async function saveCancellationFeedbackPaddle(
         )
       : 0;
 
-    await (await supabase).from("cancellation_feedback").insert({
+    await ((await supabase) as any).from("cancellation_feedback").insert({
       agency_id: agencyId,
       plan_type: sub?.plan_type || "unknown",
       reason: feedback.reason,

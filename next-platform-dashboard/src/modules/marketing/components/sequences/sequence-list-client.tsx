@@ -374,18 +374,18 @@ export function SequenceListClient({
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
                       <Users className="text-muted-foreground h-3.5 w-3.5" />
-                      <span>{seq.total_enrolled || 0} enrolled</span>
+                      <span>{seq.totalEnrolled || 0} enrolled</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">
-                        {seq.total_completed || 0} completed
+                        {seq.totalCompleted || 0} completed
                       </span>
                     </div>
                   </div>
 
                   {/* Trigger */}
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Trigger: {(seq.trigger_type || "manual").replace(/_/g, " ")}
+                    Trigger: {(seq.triggerType || "manual").replace(/_/g, " ")}
                   </div>
                 </CardContent>
               </Card>

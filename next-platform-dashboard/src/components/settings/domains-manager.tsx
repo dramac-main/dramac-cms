@@ -541,7 +541,7 @@ export function DomainsManager({
                         if (!validateDomain(newDomain)) return;
                         handleAddDomain(newDomain);
                       }}
-                      disabled={!newDomain || step === "configuring"}
+                      disabled={!newDomain}
                     >
                       Add Domain
                     </Button>

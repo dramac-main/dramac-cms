@@ -63,7 +63,7 @@ export interface CreateTeamMemberInput {
   notes?: string;
 }
 
-export interface UpdateTeamMemberInput extends Partial<CreateTeamMemberInput> {
+export interface UpdateTeamMemberInput extends Omit<Partial<CreateTeamMemberInput>, 'status'> {
   status?: "active" | "invited" | "inactive";
 }
 
@@ -124,7 +124,7 @@ export async function getPortalTeamMembers(filters?: {
   const clientId = await getPortalClientId();
   if (!clientId) return { members: [], total: 0 };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   let query = supabase
     .from("portal_team_members")
@@ -168,7 +168,7 @@ export async function getPortalTeamMember(
   const clientId = await getPortalClientId();
   if (!clientId) return null;
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { data, error } = await supabase
     .from("portal_team_members")
@@ -191,7 +191,7 @@ export async function createPortalTeamMember(
   const clientId = await getPortalClientId();
   if (!clientId) return { success: false, error: "Not authenticated" };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { data, error } = await supabase
     .from("portal_team_members")
@@ -280,7 +280,7 @@ export async function updatePortalTeamMember(
   const clientId = await getPortalClientId();
   if (!clientId) return { success: false, error: "Not authenticated" };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   // Build update object, only including provided fields
   const updateData: Record<string, unknown> = {};
@@ -351,7 +351,7 @@ export async function deletePortalTeamMember(
   const clientId = await getPortalClientId();
   if (!clientId) return { success: false, error: "Not authenticated" };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { error } = await supabase
     .from("portal_team_members")
@@ -374,7 +374,7 @@ export async function getPortalTeamDepartments(): Promise<string[]> {
   const clientId = await getPortalClientId();
   if (!clientId) return [];
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { data } = await supabase
     .from("portal_team_members")
@@ -384,7 +384,7 @@ export async function getPortalTeamDepartments(): Promise<string[]> {
     .order("department");
 
   const departments = new Set<string>();
-  data?.forEach((d) => {
+  data?.forEach((d: any) => {
     if (d.department) departments.add(d.department);
   });
 
@@ -403,7 +403,7 @@ export async function getPortalTeamStats(): Promise<{
   const clientId = await getPortalClientId();
   if (!clientId) return { total: 0, active: 0, invited: 0, inactive: 0 };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { data } = await supabase
     .from("portal_team_members")
@@ -414,9 +414,9 @@ export async function getPortalTeamStats(): Promise<{
 
   return {
     total: data.length,
-    active: data.filter((m) => m.status === "active").length,
-    invited: data.filter((m) => m.status === "invited").length,
-    inactive: data.filter((m) => m.status === "inactive").length,
+    active: data.filter((m: any) => m.status === "active").length,
+    invited: data.filter((m: any) => m.status === "invited").length,
+    inactive: data.filter((m: any) => m.status === "inactive").length,
   };
 }
 
@@ -429,7 +429,7 @@ export async function resendPortalTeamInvitation(
   const clientId = await getPortalClientId();
   if (!clientId) return { success: false, error: "Not authenticated" };
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   // Get the member
   const { data: member } = await supabase
@@ -488,7 +488,7 @@ export async function getPortalOwner(): Promise<PortalTeamMember | null> {
   const clientId = await getPortalClientId();
   if (!clientId) return null;
 
-  const supabase = await createClient();
+  const supabase: any = await createClient();
 
   const { data: client } = await supabase
     .from("clients")
@@ -525,7 +525,7 @@ export async function getPortalOwner(): Promise<PortalTeamMember | null> {
     notes: null,
     invitedAt: null,
     lastActiveAt: null,
-    createdAt: client.created_at,
-    updatedAt: client.created_at,
+    createdAt: client.created_at ?? "",
+    updatedAt: client.created_at ?? "",
   };
 }

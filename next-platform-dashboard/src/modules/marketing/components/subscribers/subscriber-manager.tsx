@@ -308,7 +308,7 @@ export function SubscriberManager({
                           </div>
                         </td>
                         <td className="text-muted-foreground px-4 py-3">
-                          {[sub.first_name, sub.last_name]
+                          {[sub.firstName, sub.lastName]
                             .filter(Boolean)
                             .join(" ") || "—"}
                         </td>
@@ -327,13 +327,13 @@ export function SubscriberManager({
                             <div
                               className="h-2 rounded-full bg-blue-500"
                               style={{
-                                width: `${Math.min(sub.engagement_score || 0, 100)}%`,
+                                width: `${Math.min(sub.engagementScore || 0, 100)}%`,
                                 maxWidth: "60px",
                                 minWidth: "4px",
                               }}
                             />
                             <span className="text-muted-foreground text-xs">
-                              {sub.engagement_score || 0}
+                              {sub.engagementScore || 0}
                             </span>
                           </div>
                         </td>
@@ -356,7 +356,7 @@ export function SubscriberManager({
                           </div>
                         </td>
                         <td className="text-muted-foreground px-4 py-3 text-xs">
-                          {new Date(sub.created_at).toLocaleDateString()}
+                          {new Date(sub.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3">
                           <DropdownMenu>
@@ -566,10 +566,10 @@ export function SubscriberManager({
                         ] || list.type}
                       </Badge>
                       <span className="text-muted-foreground">
-                        {list.subscriber_count || 0} subscribers
+                        {list.subscriberCount || 0} subscribers
                       </span>
                     </div>
-                    {list.is_double_opt_in && (
+                    {list.isDoubleOptIn && (
                       <p className="text-muted-foreground mt-2 text-xs">
                         Double opt-in enabled
                       </p>

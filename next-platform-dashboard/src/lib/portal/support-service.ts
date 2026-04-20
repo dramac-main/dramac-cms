@@ -247,8 +247,8 @@ export async function createTicket(
         .single();
 
       await sendBrandedEmail(clientRow.agency_id, {
-        type: "support_ticket_created",
-        to: "agency", // resolved by sendBrandedEmail to agency owner
+        emailType: "support_ticket_created",
+        to: "agency" as unknown as import("@/lib/email/email-types").EmailRecipient, // resolved by sendBrandedEmail to agency owner
         data: {
           ticketNumber: createdTicket?.ticket_number || "",
           subject: ticket.subject,

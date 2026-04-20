@@ -991,7 +991,7 @@ export function EmailPurchaseWizard() {
                   <div className="border border-destructive/20 bg-destructive/5 rounded-xl p-6 flex flex-col items-center gap-3">
                     <AlertCircle className="h-5 w-5 text-destructive" />
                     <p className="text-sm text-destructive">{pricingError}</p>
-                    <Button variant="outline" size="sm" onClick={loadPricing}>
+                    <Button variant="outline" size="sm" onClick={() => refetchPricing()}>
                       <RefreshCw className="h-3.5 w-3.5 mr-2" />
                       Retry
                     </Button>

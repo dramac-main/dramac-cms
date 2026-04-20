@@ -1434,7 +1434,7 @@ export async function createConnection(
   try {
     const supabase = await createClient();
 
-    const { data: connection, error } = await supabase
+    const { data: connection, error } = await (supabase as any)
       .from("automation_connections")
       .insert({
         site_id: siteId,
@@ -1582,7 +1582,7 @@ export async function testConnection(
   try {
     const supabase = await createClient();
 
-    const { data: connection, error: fetchError } = await supabase
+    const { data: connection, error: fetchError } = await (supabase as any)
       .from("automation_connections")
       .select("*")
       .eq("id", connectionId)

@@ -52,7 +52,9 @@ export interface TrialStatusInfo {
 // ============================================================================
 
 export class TrialService {
-  private supabase = createAdminClient();
+  // Cast to any to avoid deep type instantiation errors from large generated Database schema
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private supabase: any = createAdminClient();
 
   /**
    * Check if an agency is eligible for a trial

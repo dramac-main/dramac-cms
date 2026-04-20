@@ -860,7 +860,7 @@ async function logSubscriptionEvent(
   eventData: Record<string, unknown>,
 ): Promise<void> {
   try {
-    const supabase = createAdminClient();
+    const supabase: any = createAdminClient();
     await supabase.from("subscription_events").insert({
       agency_id: agencyId,
       event_type: eventType,
