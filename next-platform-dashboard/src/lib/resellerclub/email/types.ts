@@ -170,8 +170,8 @@ export interface EmailAccountInfo {
  *
  * Example: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": { ... } }, "6-25": { ... } } } }
  *
- * Prices are TOTAL for the tenure per-account (NOT per-month).
- * E.g. add["12"] = 10.20 means $10.20 total for 12 months for 1 account.
+ * Prices are per-account PER-MONTH rates for the given tenure length.
+ * E.g. add["12"] = 0.85 means $0.85/account/month when billed annually.
  */
 export interface EmailPricingResponse {
   [productKey: string]: {

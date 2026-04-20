@@ -1048,11 +1048,11 @@ function filterWizardPlans(pricing: EmailPricingResponse): EmailPricingResponse 
  * Calculate base price from RC email pricing response.
  * 
  * RC response structure (confirmed from API docs):
- * { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} } } } }
+ * { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 0.42 }, "renew": {...} } } } }
  * 
- * Prices are TOTAL for the tenure per-account.
- * E.g. add["12"] = 10.20 → $10.20 total for 12 months for 1 account.
- * Total = price * numberOfAccounts
+ * Prices are per-account PER-MONTH rates for the given tenure length.
+ * E.g. add["12"] = 0.42 means $0.42/account/month when billed annually.
+ * Total = price × numberOfAccounts × months
  */
 function calculateBasePrice(
   pricing: EmailPricingResponse,

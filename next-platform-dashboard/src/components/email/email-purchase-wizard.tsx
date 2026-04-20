@@ -896,9 +896,12 @@ export function EmailPurchaseWizard() {
 
                       {/* Total */}
                       <div className="flex justify-between items-center">
-                        <span className="text-base font-semibold">Total due today</span>
+                        <span className="text-base font-semibold">Subtotal <span className="text-xs font-normal text-muted-foreground">(excl. tax)</span></span>
                         <span className="text-xl font-bold">{formatCurrency(pricingDetails.total, "USD")}</span>
                       </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        Applicable taxes will be calculated at checkout based on your location.
+                      </p>
 
                       {pricingDetails.renewTotal != null &&
                         pricingDetails.total != null &&
@@ -935,7 +938,7 @@ export function EmailPurchaseWizard() {
                       Processing...
                     </>
                   ) : pricingDetails?.total != null ? (
-                    <>Continue to Payment — {formatCurrency(pricingDetails.total, "USD")}</>
+                    <>Continue to Payment — {formatCurrency(pricingDetails.total, "USD")} + tax</>
                   ) : (
                     'Purchase Email'
                   )}
@@ -943,7 +946,7 @@ export function EmailPurchaseWizard() {
               </div>
 
               <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                You&apos;ll be redirected to our secure checkout. Paid upfront for the selected period.
+                You&apos;ll be redirected to our secure checkout. Paid upfront for the selected period. Final amount includes applicable taxes.
               </p>
             </form>
           </Form>

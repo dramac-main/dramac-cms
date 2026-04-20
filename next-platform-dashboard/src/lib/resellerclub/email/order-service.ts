@@ -420,6 +420,6 @@ function calculateWholesalePrice(
   const price = addPricing[String(months)];
   if (price == null || isNaN(Number(price))) return 0;
   
-  // Price is total-for-tenure per account
-  return Number(price) * accounts;
+  // Price is per-account per-month. Multiply by accounts AND months.
+  return Number(price) * accounts * months;
 }
