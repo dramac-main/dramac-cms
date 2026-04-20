@@ -234,4 +234,66 @@ export const notificationTypeInfo: Record<
     label: "Missed Chat",
   },
   chat_rating: { icon: "Star", color: "text-yellow-500", label: "Chat Rating" },
+  // Domain & Email provisioning notifications
+  email_provisioned: {
+    icon: "Mail",
+    color: "text-green-500",
+    label: "Email Provisioned",
+  },
+  email_provisioning_failed: {
+    icon: "MailX",
+    color: "text-red-500",
+    label: "Email Provisioning Failed",
+  },
+  domain_provisioned: {
+    icon: "Globe",
+    color: "text-green-500",
+    label: "Domain Provisioned",
+  },
+  domain_provisioning_failed: {
+    icon: "Globe",
+    color: "text-red-500",
+    label: "Domain Provisioning Failed",
+  },
+  dns_configured: {
+    icon: "Server",
+    color: "text-blue-500",
+    label: "DNS Configured",
+  },
+  // Email renewal & expiry notifications
+  email_auto_renewed: {
+    icon: "RefreshCw",
+    color: "text-green-500",
+    label: "Email Auto-Renewed",
+  },
+  email_auto_renew_failed: {
+    icon: "AlertTriangle",
+    color: "text-red-500",
+    label: "Email Auto-Renew Failed",
+  },
+  email_expiry_60d: {
+    icon: "Clock",
+    color: "text-yellow-400",
+    label: "Email Expiry (60 Days)",
+  },
+  email_expiry_30d: {
+    icon: "Clock",
+    color: "text-yellow-500",
+    label: "Email Expiry (30 Days)",
+  },
+  email_expiry_14d: {
+    icon: "Clock",
+    color: "text-orange-400",
+    label: "Email Expiry (14 Days)",
+  },
+  email_expiry_7d: {
+    icon: "Clock",
+    color: "text-orange-500",
+    label: "Email Expiry (7 Days)",
+  },
+  email_expiry_1d: {
+    icon: "Clock",
+    color: "text-red-500",
+    label: "Email Expiry (Tomorrow)",
+  },
 };

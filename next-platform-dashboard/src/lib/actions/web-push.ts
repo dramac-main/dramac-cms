@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // push_subscriptions table is not yet in generated Supabase types — will be after migration
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Table name constant for push subscriptions (not in generated types yet)
 const PUSH_TABLE = "push_subscriptions" as any;
@@ -50,7 +50,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     return { sent: 0 };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: subscriptions } = await supabase
     .from(PUSH_TABLE)
     .select("*")
@@ -86,7 +86,7 @@ export async function sendPushToConversation(conversationId: string, payload: Pu
     return { sent: 0 };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: subscriptions } = await supabase
     .from(PUSH_TABLE)
     .select("*")
@@ -121,7 +121,7 @@ export async function sendPushToSiteAgents(siteId: string, payload: PushPayload)
     return { sent: 0 };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Get all agents for this site's agency
   const { data: site } = await supabase

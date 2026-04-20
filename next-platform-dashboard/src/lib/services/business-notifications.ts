@@ -1147,6 +1147,13 @@ export async function notifyOrderShipped(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Shipped`,
+        body: `Shipped to ${customerName}${trackingNumber ? ` — ${trackingNumber}` : ""}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-shipped-${orderNumber}`,
+      }).catch(() => {});
     }
 
     // Email to customer (uses SITE branding)
@@ -1222,6 +1229,13 @@ export async function notifyOrderDelivered(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Delivered`,
+        body: `Delivered to ${customerName}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-delivered-${orderNumber}`,
+      }).catch(() => {});
     }
 
     // Email to customer (uses SITE branding)
@@ -1301,6 +1315,13 @@ export async function notifyOrderCancelled(
         link: dashboardUrl,
         metadata: { orderNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Cancelled`,
+        body: `${customerName} — ${total}`,
+        url: dashboardUrl,
+        tag: `order-cancelled-${orderNumber}`,
+      }).catch(() => {});
     }
 
     // Email to business owner
@@ -1405,6 +1426,13 @@ export async function notifyPaymentReceived(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Payment Received: Order #${orderNumber}`,
+        body: `${customerName} paid ${total}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `payment-${orderNumber}`,
+      }).catch(() => {});
     }
 
     if (
@@ -1477,6 +1505,13 @@ export async function notifyPaymentProofUploaded(
         link: dashboardUrl,
         metadata: { orderNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Payment Proof: Order #${orderNumber}`,
+        body: `${customerName} uploaded proof (${total}) — action required`,
+        url: dashboardUrl,
+        tag: `payment-proof-${orderNumber}`,
+      }).catch(() => {});
     }
 
     // Email to business owner
@@ -1636,6 +1671,13 @@ export async function notifyLowStock(
         link: dashboardUrl,
         metadata: { productName, currentStock, threshold, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Low Stock: ${productName}`,
+        body: `${currentStock} remaining (threshold: ${threshold})${sku ? ` — SKU: ${sku}` : ""}`,
+        url: dashboardUrl,
+        tag: `low-stock-${sku || productName}`,
+      }).catch(() => {});
     }
 
     // Email to business owner
@@ -1856,6 +1898,13 @@ export async function notifyQuoteAccepted(
         link: dashboardUrl,
         metadata: { quoteNumber, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Quote #${quoteNumber} Accepted`,
+        body: `${customerName}${total ? ` — ${total}` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-accepted-${quoteNumber}`,
+      }).catch(() => {});
     }
 
     const emailPromises: Promise<unknown>[] = [];
@@ -1974,6 +2023,13 @@ export async function notifyQuoteRejected(
         link: dashboardUrl,
         metadata: { quoteNumber, siteId, reason },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Quote #${quoteNumber} Rejected`,
+        body: `${customerName}${reason ? ` — ${reason.substring(0, 60)}` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-rejected-${quoteNumber}`,
+      }).catch(() => {});
     }
 
     // 2. Email to business owner
@@ -2052,6 +2108,13 @@ export async function notifyBookingPaymentProofUploaded(
         link: dashboardUrl,
         metadata: { serviceName, siteId },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Booking Payment Proof: ${serviceName}`,
+        body: `${customerName} — ${amountFormatted} (action required)`,
+        url: dashboardUrl,
+        tag: `booking-proof-${serviceName.replace(/\s+/g, "-").toLowerCase()}`,
+      }).catch(() => {});
     }
 
     // Email to business owner
@@ -2130,6 +2193,13 @@ export async function notifyQuoteAmendmentRequested(
         link: dashboardUrl,
         metadata: { quoteNumber, siteId, customerEmail },
       });
+
+      pushToOwner(owner.agencyOwnerId, {
+        title: `Quote #${quoteNumber} — Changes Requested`,
+        body: `${customerName}: "${truncatedNotes.substring(0, 60)}${truncatedNotes.length > 60 ? "..." : ""}"`,
+        url: dashboardUrl,
+        tag: `quote-amendment-${quoteNumber}`,
+      }).catch(() => {});
     }
 
     // 2. Email to business owner
