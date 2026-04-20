@@ -3,11 +3,20 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmailOrdersList } from "@/components/email/email-orders-list";
 import { EmailStatsCards } from "@/components/email/email-stats-cards";
-import { getBusinessEmailOrders, getBusinessEmailStats } from "@/lib/actions/business-email";
+import {
+  getBusinessEmailOrders,
+  getBusinessEmailStats,
+} from "@/lib/actions/business-email";
 import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
@@ -25,15 +34,15 @@ interface EmailPageProps {
 
 async function EmailStats() {
   const result = await getBusinessEmailStats();
-  
+
   if (!result.success || !result.data) return null;
-  
+
   return <EmailStatsCards stats={result.data} />;
 }
 
 async function EmailOrders() {
   const result = await getBusinessEmailOrders();
-  
+
   if (!result.success || !result.data) {
     return (
       <Card>
@@ -70,8 +79,6 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
       <Suspense fallback={<Skeleton className="h-24" />}>
         <EmailStats />
       </Suspense>
-
-
 
       {/* Orders List */}
       <Suspense fallback={<Skeleton className="h-64" />}>

@@ -26,7 +26,10 @@ interface ExpenseReceiptViewerProps {
   mode?: "compact" | "full";
 }
 
-function getFileType(url: string, filename?: string | null): "image" | "pdf" | "unknown" {
+function getFileType(
+  url: string,
+  filename?: string | null,
+): "image" | "pdf" | "unknown" {
   const check = (filename || url).toLowerCase();
   if (/\.(jpg|jpeg|png|gif|webp|heic|svg)(\?|$)/i.test(check)) return "image";
   if (/\.pdf(\?|$)/i.test(check)) return "pdf";
@@ -44,9 +47,18 @@ export function ExpenseReceiptViewer({
 
   const fileType = getFileType(receiptUrl, receiptFilename);
 
-  const handleZoomIn = useCallback(() => setZoom((z) => Math.min(z + 0.25, 4)), []);
-  const handleZoomOut = useCallback(() => setZoom((z) => Math.max(z - 0.25, 0.25)), []);
-  const handleRotate = useCallback(() => setRotation((r) => (r + 90) % 360), []);
+  const handleZoomIn = useCallback(
+    () => setZoom((z) => Math.min(z + 0.25, 4)),
+    [],
+  );
+  const handleZoomOut = useCallback(
+    () => setZoom((z) => Math.max(z - 0.25, 0.25)),
+    [],
+  );
+  const handleRotate = useCallback(
+    () => setRotation((r) => (r + 90) % 360),
+    [],
+  );
   const handleReset = useCallback(() => {
     setZoom(1);
     setRotation(0);
@@ -113,7 +125,13 @@ export function ExpenseReceiptViewer({
 
   // ─── Full dialog viewer ────────────────────────────────────
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) handleReset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) handleReset();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Maximize2 className="h-4 w-4 mr-1.5" />
@@ -166,27 +184,49 @@ function ReceiptViewerInner({
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b px-4 py-2 bg-muted/30">
-        <span className="text-sm font-medium truncate max-w-[200px]">{displayName}</span>
+        <span className="text-sm font-medium truncate max-w-[200px]">
+          {displayName}
+        </span>
         <div className="flex items-center gap-1">
           {fileType === "image" && (
             <>
-              <Button variant="ghost" size="icon" onClick={onZoomOut} title="Zoom out">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onZoomOut}
+                title="Zoom out"
+              >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <span className="text-xs text-muted-foreground w-12 text-center">
                 {Math.round(zoom * 100)}%
               </span>
-              <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onZoomIn}
+                title="Zoom in"
+              >
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={onRotate} title="Rotate">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onRotate}
+                title="Rotate"
+              >
                 <RotateCw className="h-4 w-4" />
               </Button>
               <div className="w-px h-5 bg-border mx-1" />
             </>
           )}
           <Button variant="ghost" size="icon" asChild title="Download">
-            <a href={receiptUrl} download={displayName} target="_blank" rel="noopener noreferrer">
+            <a
+              href={receiptUrl}
+              download={displayName}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Download className="h-4 w-4" />
             </a>
           </Button>
@@ -221,7 +261,12 @@ function ReceiptViewerInner({
               Preview not available for this file type.
             </p>
             <Button variant="outline" asChild>
-              <a href={receiptUrl} download={displayName} target="_blank" rel="noopener noreferrer">
+              <a
+                href={receiptUrl}
+                download={displayName}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Download className="h-4 w-4 mr-1.5" />
                 Download
               </a>

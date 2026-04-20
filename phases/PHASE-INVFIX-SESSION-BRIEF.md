@@ -3,8 +3,8 @@
 > **Module**: Invoicing & Financial Management (overhaul)  
 > **Guide**: `phases/PHASE-INVFIX-MASTER-GUIDE.md`  
 > **Total Phases**: 12 (INVFIX-01 through INVFIX-12)  
-> **Current Execution Plan**: 13 sessions  
-> **Why the plan changed**: INVFIX-04 and INVFIX-05 required a dedicated carryover closure session, and INVFIX-07 now needs its own session instead of being bundled with INVFIX-08.
+> **Current Execution Plan**: 14 sessions  
+> **Why the plan changed**: INVFIX-04 and INVFIX-05 required a dedicated carryover closure session, INVFIX-07 needed its own session, and Session 10 verification confirmed INVFIX-08 still requires a second dedicated carryover-closure session before email work can start.
 
 ---
 
@@ -12,14 +12,15 @@
 
 The original 10-session estimate is no longer the active execution plan.
 
-As of July 2026:
+As of April 20, 2026:
 
-1. INVFIX-01 through INVFIX-06 are verified complete.
-2. Session 7 fully closed the INVFIX-04/05 production blockers and completed INVFIX-06.
-3. The repo already contains a real expense subsystem baseline, but INVFIX-07 is not closed yet.
-4. Session 8 is therefore a dedicated INVFIX-07 closure session.
-5. INVFIX-08 remains separate because cross-module reports/export work is too large to bundle safely with expense closure.
-6. If a session has a dedicated prompt file, follow that prompt over the generic phase mapping.
+1. INVFIX-01 through INVFIX-07 are verified complete.
+2. Session 9 landed the initial INVFIX-08 cross-module report work.
+3. Session 10 verification found that the remaining INVFIX-08 carryover is still open.
+4. Session 11 is therefore a second dedicated INVFIX-08 carryover-closure session.
+5. INVFIX-09 must not begin until the report carryover is genuinely closed.
+6. The safest future merge remains INVFIX-10 + INVFIX-11 because both are portal-facing and share site-scoped UX and permission testing.
+7. If a session has a dedicated prompt file, follow that prompt over the generic phase mapping.
 
 ---
 
@@ -36,45 +37,42 @@ As of July 2026:
 | **Session 7**  | INVFIX-06             | Vendors, bills, purchase orders, receive tracking, 3-way match                              | 🟠 High     |
 | **Session 8**  | INVFIX-07             | Expenses closure: approval workflow, receipt viewer, budgets, mileage/per-diem audit        | 🟠 High     |
 | **Session 9**  | INVFIX-08             | Reports overhaul — central hub, cross-module data, export polish                            | 🟡 Medium   |
-| **Session 10** | INVFIX-09             | Email templates, auto-send, dunning escalation                                              | 🟠 High     |
-| **Session 11** | INVFIX-10             | Client portal — full invoice experience, pay, statements                                    | 🟠 High     |
-| **Session 12** | INVFIX-11             | Ask Chiko — portal expansion, sticky widget, data scoping                                   | 🟡 Medium   |
-| **Session 13** | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, final polish                                | 🟡 Medium   |
+| **Session 10** | INVFIX-08             | Verification audit only; reports carryover remained open                                    | 🔴 Critical |
+| **Session 11** | INVFIX-08             | Carryover closure only: cash flow, compare/growth, AR/tax/expense completion, export decision | 🔴 Critical |
+| **Session 12** | INVFIX-09             | Email templates, auto-send, dunning escalation                                              | 🟠 High     |
+| **Session 13** | INVFIX-10 + INVFIX-11 | Client portal invoicing experience + Ask Chiko portal expansion                             | 🟠 High     |
+| **Session 14** | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, quote-to-invoice, final polish              | 🟡 Medium   |
 
 ---
 
 ## Compressed Remaining Plan (Recommended)
 
-If the goal is to reduce the number of remaining sessions without lowering quality, use this compressed plan for the unfinished work.
-
-This reduces the remaining roadmap from **6 sessions to 5 sessions** by combining only the phases that are tightly related in implementation and verification.
+From the current audited state, the realistic remaining roadmap is **4 focused sessions** if INVFIX-10 + INVFIX-11 are merged, or **5 sessions** if they stay separate.
 
 | Remaining Session | Phases                | Focus                                                                                   | Why This Merge Is Safe                                                                |
 | ----------------- | --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **Session 8**     | INVFIX-07             | Expenses closure: approval workflow, receipt viewer, budgets, mileage/per-diem audit    | Must stay isolated so reporting is built on stabilized expense data                   |
-| **Session 9**     | INVFIX-08             | Reports overhaul: central hub, cross-module data, export polish                         | Still large enough to deserve a dedicated pass                                        |
-| **Session 10**    | INVFIX-09             | Email templates, auto-send, dunning escalation                                          | Best kept focused because event triggers and messaging need careful verification      |
-| **Session 11**    | INVFIX-10 + INVFIX-11 | Client portal invoicing experience + Ask Chiko portal expansion and scoped assistant UX | Both are portal-facing and share site-scoped data, permissions, and user-flow testing |
-| **Session 12**    | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, quote-to-invoice, final polish          | Delivery notes and final polish are substantial enough to stand alone                 |
+| **Session 11**    | INVFIX-08             | Carryover closure: cross-module cash flow, compare/growth, AR/tax/expense completion, export decision | Reports are still the hard gate and must be finished before email automation begins   |
+| **Session 12**    | INVFIX-09             | Email templates, auto-send, dunning escalation                                          | Best kept focused because event triggers and messaging need careful verification      |
+| **Session 13**    | INVFIX-10 + INVFIX-11 | Client portal invoicing experience + Ask Chiko portal expansion and scoped assistant UX | Both are portal-facing and share site-scoped data, permissions, and user-flow testing |
+| **Session 14**    | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, quote-to-invoice, final polish          | Delivery notes and final polish are substantial enough to stand alone                 |
 
 ### Why This Is The Recommended Compression
 
-1. **Do not merge INVFIX-07 with INVFIX-08.** Expense approval, receipt UX, and budget logic should be closed before the reports layer is broadened.
-2. **Do not merge INVFIX-11 with INVFIX-12.** Ask Chiko portal scoping and the final delivery-note/admin/cleanup phase are too different and too large together.
-3. **The safest merge is INVFIX-10 + INVFIX-11.** Both phases are portal-facing, both depend on site-scoped permissions, and both benefit from one integrated QA pass across portal invoice pages and the portal assistant experience.
+1. **Do not merge INVFIX-08 carryover with INVFIX-09.** The email-system phase depends on invoice/payment/report state being trustworthy first.
+2. **Do not merge INVFIX-11 with INVFIX-12.** Ask Chiko portal scoping and the delivery-note/admin/cleanup phase are too different and too large together.
+3. **The safest merge remains INVFIX-10 + INVFIX-11.** Both phases are portal-facing, both depend on site-scoped permissions, and both benefit from one integrated QA pass.
 
 ### Aggressive Compression (Not Recommended)
 
-It is technically possible to force the remaining work into **4 sessions**, but that raises delivery risk and makes verification weaker.
+It is technically possible to force the remaining work into **3 sessions**, but that raises delivery risk and weakens verification.
 
 If forced, the least-bad aggressive option would be:
 
-- Session 8: INVFIX-07
-- Session 9: INVFIX-08
-- Session 10: INVFIX-09 + INVFIX-10
-- Session 11: INVFIX-11 + INVFIX-12
+- Session 11: INVFIX-08 + INVFIX-09
+- Session 12: INVFIX-10 + INVFIX-11
+- Session 13: INVFIX-12
 
-That plan is **not** the recommended standard because it mixes too many concerns per session and makes regression testing broader and less precise.
+That plan is **not** the recommended standard because the reports carryover is still large and should not be bundled with the email-system phase.
 
 ---
 
@@ -86,6 +84,8 @@ Use a dedicated session prompt whenever one exists.
 - Session 6 quick handoff version: `phases/PHASE-INVFIX-SESSION-06-QUICK-PROMPT.md`
 - Session 7 authoritative prompt: `phases/PHASE-INVFIX-SESSION-07-PROMPT.md`
 - Session 8 authoritative prompt: `phases/PHASE-INVFIX-SESSION-08-PROMPT.md`
+- Session 10 authoritative prompt: `phases/PHASE-INVFIX-SESSION-10-PROMPT.md`
+- Session 11 authoritative prompt: `phases/PHASE-INVFIX-SESSION-11-PROMPT.md`
 
 Rules:
 
@@ -122,7 +122,7 @@ Read /memory-bank/activeContext.md and /memory-bank/progress.md to see the curre
 ### "What should I do next?"
 
 ```
-Read /memory-bank/progress.md to see what is actually complete. Then read phases/PHASE-INVFIX-SESSION-BRIEF.md for the current execution plan. If the active session has a dedicated prompt, use that file instead of the old generic mapping. For the next invoicing session, use phases/PHASE-INVFIX-SESSION-08-PROMPT.md.
+Read /memory-bank/progress.md to see what is actually complete. Then read phases/PHASE-INVFIX-SESSION-BRIEF.md for the current execution plan. If the active session has a dedicated prompt, use that file instead of the old generic mapping. For the next invoicing session, use phases/PHASE-INVFIX-SESSION-11-PROMPT.md.
 ```
 
 ### "I hit an error / something broke"
@@ -200,13 +200,15 @@ Session 8 (INVFIX-07: Expenses)
   ↓ Expense workflows should be closed before broader reporting polish
 Session 9 (INVFIX-08: Reports)
   ↓ Reporting should consume stabilized expense and invoicing data
-Session 10 (INVFIX-09: Email System)
-  ↓ Email automation depends on reliable invoice/payment state changes
-Session 11 (INVFIX-10: Client Portal)
+Session 10 (INVFIX-08 verification audit)
+  ↓ Reports were re-audited and the carryover remained open
+Session 11 (INVFIX-08 carryover closure)
+  ↓ Email automation depends on reliable invoice/payment/report state changes
+Session 12 (INVFIX-09: Email System)
   ↓ Portal experience depends on invoice/payment correctness
-Session 12 (INVFIX-11: Ask Chiko)
-  ↓ AI portal work depends on stable invoice and portal data surfaces
-Session 13 (INVFIX-12: Delivery Notes + Cleanup)
+Session 13 (INVFIX-10 + INVFIX-11: Client Portal + Ask Chiko)
+  ↓ Final cleanup only after portal and assistant surfaces are coherent
+Session 14 (INVFIX-12: Delivery Notes + Cleanup)
   ↓ Final cleanup only after the module is otherwise coherent
 ```
 

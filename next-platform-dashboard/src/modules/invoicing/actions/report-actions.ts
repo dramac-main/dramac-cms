@@ -63,6 +63,23 @@ function getDateRangeFilter(dateRange?: DateRange): {
   return { start, end };
 }
 
+function escapeCsvCell(
+  value: string | number | boolean | null | undefined,
+): string {
+  const text = value == null ? "" : String(value);
+  const escaped = text.replace(/"/g, '""');
+
+  return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
+}
+
+function serializeCsv(
+  rows: Array<Array<string | number | boolean | null | undefined>>,
+): string {
+  return rows
+    .map((row) => row.map((cell) => escapeCsvCell(cell)).join(","))
+    .join("\n");
+}
+
 function getMonthStart(date: Date): string {
   return new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
 }
@@ -1213,7 +1230,7 @@ export async function exportReportCSV(
         ["Net Profit", (data.netProfit / 100).toFixed(2)],
         ["Profit Margin", `${data.netProfitMargin}%`],
       ];
-      return rows.map((r) => r.join(",")).join("\n");
+      return serializeCsv(rows);
     }
 
     case "aging": {
@@ -1231,7 +1248,7 @@ export async function exportReportCSV(
           "Total (K)",
         ],
         ...data.byClient.map((c) => [
-          `"${c.clientName}"`,
+          c.clientName,
           (c.current / 100).toFixed(2),
           (c.days1to30 / 100).toFixed(2),
           (c.days31to60 / 100).toFixed(2),
@@ -1249,7 +1266,7 @@ export async function exportReportCSV(
           (data.summary.total / 100).toFixed(2),
         ],
       ];
-      return rows.map((r) => r.join(",")).join("\n");
+      return serializeCsv(rows);
     }
 
     case "tax": {
@@ -1260,7 +1277,7 @@ export async function exportReportCSV(
         [],
         ["Tax Rate", "Rate (%)", "Collected (K)", "Paid (K)", "Net (K)"],
         ...data.byRate.map((r) => [
-          `"${r.taxRateName}"`,
+          r.taxRateName,
           (r.rate / 100).toFixed(2),
           (r.collected / 100).toFixed(2),
           (r.paid / 100).toFixed(2),
@@ -1271,7 +1288,7 @@ export async function exportReportCSV(
         ["Total Paid", (data.taxPaid / 100).toFixed(2)],
         ["Net Tax Owed", (data.netTaxOwed / 100).toFixed(2)],
       ];
-      return rows.map((r) => r.join(",")).join("\n");
+      return serializeCsv(rows);
     }
 
     case "expenses": {
@@ -1282,7 +1299,7 @@ export async function exportReportCSV(
         [],
         ["Category", "Amount (K)", "Count", "% of Total"],
         ...data.byCategory.map((c) => [
-          `"${c.categoryName}"`,
+          c.categoryName,
           (c.amount / 100).toFixed(2),
           c.count.toString(),
           `${c.percentage}%`,
@@ -1290,7 +1307,7 @@ export async function exportReportCSV(
         [],
         ["Total Expenses", (data.totalExpenses / 100).toFixed(2)],
       ];
-      return rows.map((r) => r.join(",")).join("\n");
+      return serializeCsv(rows);
     }
 
     case "top_clients": {
@@ -1306,14 +1323,14 @@ export async function exportReportCSV(
           "Invoices",
         ],
         ...data.map((c) => [
-          `"${c.clientName}"`,
+          c.clientName,
           (c.totalInvoiced / 100).toFixed(2),
           (c.totalPaid / 100).toFixed(2),
           (c.outstanding / 100).toFixed(2),
           c.invoiceCount.toString(),
         ]),
       ];
-      return rows.map((r) => r.join(",")).join("\n");
+      return serializeCsv(rows);
     }
 
     default:
@@ -1588,7 +1605,7 @@ export async function getCrossModuleClients(
     );
   }
 
-  const clients: CrossModuleClientRow[] = [...clientMap.values()]
+  const rankedClients = [...clientMap.values()]
     .map((c) => ({
       clientName: c.name,
       clientEmail: c.email,
@@ -1601,13 +1618,14 @@ export async function getCrossModuleClients(
       bookingCount: c.bookCount,
       lastActivity: c.lastActivity,
     }))
-    .sort((a, b) => b.totalRevenue - a.totalRevenue)
-    .slice(0, limit);
+    .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
-  const totalRevenue = clients.reduce((s, c) => s + c.totalRevenue, 0);
+  const totalRevenue = rankedClients.reduce((sum, client) => {
+    return sum + client.totalRevenue;
+  }, 0);
 
   return {
-    clients,
+    clients: rankedClients.slice(0, limit),
     totalClients: clientMap.size,
     totalRevenue,
   };
@@ -1644,7 +1662,7 @@ export async function exportCrossModuleCSV(
         (p.total / 100).toFixed(2),
       ]),
     ];
-    return rows.map((r) => r.join(",")).join("\n");
+    return serializeCsv(rows);
   }
 
   const data = await getCrossModuleClients(siteId, dateRange, 100);
@@ -1664,7 +1682,7 @@ export async function exportCrossModuleCSV(
       "Last Activity",
     ],
     ...data.clients.map((c) => [
-      `"${c.clientName}"`,
+      c.clientName,
       c.clientEmail,
       (c.invoicingRevenue / 100).toFixed(2),
       (c.ecommerceRevenue / 100).toFixed(2),
@@ -1676,5 +1694,5 @@ export async function exportCrossModuleCSV(
       c.lastActivity,
     ]),
   ];
-  return rows.map((r) => r.join(",")).join("\n");
+  return serializeCsv(rows);
 }

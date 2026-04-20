@@ -6,9 +6,9 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { 
-  Globe, 
-  Palette, 
+import {
+  Globe,
+  Palette,
   ChevronRight,
   TrendingUp,
   Package,
@@ -16,58 +16,84 @@ import {
   Link as LinkIcon,
   Search,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAgencyPricingConfig, getUsageSummary, getRevenueAnalytics } from "@/lib/actions/domain-billing";
-import { getDomains, getAgencyClientsForAssignment, getAgencySitesForAssignment } from "@/lib/actions/domains";
+import {
+  getAgencyPricingConfig,
+  getUsageSummary,
+  getRevenueAnalytics,
+} from "@/lib/actions/domain-billing";
+import {
+  getDomains,
+  getAgencyClientsForAssignment,
+  getAgencySitesForAssignment,
+} from "@/lib/actions/domains";
 
-import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from "@/lib/locale-config";
 import { PLATFORM } from "@/lib/constants/platform";
 import { DomainClientAssignmentSection } from "./domain-client-assignment";
 
 export const metadata: Metadata = {
   title: `Domain Settings | ${PLATFORM.name}`,
-  description: "Manage your domains — view stats, assign to clients, and configure branding",
+  description:
+    "Manage your domains — view stats, assign to clients, and configure branding",
 };
 
 async function DomainSettingsContent() {
-  const [configResult, usageResult, revenueResult, domainsResult, clientsResult, sitesResult] = await Promise.all([
+  const [
+    configResult,
+    usageResult,
+    revenueResult,
+    domainsResult,
+    clientsResult,
+    sitesResult,
+  ] = await Promise.all([
     getAgencyPricingConfig(),
     getUsageSummary(),
-    getRevenueAnalytics('month'),
+    getRevenueAnalytics("month"),
     getDomains({ limit: 100 }),
     getAgencyClientsForAssignment(),
     getAgencySitesForAssignment(),
   ]);
-  
+
   const config = configResult.data;
   const usage = usageResult.data;
   const revenue = revenueResult.data;
   const allDomains = domainsResult.data || [];
   const clients = clientsResult.data || [];
   const sites = sitesResult.data || [];
-  
+
   // Count domains assigned to clients
   const assignedDomains = allDomains.filter((d) => d.client_id);
   const unassignedDomains = allDomains.filter((d) => !d.client_id);
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DOMAIN_CURRENCY,
     }).format(price);
   };
-  
+
   const settingsCards = [
     {
       title: "Client Domain Assignment",
-      description: "Assign domains to specific clients for tracking and billing",
+      description:
+        "Assign domains to specific clients for tracking and billing",
       icon: LinkIcon,
       href: "#client-assignment",
       badge: `${assignedDomains.length} assigned`,
-      badgeVariant: assignedDomains.length > 0 ? "default" as const : "secondary" as const,
+      badgeVariant:
+        assignedDomains.length > 0
+          ? ("default" as const)
+          : ("secondary" as const),
       isAnchor: true,
     },
     {
@@ -76,11 +102,13 @@ async function DomainSettingsContent() {
       icon: Palette,
       href: "/dashboard/domains/settings/branding",
       badge: config?.custom_support_email ? "Configured" : "Default",
-      badgeVariant: config?.custom_support_email ? "default" as const : "secondary" as const,
+      badgeVariant: config?.custom_support_email
+        ? ("default" as const)
+        : ("secondary" as const),
       isAnchor: false,
     },
   ];
-  
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -93,7 +121,7 @@ async function DomainSettingsContent() {
           Overview, client assignment, and branding for your domain services
         </p>
       </div>
-      
+
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -102,15 +130,14 @@ async function DomainSettingsContent() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {allDomains.length}
-            </div>
+            <div className="text-2xl font-bold">{allDomains.length}</div>
             <p className="text-xs text-muted-foreground">
-              {(usage?.domains_registered || 0) + (usage?.domains_renewed || 0)} registered/renewed this month
+              {(usage?.domains_registered || 0) + (usage?.domains_renewed || 0)}{" "}
+              registered/renewed this month
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
@@ -120,27 +147,23 @@ async function DomainSettingsContent() {
             <div className="text-2xl font-bold">
               {formatPrice(revenue?.total_revenue || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              last 30 days
-            </p>
+            <p className="text-xs text-muted-foreground">last 30 days</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assigned</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {assignedDomains.length}
-            </div>
+            <div className="text-2xl font-bold">{assignedDomains.length}</div>
             <p className="text-xs text-muted-foreground">
               domains linked to clients
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Unassigned</CardTitle>
@@ -156,10 +179,10 @@ async function DomainSettingsContent() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Settings Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {settingsCards.map((card) => 
+        {settingsCards.map((card) =>
           card.isAnchor ? (
             <a key={card.href} href={card.href}>
               <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer">
@@ -196,10 +219,10 @@ async function DomainSettingsContent() {
                 </CardContent>
               </Card>
             </Link>
-          )
+          ),
         )}
       </div>
-      
+
       {/* Client Domain Assignment Section */}
       <div id="client-assignment">
         <DomainClientAssignmentSection
@@ -214,7 +237,7 @@ async function DomainSettingsContent() {
           sites={sites}
         />
       </div>
-      
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -233,7 +256,9 @@ async function DomainSettingsContent() {
               <Link href="/dashboard/domains/transfer">Transfer Domain</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/dashboard/domains/settings/branding">Edit Branding</Link>
+              <Link href="/dashboard/domains/settings/branding">
+                Edit Branding
+              </Link>
             </Button>
           </div>
         </CardContent>
@@ -249,7 +274,7 @@ function LoadingSkeleton() {
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-5 w-96 mt-2" />
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
@@ -263,7 +288,7 @@ function LoadingSkeleton() {
           </Card>
         ))}
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2">
         {[...Array(2)].map((_, i) => (
           <Card key={i}>

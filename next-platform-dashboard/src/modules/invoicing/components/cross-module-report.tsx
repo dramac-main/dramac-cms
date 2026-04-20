@@ -106,16 +106,14 @@ export function CrossModuleReport() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleExport(tab === "clients" ? "clients" : "revenue")}
+            onClick={() =>
+              handleExport(tab === "clients" ? "clients" : "revenue")
+            }
           >
             <Download className="h-4 w-4 mr-1" />
             Export CSV
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-          >
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-1" />
             Print
           </Button>
@@ -139,7 +137,9 @@ export function CrossModuleReport() {
           </TabsList>
 
           <TabsContent value="revenue" className="space-y-6 mt-4">
-            {revenueData && <RevenueTab data={revenueData} currency={currency} />}
+            {revenueData && (
+              <RevenueTab data={revenueData} currency={currency} />
+            )}
           </TabsContent>
 
           <TabsContent value="clients" className="space-y-6 mt-4">
@@ -379,9 +379,7 @@ function ClientTab({
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">
-              Combined Revenue
-            </p>
+            <p className="text-sm text-muted-foreground">Combined Revenue</p>
             <p className="text-2xl font-bold">
               {formatInvoiceAmount(data.totalRevenue, currency)}
             </p>
@@ -518,10 +516,7 @@ function ClientTab({
                           )}
                         </td>
                         <td className="text-right py-2 px-3">
-                          {formatInvoiceAmount(
-                            client.bookingRevenue,
-                            currency,
-                          )}
+                          {formatInvoiceAmount(client.bookingRevenue, currency)}
                         </td>
                         <td className="text-right py-2 px-3 font-bold">
                           {formatInvoiceAmount(client.totalRevenue, currency)}

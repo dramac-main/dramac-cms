@@ -80,6 +80,7 @@ const INSIGHT_REPORTS = [
 export function ReportHub() {
   const params = useParams();
   const siteId = params?.siteId as string;
+  const basePath = `/dashboard/sites/${siteId}/invoicing`;
 
   return (
     <div className="space-y-8">
@@ -97,10 +98,7 @@ export function ReportHub() {
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {ACCOUNTING_REPORTS.map((report) => (
-            <Link
-              key={report.href}
-              href={`/sites/${siteId}/modules/invoicing/${report.href}`}
-            >
+            <Link key={report.href} href={`${basePath}/${report.href}`}>
               <Card className="h-full hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                   <report.icon className={`h-5 w-5 ${report.color}`} />
@@ -124,10 +122,7 @@ export function ReportHub() {
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {INSIGHT_REPORTS.map((report) => (
-            <Link
-              key={report.href}
-              href={`/sites/${siteId}/modules/invoicing/${report.href}`}
-            >
+            <Link key={report.href} href={`${basePath}/${report.href}`}>
               <Card className="h-full hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                   <report.icon className={`h-5 w-5 ${report.color}`} />

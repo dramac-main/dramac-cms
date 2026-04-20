@@ -3,8 +3,20 @@
 import { useState } from "react";
 import { Trash2, ShoppingCart, Shield, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +24,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { DomainCartItem, DomainCart } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from "@/lib/locale-config";
 interface DomainCartProps {
   items: DomainCartItem[];
   onUpdateItem: (index: number, updates: Partial<DomainCartItem>) => void;
@@ -29,14 +41,14 @@ export function DomainCartComponent({
   className,
 }: DomainCartProps) {
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DOMAIN_CURRENCY,
     }).format(price);
   };
-  
+
   /** Get the correct retail TOTAL for the selected year count.
    *  RC API register[N] is the per-year rate for an N-year tenure.
    *  Total = perYearRate * years.  Falls back to register[1] if the
@@ -44,27 +56,32 @@ export function DomainCartComponent({
   const getRetailForYears = (item: DomainCartItem): number => {
     // Per-year rate for the chosen tenure (RC returns per-year, NOT total)
     const perYearForTenure = Number(
-      item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any] ?? 0
+      item.retailPrices?.[item.years] ??
+        item.retailPrices?.[String(item.years) as any] ??
+        0,
     );
-    const perYear = perYearForTenure > 0
-      ? perYearForTenure
-      : Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+    const perYear =
+      perYearForTenure > 0
+        ? perYearForTenure
+        : Number(item.retailPrices?.[1] ?? item.retailPrices?.["1" as any]) ||
+          item.retailPrice ||
+          0;
     return Math.round(perYear * item.years * 100) / 100;
   };
 
   const calculateTotals = (): DomainCart => {
     let subtotal = 0;
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       subtotal += getRetailForYears(item);
       if (item.privacy) {
         subtotal += item.privacyPrice * item.years;
       }
     });
-    
+
     const tax = 0; // Would calculate based on location
     const total = subtotal + tax;
-    
+
     return {
       items,
       subtotal,
@@ -73,9 +90,9 @@ export function DomainCartComponent({
       currency: DOMAIN_CURRENCY,
     };
   };
-  
+
   const cart = calculateTotals();
-  
+
   const handleCheckout = async () => {
     setIsLoading(true);
     try {
@@ -84,7 +101,7 @@ export function DomainCartComponent({
       setIsLoading(false);
     }
   };
-  
+
   if (items.length === 0) {
     return (
       <Card className={cn("text-center py-12", className)}>
@@ -98,7 +115,7 @@ export function DomainCartComponent({
       </Card>
     );
   }
-  
+
   return (
     <div className={cn("space-y-6", className)}>
       {/* Cart Items */}
@@ -110,10 +127,12 @@ export function DomainCartComponent({
                 <div className="flex-1">
                   <h4 className="font-semibold text-lg">{item.domainName}</h4>
                   <p className="text-sm text-muted-foreground capitalize">
-                    {item.type === 'registration' ? 'New Registration' : item.type}
+                    {item.type === "registration"
+                      ? "New Registration"
+                      : item.type}
                   </p>
                 </div>
-                
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -123,7 +142,7 @@ export function DomainCartComponent({
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Years Selection */}
                 <div className="space-y-2">
@@ -133,32 +152,49 @@ export function DomainCartComponent({
                   </Label>
                   <Select
                     value={String(item.years)}
-                    onValueChange={(value) => onUpdateItem(index, { years: Number(value) })}
+                    onValueChange={(value) =>
+                      onUpdateItem(index, { years: Number(value) })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 5, 10].map(yr => {
+                      {[1, 2, 3, 5, 10].map((yr) => {
                         // RC register[N] = per-year rate for N-year tenure.
                         // Savings = how much cheaper the per-year rate is vs 1-year rate.
                         // e.g. register[1]=$10/yr, register[2]=$9/yr → Save 10%
-                        const perYear1 = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
-                        const perYearN = Number(item.retailPrices?.[yr] ?? item.retailPrices?.[String(yr) as any]) || 0;
+                        const perYear1 =
+                          Number(
+                            item.retailPrices?.[1] ??
+                              item.retailPrices?.["1" as any],
+                          ) ||
+                          item.retailPrice ||
+                          0;
+                        const perYearN =
+                          Number(
+                            item.retailPrices?.[yr] ??
+                              item.retailPrices?.[String(yr) as any],
+                          ) || 0;
                         // Only show savings if the per-year rate for longer tenure is genuinely lower
-                        const savings = yr > 1 && perYear1 > 0 && perYearN > 0 && perYearN < perYear1
-                          ? Math.round((1 - perYearN / perYear1) * 100)
-                          : 0;
+                        const savings =
+                          yr > 1 &&
+                          perYear1 > 0 &&
+                          perYearN > 0 &&
+                          perYearN < perYear1
+                            ? Math.round((1 - perYearN / perYear1) * 100)
+                            : 0;
                         return (
                           <SelectItem key={yr} value={String(yr)}>
-                            {yr} Year{yr > 1 ? 's' : ''}{savings > 0 ? ` (Save ${savings}%)` : ''}
+                            {yr} Year{yr > 1 ? "s" : ""}
+                            {savings > 0 ? ` (Save ${savings}%)` : ""}
                           </SelectItem>
                         );
                       })}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* Privacy Protection */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm">
@@ -168,7 +204,9 @@ export function DomainCartComponent({
                   <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
                     <div className="flex-1">
                       <span className="text-sm font-medium">
-                        {item.privacyPrice === 0 ? 'FREE' : formatPrice(item.privacyPrice) + '/yr'}
+                        {item.privacyPrice === 0
+                          ? "FREE"
+                          : formatPrice(item.privacyPrice) + "/yr"}
                       </span>
                       <p className="text-xs text-muted-foreground">
                         Hide your contact info from WHOIS
@@ -176,18 +214,23 @@ export function DomainCartComponent({
                     </div>
                     <Switch
                       checked={item.privacy}
-                      onCheckedChange={(checked) => onUpdateItem(index, { privacy: checked })}
+                      onCheckedChange={(checked) =>
+                        onUpdateItem(index, { privacy: checked })
+                      }
                     />
                   </div>
                 </div>
               </div>
-              
+
               {/* Item Price */}
               <div className="mt-6 pt-4 border-t flex justify-between items-center">
-                <span className="text-muted-foreground">Subtotal for {item.years} year{item.years > 1 ? 's' : ''}</span>
+                <span className="text-muted-foreground">
+                  Subtotal for {item.years} year{item.years > 1 ? "s" : ""}
+                </span>
                 <span className="font-semibold text-lg">
                   {formatPrice(
-                    getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0)
+                    getRetailForYears(item) +
+                      (item.privacy ? item.privacyPrice * item.years : 0),
                   )}
                 </span>
               </div>
@@ -195,7 +238,7 @@ export function DomainCartComponent({
           </Card>
         ))}
       </div>
-      
+
       {/* Cart Summary */}
       <Card>
         <CardHeader>
@@ -206,43 +249,46 @@ export function DomainCartComponent({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Domains ({items.length})</span>
+            <span className="text-muted-foreground">
+              Domains ({items.length})
+            </span>
             <span>{formatPrice(cart.subtotal)}</span>
           </div>
-          
+
           {cart.tax > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tax</span>
               <span>{formatPrice(cart.tax)}</span>
             </div>
           )}
-          
+
           <Separator />
-          
+
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>
             <span>{formatPrice(cart.total)}</span>
           </div>
         </CardContent>
         <CardFooter className="flex-col gap-4">
-          <Button 
-            className="w-full" 
+          <Button
+            className="w-full"
             size="lg"
             onClick={handleCheckout}
             disabled={isLoading}
           >
-            {isLoading ? 'Processing...' : 'Proceed to Checkout'}
+            {isLoading ? "Processing..." : "Proceed to Checkout"}
           </Button>
-          
+
           <Alert className="bg-muted/50">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              By completing this purchase, you agree to the domain registration terms and conditions.
+              By completing this purchase, you agree to the domain registration
+              terms and conditions.
             </AlertDescription>
           </Alert>
         </CardFooter>
       </Card>
-      
+
       {/* Trust Badges */}
       <div className="grid grid-cols-3 gap-4 text-center text-xs text-muted-foreground">
         <div className="p-4 rounded-lg border bg-muted/30">

@@ -238,6 +238,10 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         onlinePaymentEnabled: form.onlinePaymentEnabled,
         bankTransferInstructions: form.bankTransferInstructions || null,
         mobileMoneyInstructions: form.mobileMoneyInstructions || null,
+        expenseApprovalThreshold: form.expenseApprovalThreshold,
+        expenseAutoApproveBelowThreshold:
+          form.expenseAutoApproveBelowThreshold,
+        mileageRatePerKm: form.mileageRatePerKm,
       });
       if (result.success) {
         toast.success("Settings saved");

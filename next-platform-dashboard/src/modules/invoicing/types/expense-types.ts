@@ -11,7 +11,12 @@
 // TYPE ALIASES
 // ============================================================================
 
-export type ExpenseStatus = "pending" | "approved" | "rejected" | "paid" | "void";
+export type ExpenseStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "paid"
+  | "void";
 
 export type ExpensePaymentMethod =
   | "bank_transfer"

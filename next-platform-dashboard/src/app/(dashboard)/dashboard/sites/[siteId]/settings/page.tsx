@@ -25,15 +25,28 @@ export async function generateMetadata({
   const { siteId } = await params;
   const site = await getSite(siteId).catch(() => null);
   return {
-    title: site ? `Settings - ${site.name} | ${PLATFORM.name}` : "Site Not Found",
+    title: site
+      ? `Settings - ${site.name} | ${PLATFORM.name}`
+      : "Site Not Found",
   };
 }
 
-export default async function SiteSettingsPage({ params, searchParams }: SiteSettingsPageProps) {
+export default async function SiteSettingsPage({
+  params,
+  searchParams,
+}: SiteSettingsPageProps) {
   const { siteId } = await params;
   const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
-  const validTabs = ["general", "branding", "domains", "seo", "modules", "backups", "danger"];
+  const validTabs = [
+    "general",
+    "branding",
+    "domains",
+    "seo",
+    "modules",
+    "backups",
+    "danger",
+  ];
   const defaultTab = tab && validTabs.includes(tab) ? tab : "general";
 
   if (!site) {

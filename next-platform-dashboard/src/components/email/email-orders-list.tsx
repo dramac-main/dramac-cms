@@ -14,12 +14,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Mail, 
-  MoreHorizontal, 
-  ExternalLink, 
-  Settings, 
-  Users, 
+import {
+  Mail,
+  MoreHorizontal,
+  ExternalLink,
+  Settings,
+  Users,
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
@@ -30,31 +30,31 @@ import type { EmailOrder } from "@/lib/resellerclub/email/types";
 // Plan name resolution from product key
 function getPlanDisplayName(productKey: string): string {
   const PLAN_NAMES: Record<string, string> = {
-    eeliteus: 'Business Email',
-    eelitein: 'Business Email',
-    eeliteuk: 'Business Email',
-    enterpriseemailus: 'Enterprise Email',
-    enterpriseemailin: 'Enterprise Email',
-    titanmailglobal: 'Titan Email',
-    titanmailindia: 'Titan Email',
+    eeliteus: "Business Email",
+    eelitein: "Business Email",
+    eeliteuk: "Business Email",
+    enterpriseemailus: "Enterprise Email",
+    enterpriseemailin: "Enterprise Email",
+    titanmailglobal: "Titan Email",
+    titanmailindia: "Titan Email",
   };
   // Check for Titan Mail plan IDs
   const titanMatch = productKey.match(/^titanmail(?:global|india)_(\d+)$/);
   if (titanMatch) {
     const planId = parseInt(titanMatch[1], 10);
     const TITAN_NAMES: Record<number, string> = {
-      1762: 'Professional Email',
-      1761: 'Professional Email',
-      1756: 'Business Email',
-      1758: 'Business Email',
-      1757: 'Enterprise Email',
-      1759: 'Enterprise Email',
-      1755: 'Business Email (Trial)',
-      1760: 'Business Email (Trial)',
+      1762: "Professional Email",
+      1761: "Professional Email",
+      1756: "Business Email",
+      1758: "Business Email",
+      1757: "Enterprise Email",
+      1759: "Enterprise Email",
+      1755: "Business Email (Trial)",
+      1760: "Business Email (Trial)",
     };
-    return TITAN_NAMES[planId] || 'Titan Email';
+    return TITAN_NAMES[planId] || "Titan Email";
   }
-  return PLAN_NAMES[productKey] || 'Business Email';
+  return PLAN_NAMES[productKey] || "Business Email";
 }
 
 interface EmailOrdersListProps {
@@ -72,7 +72,8 @@ export function EmailOrdersList({ orders }: EmailOrdersListProps) {
           <Mail className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No Email Orders</h3>
           <p className="text-muted-foreground text-center mb-4">
-            Purchase business email to add professional email addresses to your domains.
+            Purchase business email to add professional email addresses to your
+            domains.
           </p>
           <Button asChild>
             <Link href="/dashboard/email/purchase">Purchase Email</Link>
@@ -91,25 +92,39 @@ export function EmailOrdersList({ orders }: EmailOrdersListProps) {
   );
 }
 
-function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] }) {
-  const accountUsage = order.number_of_accounts > 0 ? (order.used_accounts / order.number_of_accounts) * 100 : 0;
+function EmailOrderCard({
+  order,
+}: {
+  order: EmailOrdersListProps["orders"][0];
+}) {
+  const accountUsage =
+    order.number_of_accounts > 0
+      ? (order.used_accounts / order.number_of_accounts) * 100
+      : 0;
   const expiryDate = new Date(order.expiry_date);
-  const isExpiringSoon = expiryDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
+  const isExpiringSoon =
+    expiryDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
   const isExpired = expiryDate < new Date();
 
   const getStatusBadge = () => {
     switch (order.status) {
-      case 'Active':
+      case "Active":
         if (isExpired) {
           return <Badge variant="destructive">Expired</Badge>;
         }
         if (isExpiringSoon) {
-          return <Badge className="bg-yellow-500 hover:bg-yellow-600">Expiring Soon</Badge>;
+          return (
+            <Badge className="bg-yellow-500 hover:bg-yellow-600">
+              Expiring Soon
+            </Badge>
+          );
         }
-        return <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>;
-      case 'Suspended':
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>
+        );
+      case "Suspended":
         return <Badge variant="destructive">Suspended</Badge>;
-      case 'Pending':
+      case "Pending":
         return <Badge variant="secondary">Pending</Badge>;
       default:
         return <Badge variant="outline">{order.status}</Badge>;
@@ -126,7 +141,7 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <Link 
+                <Link
                   href={`/dashboard/email/${order.id}`}
                   className="text-lg font-medium hover:underline"
                 >
@@ -135,16 +150,18 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
                 {getStatusBadge()}
               </div>
               <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                {order.client && (
-                  <span>Client: {order.client.name}</span>
-                )}
+                {order.client && <span>Client: {order.client.name}</span>}
                 <span>Plan: {getPlanDisplayName(order.product_key)}</span>
               </div>
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`Actions for ${order.domain_name}`}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Actions for ${order.domain_name}`}
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -163,9 +180,9 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <a 
-                  href="https://app.titan.email" 
-                  target="_blank" 
+                <a
+                  href="https://app.titan.email"
+                  target="_blank"
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
@@ -209,7 +226,9 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
           <div>
             <p className="text-sm text-muted-foreground mb-1">Price</p>
             <p className="font-medium">
-              {order.retail_price > 0 ? formatCurrency(order.retail_price) : '—'}
+              {order.retail_price > 0
+                ? formatCurrency(order.retail_price)
+                : "—"}
             </p>
           </div>
 

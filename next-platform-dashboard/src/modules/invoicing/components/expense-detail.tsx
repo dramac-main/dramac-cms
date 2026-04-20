@@ -50,6 +50,9 @@ import { toast } from "sonner";
 
 type ExpenseWithDetails = Expense & {
   activity: InvoiceActivity[];
+  canCurrentUserApprove: boolean;
+  approvedByName: string | null;
+  approvedByEmail: string | null;
 };
 
 interface ExpenseDetailProps {
@@ -151,7 +154,7 @@ export function ExpenseDetail({ siteId, expenseId }: ExpenseDetailProps) {
   }
 
   const canEdit = !expense.isBilled && expense.status !== "void";
-  const canApprove = expense.status === "pending";
+  const canApprove = expense.status === "pending" && expense.canCurrentUserApprove;
   const canDelete = !expense.isBilled && expense.status !== "void";
 
   return (
@@ -466,6 +469,16 @@ export function ExpenseDetail({ siteId, expenseId }: ExpenseDetailProps) {
                     </span>
                     <p className="font-medium">
                       {new Date(expense.approvedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                {(expense.approvedByName || expense.approvedByEmail) && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      {expense.status === "approved" ? "Approved by" : "Rejected by"}
+                    </span>
+                    <p className="font-medium">
+                      {expense.approvedByName || expense.approvedByEmail}
                     </p>
                   </div>
                 )}

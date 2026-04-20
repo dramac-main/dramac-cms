@@ -9,12 +9,21 @@ import { DOMAIN_CURRENCY_SYMBOL } from "@/lib/locale-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { updateAgencyPricingConfig } from "@/lib/actions/domain-billing";
-import type { AgencyDomainPricing, PricingMarkupType } from "@/types/domain-pricing";
+import type {
+  AgencyDomainPricing,
+  PricingMarkupType,
+} from "@/types/domain-pricing";
 
 interface DomainPricingConfigProps {
   config: Partial<AgencyDomainPricing>;
@@ -23,21 +32,21 @@ interface DomainPricingConfigProps {
 export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [markupType, setMarkupType] = useState<PricingMarkupType>(
-    config.default_markup_type || 'percentage'
+    config.default_markup_type || "percentage",
   );
   const [markupValue, setMarkupValue] = useState(
-    String(config.default_markup_value ?? 0)
+    String(config.default_markup_value ?? 0),
   );
   const [showWholesale, setShowWholesale] = useState(
-    config.show_wholesale_prices || false
+    config.show_wholesale_prices || false,
   );
   const [billingEnabled, setBillingEnabled] = useState(
-    config.billing_enabled || false
+    config.billing_enabled || false,
   );
-  
+
   const handleSave = async () => {
     setIsLoading(true);
-    
+
     try {
       const result = await updateAgencyPricingConfig({
         default_markup_type: markupType,
@@ -45,34 +54,35 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
         show_wholesale_prices: showWholesale,
         billing_enabled: billingEnabled,
       });
-      
+
       if (result.success) {
-        toast.success('Pricing configuration saved');
+        toast.success("Pricing configuration saved");
       } else {
-        toast.error(result.error || 'Failed to save configuration');
+        toast.error(result.error || "Failed to save configuration");
       }
     } catch {
-      toast.error('An error occurred');
+      toast.error("An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Calculate example markup
   const exampleWholesale = 12.99;
   let exampleRetail: number;
-  
+
   switch (markupType) {
-    case 'percentage':
-      exampleRetail = exampleWholesale * (1 + (parseFloat(markupValue) || 0) / 100);
+    case "percentage":
+      exampleRetail =
+        exampleWholesale * (1 + (parseFloat(markupValue) || 0) / 100);
       break;
-    case 'fixed':
+    case "fixed":
       exampleRetail = exampleWholesale + (parseFloat(markupValue) || 0);
       break;
     default:
       exampleRetail = parseFloat(markupValue) || exampleWholesale;
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Default Markup */}
@@ -80,46 +90,58 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
         <CardHeader>
           <CardTitle>Default Pricing Markup</CardTitle>
           <CardDescription>
-            Your supplier selling prices already include the profit margin you configured.
-            This setting adds an <strong>additional</strong> markup on top. Set to 0% to use your supplier prices exactly as configured.
+            Your supplier selling prices already include the profit margin you
+            configured. This setting adds an <strong>additional</strong> markup
+            on top. Set to 0% to use your supplier prices exactly as configured.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <RadioGroup 
-            value={markupType} 
+          <RadioGroup
+            value={markupType}
             onValueChange={(v) => setMarkupType(v as PricingMarkupType)}
           >
             <div className="grid gap-4">
               <div className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <RadioGroupItem value="percentage" id="percentage" />
                 <div className="flex-1">
-                  <Label htmlFor="percentage" className="flex items-center gap-2 cursor-pointer">
+                  <Label
+                    htmlFor="percentage"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Percent className="h-4 w-4 text-blue-500" />
                     Percentage Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a percentage on top of supplier selling prices (0% = use supplier prices as-is)
+                    Add a percentage on top of supplier selling prices (0% = use
+                    supplier prices as-is)
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <RadioGroupItem value="fixed" id="fixed" />
                 <div className="flex-1">
-                  <Label htmlFor="fixed" className="flex items-center gap-2 cursor-pointer">
+                  <Label
+                    htmlFor="fixed"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Coins className="h-4 w-4 text-green-500" />
                     Fixed Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a fixed currency amount on top of supplier selling prices
+                    Add a fixed currency amount on top of supplier selling
+                    prices
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <RadioGroupItem value="custom" id="custom" />
                 <div className="flex-1">
-                  <Label htmlFor="custom" className="flex items-center gap-2 cursor-pointer">
+                  <Label
+                    htmlFor="custom"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Tag className="h-4 w-4 text-purple-500" />
                     Custom Price
                   </Label>
@@ -130,12 +152,12 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
               </div>
             </div>
           </RadioGroup>
-          
+
           <div className="space-y-2">
             <Label>
-              {markupType === 'percentage' 
-                ? 'Markup Percentage' 
-                : markupType === 'fixed'
+              {markupType === "percentage"
+                ? "Markup Percentage"
+                : markupType === "fixed"
                   ? `Fixed Amount (${DOMAIN_CURRENCY_SYMBOL})`
                   : `Custom Price (${DOMAIN_CURRENCY_SYMBOL})`}
             </Label>
@@ -146,21 +168,25 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                 onChange={(e) => setMarkupValue(e.target.value)}
                 className="w-32"
                 min="0"
-                step={markupType === 'percentage' ? '1' : '0.01'}
+                step={markupType === "percentage" ? "1" : "0.01"}
               />
-              {markupType === 'percentage' && (
+              {markupType === "percentage" && (
                 <span className="text-muted-foreground">%</span>
               )}
             </div>
           </div>
-          
+
           {/* Preview */}
           <div className="p-4 bg-muted rounded-lg">
-            <h4 className="text-sm font-medium mb-3">Price Preview (example .com domain)</h4>
+            <h4 className="text-sm font-medium mb-3">
+              Price Preview (example .com domain)
+            </h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Supplier Price</p>
-                <p className="font-semibold text-lg">${exampleWholesale.toFixed(2)}</p>
+                <p className="font-semibold text-lg">
+                  ${exampleWholesale.toFixed(2)}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Your Final Price</p>
@@ -177,15 +203,15 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             </div>
             <div className="mt-2 pt-2 border-t">
               <p className="text-xs text-muted-foreground">
-                {parseFloat(markupValue) === 0 
-                  ? 'Prices match your supplier selling prices exactly'
-                  : `Additional markup: ${((exampleRetail - exampleWholesale) / exampleWholesale * 100).toFixed(1)}%`}
+                {parseFloat(markupValue) === 0
+                  ? "Prices match your supplier selling prices exactly"
+                  : `Additional markup: ${(((exampleRetail - exampleWholesale) / exampleWholesale) * 100).toFixed(1)}%`}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Display Options */}
       <Card>
         <CardHeader>
@@ -199,7 +225,8 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             <div>
               <Label className="font-medium">Show Wholesale Prices</Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Display wholesale prices alongside retail prices in your dashboard
+                Display wholesale prices alongside retail prices in your
+                dashboard
               </p>
             </div>
             <Switch
@@ -207,12 +234,13 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
               onCheckedChange={setShowWholesale}
             />
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <Label className="font-medium">Enable Client Billing</Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Allow clients to purchase and manage domains directly through the client portal
+                Allow clients to purchase and manage domains directly through
+                the client portal
               </p>
             </div>
             <Switch
@@ -222,7 +250,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Save Button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isLoading}>
@@ -231,7 +259,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {isLoading ? 'Saving...' : 'Save Configuration'}
+          {isLoading ? "Saving..." : "Save Configuration"}
         </Button>
       </div>
     </div>

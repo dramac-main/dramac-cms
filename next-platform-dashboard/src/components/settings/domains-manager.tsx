@@ -19,7 +19,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -46,7 +52,12 @@ interface DomainsManagerProps {
   domainVerified: boolean;
 }
 
-type DomainStep = "idle" | "entering" | "verifying" | "configuring" | "complete";
+type DomainStep =
+  | "idle"
+  | "entering"
+  | "verifying"
+  | "configuring"
+  | "complete";
 
 export function DomainsManager({
   siteId,
@@ -61,13 +72,17 @@ export function DomainsManager({
   const [step, setStep] = useState<DomainStep>("idle");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
-  const [healthCheck, setHealthCheck] = useState<DomainHealthCheck | null>(null);
+  const [healthCheck, setHealthCheck] = useState<DomainHealthCheck | null>(
+    null,
+  );
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [pollCount, setPollCount] = useState(0);
   const [validationError, setValidationError] = useState("");
 
   const subdomainUrl = `${DOMAINS.PROTOCOL}://${currentSubdomain}.${DOMAINS.SITES_BASE}`;
-  const customDomainUrl = customDomain ? `${DOMAINS.PROTOCOL}://${customDomain}` : null;
+  const customDomainUrl = customDomain
+    ? `${DOMAINS.PROTOCOL}://${customDomain}`
+    : null;
 
   // Domain format validation
   const validateDomain = (domain: string): boolean => {
@@ -161,9 +176,12 @@ export function DomainsManager({
       setIsDialogOpen(false);
       setNewDomain("");
       setPollCount(0);
-      toast.success(`Domain ${domain} saved! Configure your DNS records below.`);
+      toast.success(
+        `Domain ${domain} saved! Configure your DNS records below.`,
+      );
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to add domain";
+      const message =
+        error instanceof Error ? error.message : "Failed to add domain";
       toast.error(message);
       setStep("entering");
     }
@@ -190,7 +208,8 @@ export function DomainsManager({
       setVerified(false);
       setHealthCheck(null);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to remove domain";
+      const message =
+        error instanceof Error ? error.message : "Failed to remove domain";
       toast.error(message);
     } finally {
       setIsRemoving(false);
@@ -203,7 +222,7 @@ export function DomainsManager({
     setIsCheckingHealth(true);
     try {
       const res = await fetch(
-        `/api/domains/${encodeURIComponent(customDomain)}/status`
+        `/api/domains/${encodeURIComponent(customDomain)}/status`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -322,12 +341,7 @@ export function DomainsManager({
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  asChild
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                   <a
                     href={customDomainUrl!}
                     target="_blank"
@@ -390,9 +404,7 @@ export function DomainsManager({
                         setNewDomain(e.target.value.toLowerCase().trim());
                         setValidationError("");
                       }}
-                      disabled={
-                        step === "configuring" || step === "complete"
-                      }
+                      disabled={step === "configuring" || step === "complete"}
                     />
                     {validationError && (
                       <p className="text-sm text-destructive">
@@ -436,9 +448,7 @@ export function DomainsManager({
                               <span className="text-xs text-muted-foreground">
                                 Value
                               </span>
-                              <p className="truncate">
-                                {DOMAINS.VERCEL_CNAME}
-                              </p>
+                              <p className="truncate">{DOMAINS.VERCEL_CNAME}</p>
                             </div>
                             <Button
                               variant="ghost"
@@ -552,7 +562,8 @@ export function DomainsManager({
               DNS Configuration Required
             </CardTitle>
             <CardDescription>
-              Your domain <strong>{customDomain}</strong> has been saved. Configure the DNS records below with your domain registrar.
+              Your domain <strong>{customDomain}</strong> has been saved.
+              Configure the DNS records below with your domain registrar.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -575,7 +586,12 @@ export function DomainsManager({
                     <span className="text-xs text-muted-foreground">Value</span>
                     <p className="truncate">{DOMAINS.VERCEL_CNAME}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copyToClipboard(DOMAINS.VERCEL_CNAME)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => copyToClipboard(DOMAINS.VERCEL_CNAME)}
+                  >
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
@@ -601,7 +617,12 @@ export function DomainsManager({
                     <span className="text-xs text-muted-foreground">Value</span>
                     <p>{DOMAINS.VERCEL_A_RECORD}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copyToClipboard(DOMAINS.VERCEL_A_RECORD)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => copyToClipboard(DOMAINS.VERCEL_A_RECORD)}
+                  >
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
@@ -614,12 +635,18 @@ export function DomainsManager({
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <AlertTitle>Auto-checking DNS propagation</AlertTitle>
                 <AlertDescription>
-                  Checking every 30 seconds ({pollCount}/20 checks). DNS can take up to 48 hours to propagate.
+                  Checking every 30 seconds ({pollCount}/20 checks). DNS can
+                  take up to 48 hours to propagate.
                 </AlertDescription>
               </Alert>
             )}
 
-            <Button onClick={handleManualVerify} disabled={isVerifying} variant="outline" className="w-full">
+            <Button
+              onClick={handleManualVerify}
+              disabled={isVerifying}
+              variant="outline"
+              className="w-full"
+            >
               {isVerifying ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (

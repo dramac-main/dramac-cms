@@ -261,29 +261,36 @@ export async function createDomainPurchase(
   
   try {
     // =========================================================================
-    // PRE-FLIGHT BALANCE CHECK — Fail-open design with auto-refund safety
-    // 
-    // Strategy: WARN but DO NOT BLOCK. Let the checkout proceed even if RC 
-    // balance is insufficient. This prevents false positives from blocking 
-    // legitimate orders.
+    // PRE-FLIGHT BALANCE CHECK — BLOCK when balance is confirmed insufficient
     //
-    // Safety net: Auto-refund mechanism (Strategy 2 in payment safety) will 
-    // issue full refund if provisioning fails after payment. Customer is 
-    // protected and we avoid incorrectly blocking orders.
+    // Strategy: If we can successfully confirm that the RC balance is too low,
+    // BLOCK the checkout and tell the agency owner to top up. This prevents 
+    // the frustrating flow where the client pays, provisioning fails, and they
+    // receive a delayed refund email from Paddle.
     //
-    // Why fail-open?
-    // - getBalance() API call can fail (network, API timeout, auth issues)
-    // - Balance can change between check and provisioning (race condition)
-    // - False positives damage user experience more than auto-refunds
-    // - Auto-refund provides stronger safety than pre-flight blocking
+    // Fail-open ONLY when the balance API is unreachable (network error, 
+    // timeout, auth failure). In that case the auto-refund safety net still
+    // covers us, but at least legitimate insufficient-balance scenarios are
+    // caught before payment.
     // =========================================================================
     const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
     if (!balanceCheck.sufficient) {
+      if (balanceCheck.balance >= 0) {
+        // Balance API responded successfully but funds are too low → BLOCK
+        console.error(
+          `[Paddle] PRE-FLIGHT BLOCKED: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+          `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
+          `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`
+        );
+        throw new Error(
+          `Insufficient provider balance to fulfill this order. ` +
+          `Please top up your ResellerClub account (shortfall: $${balanceCheck.shortfall.toFixed(2)}) and try again.`
+        );
+      }
+      // balance === -1 → API failed, fail-open with auto-refund safety
       console.warn(
-        `[Paddle] PRE-FLIGHT WARNING: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
-        `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
-        `shortfall: $${balanceCheck.shortfall.toFixed(2)}). ` +
-        `Allowing checkout to proceed - auto-refund will handle provisioning failure.`
+        `[Paddle] PRE-FLIGHT WARNING: Could not verify RC balance for ${params.domainName}. ` +
+        `Allowing checkout to proceed — auto-refund will handle provisioning failure.`
       );
     } else if (balanceCheck.balance > 0) {
       console.log(
@@ -441,18 +448,29 @@ export async function createEmailPurchase(
   
   try {
     // =========================================================================
-    // PRE-FLIGHT BALANCE CHECK — Same safety mechanism as domain purchases
+    // PRE-FLIGHT BALANCE CHECK — BLOCK when balance is confirmed insufficient
     // =========================================================================
-    // Pre-flight balance check — FAIL-OPEN design (consistent with domain flow)
-    // If RC balance is low, warn but allow checkout. The provisioning step will catch
-    // actual failures and the auto-refund mechanism handles refunds automatically.
-    // Blocking users on a balance check that may have false positives damages UX.
+    // Same strategy as domain purchases: if RC API confirms insufficient funds,
+    // BLOCK checkout to prevent the frustrating pay-then-refund flow.
+    // Fail-open ONLY when the balance API is unreachable.
     const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
     if (!balanceCheck.sufficient) {
+      if (balanceCheck.balance >= 0) {
+        // Balance API responded successfully but funds are too low → BLOCK
+        console.error(
+          `[Paddle] PRE-FLIGHT BLOCKED: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+          `may be insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
+          `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Checkout blocked.`
+        );
+        throw new Error(
+          `Insufficient provider balance to fulfill this order. ` +
+          `Please top up your ResellerClub account (shortfall: $${balanceCheck.shortfall.toFixed(2)}) and try again.`
+        );
+      }
+      // balance === -1 → API failed, fail-open with auto-refund safety
       console.warn(
-        `[Paddle] PRE-FLIGHT WARNING: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
-        `may be insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
-        `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Proceeding — auto-refund will handle failures.`
+        `[Paddle] PRE-FLIGHT WARNING: Could not verify RC balance for ${params.domainName} email. ` +
+        `Allowing checkout to proceed — auto-refund will handle provisioning failure.`
       );
     } else if (balanceCheck.balance > 0) {
       console.log(

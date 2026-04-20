@@ -187,7 +187,12 @@ export function DomainCheckout({
 
                 <div className="border-t pt-2">
                   <div className="flex justify-between font-semibold">
-                    <span>Subtotal <span className="text-xs font-normal text-muted-foreground">(excl. tax)</span></span>
+                    <span>
+                      Subtotal{" "}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        (excl. tax)
+                      </span>
+                    </span>
                     <span>{formatPrice(totalPrice)}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">

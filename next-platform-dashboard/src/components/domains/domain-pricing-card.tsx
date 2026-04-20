@@ -3,11 +3,17 @@
 import { Check, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { DomainSearchResult } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from "@/lib/locale-config";
 interface DomainPricingCardProps {
   domain: DomainSearchResult;
   onAddToCart: () => void;
@@ -21,7 +27,7 @@ export function DomainPricingCard({
 }: DomainPricingCardProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DOMAIN_CURRENCY,
     }).format(price);
   };
@@ -64,7 +70,9 @@ export function DomainPricingCard({
         <div>
           <p className="text-3xl font-bold">
             {formatPrice(registerPrice)}
-            <span className="text-sm font-normal text-muted-foreground">/yr</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              /yr
+            </span>
           </p>
           {hasDiscount && (
             <p className="text-xs text-muted-foreground mt-1">

@@ -860,6 +860,36 @@ export async function provisionEmailOrder(
       })
       .eq('id', emailOrderId);
     
+    // =========================================================================
+    // AUTO-CONFIGURE DNS — Make email "just work" after purchase
+    //
+    // If the domain is managed via Cloudflare (has a zone_id), automatically
+    // set up MX, SPF, and DKIM records. This eliminates the manual DNS step
+    // that otherwise prevents email from working until the user clicks
+    // "Configure DNS" in the dashboard.
+    // =========================================================================
+    if (domainId) {
+      try {
+        const { data: domainRecord } = await admin
+          .from('domains')
+          .select('cloudflare_zone_id')
+          .eq('id', domainId)
+          .single();
+        
+        if (domainRecord?.cloudflare_zone_id) {
+          console.log(`[Provisioning] Auto-configuring DNS for email order ${emailOrderId} (zone: ${domainRecord.cloudflare_zone_id})`);
+          await emailOrderService.configureDns(emailOrderId, domainRecord.cloudflare_zone_id);
+          console.log(`[Provisioning] DNS auto-configured successfully for ${domainName}`);
+        } else {
+          console.log(`[Provisioning] Skipping DNS auto-config — domain ${domainName} has no Cloudflare zone`);
+        }
+      } catch (dnsError) {
+        // DNS config failure should NOT fail the overall provisioning.
+        // The email order is already created; the user can configure DNS manually.
+        console.warn(`[Provisioning] DNS auto-config failed for ${domainName} (non-fatal):`, dnsError);
+      }
+    }
+    
     // Update pending purchase to completed
     await updatePendingPurchaseStatus(pendingPurchaseId, 'completed', {
       resellerclub_order_id: rcOrderId,

@@ -15,6 +15,8 @@
  * - ResellerClub sync + pricing cache
  * - Social media publish queue
  * - Social media sync
+ * - Email auto-renewal
+ * - Email expiry notifications
  * - Abandoned cart recovery (e-commerce)
  * - Resume paused automation workflows
  */
@@ -66,6 +68,11 @@ export async function GET(request: NextRequest) {
   await dispatch("socialPublish", "/api/social/publish");
   await dispatch("socialSync", "/api/social/sync");
   await dispatch("abandonedCarts", "/api/cron/abandoned-carts");
+  await dispatch("emailAutoRenew", "/api/cron/email-auto-renew");
+  await dispatch(
+    "emailExpiryNotifications",
+    "/api/cron/email-expiry-notifications",
+  );
   await dispatch("recurringInvoices", "/api/invoicing/recurring/process");
 
   // Resume paused automation workflows (delay steps, waiting steps)

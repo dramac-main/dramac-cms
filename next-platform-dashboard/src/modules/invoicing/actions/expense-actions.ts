@@ -48,6 +48,42 @@ async function logActivity(
   });
 }
 
+async function canUserApproveExpense(
+  supabase: any,
+  siteId: string,
+  userId?: string | null,
+): Promise<boolean> {
+  if (!userId) return false;
+
+  const { data: site } = await supabase
+    .from("sites")
+    .select("agency_id")
+    .eq("id", siteId)
+    .single();
+
+  if (!site?.agency_id) return false;
+
+  const { data: membership } = await supabase
+    .from("agency_members")
+    .select("role")
+    .eq("agency_id", site.agency_id)
+    .eq("user_id", userId)
+    .single();
+
+  return membership?.role === "owner" || membership?.role === "admin";
+}
+
+async function assertCanApproveExpense(
+  supabase: any,
+  siteId: string,
+  userId?: string | null,
+): Promise<void> {
+  const canApprove = await canUserApproveExpense(supabase, siteId, userId);
+  if (!canApprove) {
+    throw new Error("Only agency owners or admins can approve or reject expenses");
+  }
+}
+
 // ─── Filter / Pagination Types ─────────────────────────────────
 
 export interface ExpenseFilters {
@@ -144,9 +180,18 @@ export async function getExpenses(
 export async function getExpense(
   expenseId: string,
 ): Promise<
-  (Expense & { category: ExpenseCategory | null; activity: InvoiceActivity[] }) | null
+  (Expense & {
+    category: ExpenseCategory | null;
+    activity: InvoiceActivity[];
+    canCurrentUserApprove: boolean;
+    approvedByName: string | null;
+    approvedByEmail: string | null;
+  }) | null
 > {
   const supabase = await getModuleClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: exp, error } = await supabase
     .from(INV_TABLES.expenses)
@@ -175,11 +220,32 @@ export async function getExpense(
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const canCurrentUserApprove = await canUserApproveExpense(
+    supabase,
+    exp.site_id,
+    user?.id,
+  );
+
+  let approvedByName: string | null = null;
+  let approvedByEmail: string | null = null;
+  if (exp.approved_by) {
+    const { data: approverProfile } = await supabase
+      .from("profiles")
+      .select("name, email")
+      .eq("id", exp.approved_by)
+      .single();
+    approvedByName = approverProfile?.name || null;
+    approvedByEmail = approverProfile?.email || null;
+  }
+
   const mapped = mapRecord<Expense>(exp);
   return {
     ...mapped,
     category,
     activity: mapRecords<InvoiceActivity>(activity || []),
+    canCurrentUserApprove,
+    approvedByName,
+    approvedByEmail,
   };
 }
 
@@ -374,6 +440,8 @@ export async function approveExpense(expenseId: string): Promise<void> {
   if (current.status !== "pending")
     throw new Error("Only pending expenses can be approved");
 
+  await assertCanApproveExpense(supabase, current.site_id, user?.id);
+
   const now = new Date().toISOString();
   const { error } = await supabase
     .from(INV_TABLES.expenses)
@@ -435,6 +503,8 @@ export async function rejectExpense(
   if (!current) throw new Error("Expense not found");
   if (current.status !== "pending")
     throw new Error("Only pending expenses can be rejected");
+
+  await assertCanApproveExpense(supabase, current.site_id, user?.id);
 
   const now = new Date().toISOString();
   const { error } = await supabase

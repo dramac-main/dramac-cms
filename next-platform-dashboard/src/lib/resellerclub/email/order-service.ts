@@ -1,18 +1,18 @@
 // src/lib/resellerclub/email/order-service.ts
 // Email Order Service - Database operations + ResellerClub API integration
 
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { businessEmailApi } from './client';
-import { titanMailApi, TITAN_PLAN_IDS } from './titan-client';
-import { emailDnsService } from './dns-service';
-import { dnsService } from '@/lib/cloudflare';
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
-import type { 
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { businessEmailApi } from "./client";
+import { titanMailApi, TITAN_PLAN_IDS } from "./titan-client";
+import { emailDnsService } from "./dns-service";
+import { dnsService } from "@/lib/cloudflare";
+import { DEFAULT_CURRENCY } from "@/lib/locale-config";
+import type {
   CreateEmailOrderInput,
   EmailOrder,
   EmailPricingResponse,
-} from './types';
+} from "./types";
 
 // ============================================================================
 // Email Order Service
@@ -25,7 +25,7 @@ export const emailOrderService = {
   async createOrder(params: CreateEmailOrderInput): Promise<EmailOrder> {
     const adminClient = createAdminClient();
 
-    const productKey = params.productKey || 'eeliteus';
+    const productKey = params.productKey || "eeliteus";
     const isTitan = isTitanMailKey(productKey);
 
     let rcOrderId: string;
@@ -37,7 +37,9 @@ export const emailOrderService = {
       const planId = resolveTitanPlanId(productKey);
       const region = extractTitanRegion(productKey);
 
-      console.log(`[EmailOrderService] Titan Mail order: domain=${params.domainName}, planId=${planId}, region=${region}`);
+      console.log(
+        `[EmailOrderService] Titan Mail order: domain=${params.domainName}, planId=${planId}, region=${region}`,
+      );
 
       const rcResult = await titanMailApi.createOrder({
         domainName: params.domainName,
@@ -74,10 +76,13 @@ export const emailOrderService = {
           pricing,
           storedProductKey,
           params.months,
-          params.numberOfAccounts
+          params.numberOfAccounts,
         );
       } catch (pricingError) {
-        console.warn('[EmailOrderService] Failed to fetch wholesale pricing, using 0:', pricingError);
+        console.warn(
+          "[EmailOrderService] Failed to fetch wholesale pricing, using 0:",
+          pricingError,
+        );
       }
     }
 
@@ -88,7 +93,7 @@ export const emailOrderService = {
     // Save to database (using 'any' until table types are generated)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: emailOrder, error } = await (adminClient as any)
-      .from('email_orders')
+      .from("email_orders")
       .insert({
         agency_id: params.agencyId,
         client_id: params.clientId || null,
@@ -99,7 +104,7 @@ export const emailOrderService = {
         product_key: storedProductKey,
         number_of_accounts: params.numberOfAccounts,
         used_accounts: 0,
-        status: 'Active',
+        status: "Active",
         start_date: new Date().toISOString(),
         expiry_date: expiryDate.toISOString(),
         wholesale_price: wholesalePrice,
@@ -118,12 +123,12 @@ export const emailOrderService = {
    */
   async getOrder(orderId: string): Promise<EmailOrder | null> {
     const supabase = await createClient();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
-      .from('email_orders')
-      .select('*')
-      .eq('id', orderId)
+      .from("email_orders")
+      .select("*")
+      .eq("id", orderId)
       .single();
 
     if (error) return null;
@@ -133,15 +138,18 @@ export const emailOrderService = {
   /**
    * Get email order by domain
    */
-  async getOrderByDomain(domainName: string, agencyId: string): Promise<EmailOrder | null> {
+  async getOrderByDomain(
+    domainName: string,
+    agencyId: string,
+  ): Promise<EmailOrder | null> {
     const supabase = await createClient();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
-      .from('email_orders')
-      .select('*')
-      .eq('domain_name', domainName)
-      .eq('agency_id', agencyId)
+      .from("email_orders")
+      .select("*")
+      .eq("domain_name", domainName)
+      .eq("agency_id", agencyId)
       .single();
 
     if (error) return null;
@@ -153,13 +161,13 @@ export const emailOrderService = {
    */
   async getOrdersForAgency(agencyId: string): Promise<EmailOrder[]> {
     const supabase = await createClient();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
-      .from('email_orders')
-      .select('*')
-      .eq('agency_id', agencyId)
-      .order('created_at', { ascending: false });
+      .from("email_orders")
+      .select("*")
+      .eq("agency_id", agencyId)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return (data || []) as EmailOrder[];
@@ -171,17 +179,17 @@ export const emailOrderService = {
   async syncOrder(orderId: string): Promise<EmailOrder> {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-    
+
     // Get local order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: localOrder, error: fetchError } = await (supabase as any)
-      .from('email_orders')
-      .select('*')
-      .eq('id', orderId)
+      .from("email_orders")
+      .select("*")
+      .eq("id", orderId)
       .single();
 
     if (fetchError || !localOrder) {
-      throw new Error('Order not found');
+      throw new Error("Order not found");
     }
 
     // Get details from ResellerClub — route to Titan or legacy API based on stored product key
@@ -192,13 +200,18 @@ export const emailOrderService = {
 
     if (isTitanMailKey(localOrder.product_key)) {
       const region = extractTitanRegion(localOrder.product_key);
-      const rcDetails = await titanMailApi.getOrderDetails(localOrder.resellerclub_order_id, region);
+      const rcDetails = await titanMailApi.getOrderDetails(
+        localOrder.resellerclub_order_id,
+        region,
+      );
       rcStatus = rcDetails.currentStatus;
       numberOfAccounts = rcDetails.numberOfAccounts;
       usedAccounts = rcDetails.usedAccounts;
       endTime = rcDetails.endTime;
     } else {
-      const rcDetails = await businessEmailApi.getOrderDetails(localOrder.resellerclub_order_id);
+      const rcDetails = await businessEmailApi.getOrderDetails(
+        localOrder.resellerclub_order_id,
+      );
       rcStatus = rcDetails.currentStatus;
       numberOfAccounts = rcDetails.numberOfAccounts;
       usedAccounts = rcDetails.usedAccounts;
@@ -207,8 +220,10 @@ export const emailOrderService = {
 
     // Update local order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedOrder, error: updateError } = await (adminClient as any)
-      .from('email_orders')
+    const { data: updatedOrder, error: updateError } = await (
+      adminClient as any
+    )
+      .from("email_orders")
       .update({
         status: rcStatus,
         number_of_accounts: numberOfAccounts,
@@ -216,7 +231,7 @@ export const emailOrderService = {
         expiry_date: new Date(parseInt(endTime) * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', orderId)
+      .eq("id", orderId)
       .select()
       .single();
 
@@ -230,26 +245,28 @@ export const emailOrderService = {
   async configureDns(orderId: string, cloudflareZoneId: string): Promise<void> {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-    
+
     // Get order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order, error } = await (supabase as any)
-      .from('email_orders')
-      .select('resellerclub_order_id, domain_id')
-      .eq('id', orderId)
+      .from("email_orders")
+      .select("resellerclub_order_id, domain_id")
+      .eq("id", orderId)
       .single();
 
-    if (error || !order) throw new Error('Order not found');
+    if (error || !order) throw new Error("Order not found");
 
     // Get DNS records — emailDnsService falls back to standard Titan Mail records if API fails
-    const dnsRecords = await emailDnsService.getDnsRecords(order.resellerclub_order_id);
+    const dnsRecords = await emailDnsService.getDnsRecords(
+      order.resellerclub_order_id,
+    );
 
     // Add MX records
     for (const mx of dnsRecords.mx) {
       await dnsService.createRecord({
         zoneId: cloudflareZoneId,
-        type: 'MX',
-        name: '@',
+        type: "MX",
+        name: "@",
         content: mx.host,
         priority: mx.priority,
         ttl: mx.ttl,
@@ -259,7 +276,7 @@ export const emailOrderService = {
     // Add SPF record
     await dnsService.createRecord({
       zoneId: cloudflareZoneId,
-      type: 'TXT',
+      type: "TXT",
       name: dnsRecords.spf.host,
       content: dnsRecords.spf.value,
       ttl: dnsRecords.spf.ttl,
@@ -269,7 +286,7 @@ export const emailOrderService = {
     if (dnsRecords.dkim) {
       await dnsService.createRecord({
         zoneId: cloudflareZoneId,
-        type: 'TXT',
+        type: "TXT",
         name: dnsRecords.dkim.host,
         content: dnsRecords.dkim.value,
         ttl: dnsRecords.dkim.ttl,
@@ -280,9 +297,9 @@ export const emailOrderService = {
     if (order.domain_id) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (adminClient as any)
-        .from('domains')
+        .from("domains")
         .update({ email_dns_configured: true })
-        .eq('id', order.domain_id);
+        .eq("id", order.domain_id);
     }
   },
 
@@ -292,17 +309,17 @@ export const emailOrderService = {
   async renewOrder(orderId: string, months: number): Promise<EmailOrder> {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-    
+
     // Get local order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: localOrder, error: fetchError } = await (supabase as any)
-      .from('email_orders')
-      .select('*')
-      .eq('id', orderId)
+      .from("email_orders")
+      .select("*")
+      .eq("id", orderId)
       .single();
 
     if (fetchError || !localOrder) {
-      throw new Error('Order not found');
+      throw new Error("Order not found");
     }
 
     // Renew in ResellerClub — route to Titan or legacy API based on stored product key
@@ -327,14 +344,16 @@ export const emailOrderService = {
 
     // Update local order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedOrder, error: updateError } = await (adminClient as any)
-      .from('email_orders')
+    const { data: updatedOrder, error: updateError } = await (
+      adminClient as any
+    )
+      .from("email_orders")
       .update({
         expiry_date: currentExpiry.toISOString(),
-        status: 'Active',
+        status: "Active",
         updated_at: new Date().toISOString(),
       })
-      .eq('id', orderId)
+      .eq("id", orderId)
       .select()
       .single();
 
@@ -350,7 +369,10 @@ export const emailOrderService = {
 /** Returns true for any 'titanmailglobal' or 'titanmailindia' key (including synthetic variants). */
 function isTitanMailKey(productKey: string | undefined | null): boolean {
   if (!productKey) return false;
-  return productKey.startsWith('titanmailglobal') || productKey.startsWith('titanmailindia');
+  return (
+    productKey.startsWith("titanmailglobal") ||
+    productKey.startsWith("titanmailindia")
+  );
 }
 
 /**
@@ -362,13 +384,13 @@ function isTitanMailKey(productKey: string | undefined | null): boolean {
 function resolveTitanPlanId(productKey: string): number {
   const match = productKey.match(/^titanmail(?:global|india)_?(\d+)$/);
   if (match) return parseInt(match[1], 10);
-  if (productKey.includes('india')) return TITAN_PLAN_IDS.india.business;
+  if (productKey.includes("india")) return TITAN_PLAN_IDS.india.business;
   return TITAN_PLAN_IDS.global.business;
 }
 
 /** Determine Titan Mail region from product key. */
-function extractTitanRegion(productKey: string): 'global' | 'india' {
-  return productKey.includes('india') ? 'india' : 'global';
+function extractTitanRegion(productKey: string): "global" | "india" {
+  return productKey.includes("india") ? "india" : "global";
 }
 
 /** Strip the synthetic plan-ID suffix: 'titanmailglobal_1762' → 'titanmailglobal'. */
@@ -389,18 +411,18 @@ function calculateWholesalePrice(
   pricing: EmailPricingResponse,
   productKey: string,
   months: number,
-  accounts: number
+  accounts: number,
 ): number {
   const productPricing = pricing[productKey];
   if (!productPricing) return 0;
-  
+
   const ranges = productPricing.email_account_ranges;
-  if (!ranges || typeof ranges !== 'object') return 0;
-  
+  if (!ranges || typeof ranges !== "object") return 0;
+
   // Find the correct slab for the number of accounts
   let matchedSlab: string | null = null;
   for (const slab of Object.keys(ranges)) {
-    const parts = slab.split('-');
+    const parts = slab.split("-");
     if (parts.length === 2) {
       const min = parseInt(parts[0]);
       const max = parseInt(parts[1]);
@@ -412,14 +434,17 @@ function calculateWholesalePrice(
   }
   if (!matchedSlab) matchedSlab = Object.keys(ranges)[0] || null;
   if (!matchedSlab) return 0;
-  
-  const slabPricing = ranges[matchedSlab] as { add?: Record<string, number>; renew?: Record<string, number> };
+
+  const slabPricing = ranges[matchedSlab] as {
+    add?: Record<string, number>;
+    renew?: Record<string, number>;
+  };
   const addPricing = slabPricing?.add;
   if (!addPricing) return 0;
-  
+
   const price = addPricing[String(months)];
   if (price == null || isNaN(Number(price))) return 0;
-  
+
   // Price is per-account per-month. Multiply by accounts AND months.
   return Number(price) * accounts * months;
 }

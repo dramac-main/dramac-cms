@@ -38,7 +38,21 @@ export type NotificationType =
   | "chat_message"
   | "chat_assigned"
   | "chat_missed"
-  | "chat_rating";
+  | "chat_rating"
+  // Domain & Email provisioning
+  | "email_provisioned"
+  | "email_provisioning_failed"
+  | "domain_provisioned"
+  | "domain_provisioning_failed"
+  | "dns_configured"
+  // Email renewal & expiry
+  | "email_auto_renewed"
+  | "email_auto_renew_failed"
+  | "email_expiry_60d"
+  | "email_expiry_30d"
+  | "email_expiry_14d"
+  | "email_expiry_7d"
+  | "email_expiry_1d";
 
 export interface Notification {
   id: string;

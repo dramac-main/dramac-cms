@@ -7,7 +7,10 @@ import { Loader2 } from "lucide-react";
 import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import { toast } from "sonner";
 import { updateSiteAction } from "@/lib/actions/sites";
-import { updateSiteSchema, type UpdateSiteFormData } from "@/lib/validations/site";
+import {
+  updateSiteSchema,
+  type UpdateSiteFormData,
+} from "@/lib/validations/site";
 import {
   Card,
   CardContent,
@@ -110,7 +113,9 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
           <Card>
             <CardHeader>
               <CardTitle>Domain Settings</CardTitle>
-              <CardDescription>Configure your site&apos;s URLs.</CardDescription>
+              <CardDescription>
+                Configure your site&apos;s URLs.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -122,7 +127,9 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                     <FormControl>
                       <div className="flex items-center gap-2">
                         <Input {...field} />
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">.{getBaseDomain()}</span>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          .{getBaseDomain()}
+                        </span>
                       </div>
                     </FormControl>
                     <FormDescription>
@@ -165,15 +172,15 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                   <FormItem>
                     <FormLabel>SEO Title</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="My Awesome Website" 
-                        maxLength={60} 
-                        {...field} 
+                      <Input
+                        placeholder="My Awesome Website"
+                        maxLength={60}
+                        {...field}
                         value={field.value || ""}
                       />
                     </FormControl>
                     <FormDescription>
-                      {(field.value?.length || 0)}/60 characters
+                      {field.value?.length || 0}/60 characters
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -196,7 +203,7 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                       />
                     </FormControl>
                     <FormDescription>
-                      {(field.value?.length || 0)}/160 characters
+                      {field.value?.length || 0}/160 characters
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -210,14 +217,15 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                   <FormItem>
                     <FormLabel>SEO Image (OG Image)</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://example.com/og-image.jpg" 
-                        {...field} 
+                      <Input
+                        placeholder="https://example.com/og-image.jpg"
+                        {...field}
                         value={field.value || ""}
                       />
                     </FormControl>
                     <FormDescription>
-                      Image shown when sharing on social media (recommended: 1200x630px)
+                      Image shown when sharing on social media (recommended:
+                      1200x630px)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

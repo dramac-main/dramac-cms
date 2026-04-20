@@ -23,6 +23,9 @@ const handlers: Record<string, () => Promise<RouteHandler>> = {
     import("../domain-expiry-notifications/handler"),
   "domain-health": () => import("../domain-health/handler"),
   domains: () => import("../domains/handler"),
+  "email-auto-renew": () => import("../email-auto-renew/handler"),
+  "email-expiry-notifications": () =>
+    import("../email-expiry-notifications/handler"),
   "marketing-scheduler": () => import("../marketing-scheduler/handler"),
   "resellerclub-sync": () => import("../resellerclub-sync/handler"),
 };

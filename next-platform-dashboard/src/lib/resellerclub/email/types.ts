@@ -10,13 +10,13 @@
 // Enterprise Email (enterpriseemailus): Enterprise plan, 50GB/mailbox, endpoint enterpriseemail/us/add.json
 // Additional plans (e.g. Professional) are discovered dynamically from the pricing API response
 export type EmailPlanType =
-  | 'eeliteus'          // Business Email - US
-  | 'eelitein'          // Business Email - India
-  | 'eeliteuk'          // Business Email - UK
-  | 'enterpriseemailus' // Enterprise Email - US
-  | 'enterpriseemailin' // Enterprise Email - India
-  | 'titanmailglobal'   // Titan Mail - Global (Professional / Business / Enterprise)
-  | 'titanmailindia';   // Titan Mail - India
+  | "eeliteus" // Business Email - US
+  | "eelitein" // Business Email - India
+  | "eeliteuk" // Business Email - UK
+  | "enterpriseemailus" // Enterprise Email - US
+  | "enterpriseemailin" // Enterprise Email - India
+  | "titanmailglobal" // Titan Mail - Global (Professional / Business / Enterprise)
+  | "titanmailindia"; // Titan Mail - India
 
 export interface EmailPlan {
   planKey: EmailPlanType;
@@ -31,11 +31,11 @@ export interface EmailPlan {
 
 // Product keys for ResellerClub
 export const EMAIL_PRODUCT_KEYS = {
-  eeliteus: 'eeliteus',                   // Business Email - US datacenter
-  eelitein: 'eelitein',                   // Business Email - India datacenter
-  eeliteuk: 'eeliteuk',                   // Business Email - UK datacenter
-  enterpriseemailus: 'enterpriseemailus', // Enterprise Email - US datacenter
-  enterpriseemailin: 'enterpriseemailin', // Enterprise Email - India datacenter
+  eeliteus: "eeliteus", // Business Email - US datacenter
+  eelitein: "eelitein", // Business Email - India datacenter
+  eeliteuk: "eeliteuk", // Business Email - UK datacenter
+  enterpriseemailus: "enterpriseemailus", // Enterprise Email - US datacenter
+  enterpriseemailin: "enterpriseemailin", // Enterprise Email - India datacenter
 } as const;
 
 // Static plan display definitions.
@@ -51,33 +51,33 @@ export interface EmailPlanDefinition {
 
 export const EMAIL_PLAN_DEFINITIONS: EmailPlanDefinition[] = [
   {
-    key: 'eeliteus',
-    name: 'Business',
-    tagline: 'For individuals & small teams',
+    key: "eeliteus",
+    name: "Business",
+    tagline: "For individuals & small teams",
     storageGB: 10,
     isPopular: false,
     features: [
-      '10GB mailbox storage',
-      'Custom domain email',
-      'Webmail & mobile apps',
-      'Calendar & contacts sync',
-      'Anti-spam & anti-virus',
+      "10GB mailbox storage",
+      "Custom domain email",
+      "Webmail & mobile apps",
+      "Calendar & contacts sync",
+      "Anti-spam & anti-virus",
     ],
   },
   {
-    key: 'enterpriseemailus',
-    name: 'Enterprise',
-    tagline: 'For growing businesses',
+    key: "enterpriseemailus",
+    name: "Enterprise",
+    tagline: "For growing businesses",
     storageGB: 50,
     isPopular: true,
     features: [
-      '50GB mailbox storage',
-      'Custom domain email',
-      'Webmail & mobile apps',
-      'Calendar & contacts sync',
-      'Anti-spam & anti-virus',
-      'Priority 24/7 support',
-      'Advanced admin controls',
+      "50GB mailbox storage",
+      "Custom domain email",
+      "Webmail & mobile apps",
+      "Calendar & contacts sync",
+      "Anti-spam & anti-virus",
+      "Priority 24/7 support",
+      "Advanced admin controls",
     ],
   },
 ];
@@ -92,7 +92,7 @@ export interface CreateEmailOrderParams {
   numberOfAccounts: number;
   months: number; // 1, 3, 6, or 12 (RC only supports these)
   productKey?: EmailPlanType;
-  invoiceOption?: 'NoInvoice' | 'PayInvoice' | 'KeepInvoice';
+  invoiceOption?: "NoInvoice" | "PayInvoice" | "KeepInvoice";
 }
 
 export interface AddEmailAccountParams {
@@ -114,7 +114,7 @@ export interface RenewEmailOrderParams {
   orderId: string;
   months: number; // 1, 3, 6, or 12 (RC only supports these)
   numberOfAccounts: number;
-  invoiceOption?: 'NoInvoice' | 'PayInvoice' | 'KeepInvoice';
+  invoiceOption?: "NoInvoice" | "PayInvoice" | "KeepInvoice";
 }
 
 export interface SearchEmailOrdersParams {
@@ -123,20 +123,20 @@ export interface SearchEmailOrdersParams {
   status?: EmailOrderStatus;
   pageNo?: number;
   noOfRecords?: number;
-  orderBy?: 'orderid' | 'endtime' | 'timestamp';
+  orderBy?: "orderid" | "endtime" | "timestamp";
 }
 
 // ============================================================================
 // API Response Types
 // ============================================================================
 
-export type EmailOrderStatus = 
-  | 'Active'
-  | 'Pending'
-  | 'Suspended'
-  | 'Deleted'
-  | 'InActive'
-  | 'Expired';
+export type EmailOrderStatus =
+  | "Active"
+  | "Pending"
+  | "Suspended"
+  | "Deleted"
+  | "InActive"
+  | "Expired";
 
 export interface EmailOrderDetails {
   orderId: string;
@@ -157,7 +157,7 @@ export interface EmailAccountInfo {
   email: string;
   firstName: string;
   lastName: string;
-  status: 'active' | 'suspended' | 'deleted';
+  status: "active" | "suspended" | "deleted";
   createdAt: string;
   lastLogin?: string;
   storageUsed?: number;
@@ -213,27 +213,27 @@ export interface EmailOrder {
   agency_id: string;
   client_id?: string | null;
   domain_id?: string | null;
-  
+
   // ResellerClub data
   resellerclub_order_id: string;
   resellerclub_customer_id: string;
-  
+
   // Order details
   domain_name: string;
   product_key: EmailPlanType;
   number_of_accounts: number;
   used_accounts: number;
   status: EmailOrderStatus;
-  
+
   // Dates
   start_date: string;
   expiry_date: string;
-  
+
   // Pricing
   wholesale_price: number;
   retail_price: number;
   currency: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -245,7 +245,7 @@ export interface EmailAccount {
   email: string;
   first_name: string;
   last_name: string;
-  status: 'active' | 'suspended' | 'deleted';
+  status: "active" | "suspended" | "deleted";
   storage_used?: number | null;
   storage_limit?: number | null;
   last_login?: string | null;

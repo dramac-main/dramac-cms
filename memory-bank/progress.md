@@ -205,7 +205,7 @@
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | ✅ Complete    |
-| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | ✅ Complete    |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 🟡 Carryover   |
 | INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
 | INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
@@ -248,10 +248,16 @@
 - **Revenue trends enhancement**: Source breakdown cards, CSV export, print button added.
 - **Report hub categorization**: Restructured from flat 6-card grid to Accounting (4) + Insights (3) sections. Cross-Module Revenue card (Globe icon, cyan).
 - **Print CSS + buttons**: @media print rules in globals.css. Printer button added to all 7 report components.
+
+**Post-audit correction:** INVFIX-08 is not fully closed yet. Follow-up audit fixed broken report-hub routes, corrected cross-module client total aggregation, and replaced raw `row.join(',')` CSV construction with safe escaping/serialization in `report-actions.ts`. Remaining carryover: cash flow is still invoicing-only, revenue trends still lacks compare/growth/segment analysis, AR aging still lacks drilldowns/probability/weighted DSO, tax summary still lacks filing-period breakdown/export, expense report still lacks budget-vs-actual and YoY trends, and report UIs still expose CSV + print rather than a true PDF export flow.
 - **Route page**: New `reports/cross-module/page.tsx`.
 - **TSC**: 0 invoicing errors (135 total — reduced from 352 baseline due to prior marketing fixes).
 
-**Next session recommendation:** Session 10 should be **INVFIX-09** (Email System — Templates, Auto-Send, Dunning Escalation).
+**Next session recommendation:** Session 10 should begin with **INVFIX-08 carryover closure**. Only continue into **INVFIX-09** if the remaining report requirements are fully implemented and validated first.
+
+**Session 10 verification audit (April 20, 2026):** No new INVFIX commit landed after `355ae75f`. Current report code still matches the earlier cross-module/report-hub/export baseline plus the post-audit fixes above. The remaining INVFIX-08 carryover is unchanged: cash flow is still invoicing-only, revenue trends still lacks compare/growth/segment analysis, P&L still lacks YTD/gross-margin completion, AR aging still lacks drilldowns/probability/weighted DSO, tax summary still lacks filing-period breakdown/export, expense report still lacks budget-vs-actual and YoY completion, and the report stack still has no real PDF export path.
+
+**Updated next session recommendation:** Session 11 must remain **INVFIX-08 carryover closure only**. Do not include **INVFIX-09** in the same pass unless reports are actually closed and re-validated.
 
 ---
 
@@ -308,7 +314,7 @@
 | Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
 | Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
 | Jul 2026 | Billing Flow Deep Audit Session 8: Fix billing page wrong table (subscriptions→paddle_subscriptions), domain search debounce (useState→useRef), checkout successUrl, revalidatePath fixes — commit 94ce88d0         |
-| Jul 2026 | Invoicing INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports                                                                       |
+| Jul 2026 | Invoicing INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports                                                                      |
 
 ---
 

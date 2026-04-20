@@ -2,7 +2,19 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  Globe,
+  Check,
+  X,
+  Star,
+  ShoppingCart,
+  RefreshCw,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,19 +25,21 @@ import { normalizeDomainKeyword } from "@/lib/domain-keyword";
 import { TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { DomainSearchResult } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from "@/lib/locale-config";
 
 const POPULAR_TLDS = [...TLD_CATEGORIES.popular];
-const ALL_CATEGORY_ENTRIES = Object.entries(TLD_CATEGORIES).filter(([key]) => key !== 'popular') as [string, readonly string[]][];
+const ALL_CATEGORY_ENTRIES = Object.entries(TLD_CATEGORIES).filter(
+  ([key]) => key !== "popular",
+) as [string, readonly string[]][];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  business: '💼 Business',
-  tech: '💻 Tech',
-  creative: '🎨 Creative',
-  country: '🌍 Country',
-  africa: '🌍 Africa',
-  lifestyle: '✨ Lifestyle',
-  professional: '👔 Professional',
+  business: "💼 Business",
+  tech: "💻 Tech",
+  creative: "🎨 Creative",
+  country: "🌍 Country",
+  africa: "🌍 Africa",
+  lifestyle: "✨ Lifestyle",
+  professional: "👔 Professional",
 };
 
 interface DomainSearchProps {
@@ -34,7 +48,11 @@ interface DomainSearchProps {
   className?: string;
 }
 
-export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchProps) {
+export function DomainSearch({
+  onSelect,
+  onAddToCart,
+  className,
+}: DomainSearchProps) {
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState<DomainSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -42,68 +60,74 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   const [selectedTlds, setSelectedTlds] = useState<string[]>(POPULAR_TLDS);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showMoreTlds, setShowMoreTlds] = useState(false);
-  const [searchSource, setSearchSource] = useState<'resellerclub' | 'fallback' | null>(null);
+  const [searchSource, setSearchSource] = useState<
+    "resellerclub" | "fallback" | null
+  >(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const router = useRouter();
-  
-  const performSearch = useCallback(async (searchKeyword: string) => {
-    if (!searchKeyword || searchKeyword.length < 2) {
-      setResults([]);
+
+  const performSearch = useCallback(
+    async (searchKeyword: string) => {
+      if (!searchKeyword || searchKeyword.length < 2) {
+        setResults([]);
+        setSearchSource(null);
+        setSearchMessage(null);
+        return;
+      }
+
+      setIsSearching(true);
+      setError(null);
       setSearchSource(null);
       setSearchMessage(null);
-      return;
-    }
-    
-    setIsSearching(true);
-    setError(null);
-    setSearchSource(null);
-    setSearchMessage(null);
-    
-    try {
-      const response = await searchDomains(searchKeyword, selectedTlds);
-      if (response.success && response.data) {
-        setResults(response.data);
-        setSearchSource(response.source ?? null);
-        setSearchMessage(response.message ?? null);
-      } else {
-        setError(response.error || 'Search failed');
+
+      try {
+        const response = await searchDomains(searchKeyword, selectedTlds);
+        if (response.success && response.data) {
+          setResults(response.data);
+          setSearchSource(response.source ?? null);
+          setSearchMessage(response.message ?? null);
+        } else {
+          setError(response.error || "Search failed");
+        }
+      } catch {
+        setError("An error occurred");
+      } finally {
+        setIsSearching(false);
       }
-    } catch {
-      setError('An error occurred');
-    } finally {
-      setIsSearching(false);
-    }
-  }, [selectedTlds]);
-  
-  const handleKeywordChange = useCallback((value: string) => {
-    // Allow dots in input so users can type full domains like "1044.io" or "example.com"
-    const cleaned = normalizeDomainKeyword(value);
-    setKeyword(value.toLowerCase().trim()); // Show what user typed (preserve dots)
-    
-    // Debounce search — useRef ensures we always clear the latest timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      performSearch(cleaned);
-    }, 500);
-  }, [performSearch]);
-  
+    },
+    [selectedTlds],
+  );
+
+  const handleKeywordChange = useCallback(
+    (value: string) => {
+      // Allow dots in input so users can type full domains like "1044.io" or "example.com"
+      const cleaned = normalizeDomainKeyword(value);
+      setKeyword(value.toLowerCase().trim()); // Show what user typed (preserve dots)
+
+      // Debounce search — useRef ensures we always clear the latest timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+
+      searchTimeoutRef.current = setTimeout(() => {
+        performSearch(cleaned);
+      }, 500);
+    },
+    [performSearch],
+  );
+
   const handleManualSearch = () => {
     if (keyword.length >= 2) {
       performSearch(keyword);
     }
   };
-  
+
   const toggleTld = (tld: string) => {
-    setSelectedTlds(prev => 
-      prev.includes(tld) 
-        ? prev.filter(t => t !== tld)
-        : [...prev, tld]
+    setSelectedTlds((prev) =>
+      prev.includes(tld) ? prev.filter((t) => t !== tld) : [...prev, tld],
     );
   };
-  
+
   const handleSelect = (result: DomainSearchResult) => {
     if (onSelect) {
       onSelect(result);
@@ -111,17 +135,19 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
       onAddToCart(result);
     } else {
       // Navigate to cart with domain
-      router.push(`/dashboard/domains/cart?domain=${encodeURIComponent(result.domain)}`);
+      router.push(
+        `/dashboard/domains/cart?domain=${encodeURIComponent(result.domain)}`,
+      );
     }
   };
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DOMAIN_CURRENCY,
     }).format(price);
   };
-  
+
   return (
     <div className={cn("space-y-6", className)}>
       {/* Search Input */}
@@ -133,15 +159,15 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
             placeholder="Search for your perfect domain..."
             value={keyword}
             onChange={(e) => handleKeywordChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
+            onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
             className="pl-12 pr-12 h-14 text-lg"
           />
           {isSearching && (
             <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
           )}
         </div>
-        <Button 
-          size="lg" 
+        <Button
+          size="lg"
           className="h-14 px-6"
           onClick={handleManualSearch}
           disabled={isSearching || keyword.length < 2}
@@ -150,12 +176,14 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
           Search
         </Button>
       </div>
-      
+
       {/* TLD Filter */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground mr-2">Extensions:</span>
-          {POPULAR_TLDS.map(tld => (
+          <span className="text-sm text-muted-foreground mr-2">
+            Extensions:
+          </span>
+          {POPULAR_TLDS.map((tld) => (
             <Badge
               key={tld}
               variant={selectedTlds.includes(tld) ? "default" : "outline"}
@@ -171,8 +199,14 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
             onClick={() => setShowMoreTlds(!showMoreTlds)}
             className="ml-2"
           >
-            {showMoreTlds ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
-            {showMoreTlds ? 'Less' : `More TLDs (${ALL_CATEGORY_ENTRIES.reduce((acc, [, tlds]) => acc + tlds.length, 0)}+)`}
+            {showMoreTlds ? (
+              <ChevronUp className="h-3 w-3 mr-1" />
+            ) : (
+              <ChevronDown className="h-3 w-3 mr-1" />
+            )}
+            {showMoreTlds
+              ? "Less"
+              : `More TLDs (${ALL_CATEGORY_ENTRIES.reduce((acc, [, tlds]) => acc + tlds.length, 0)}+)`}
           </Button>
           <Button
             variant="ghost"
@@ -183,7 +217,7 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
             Reset
           </Button>
         </div>
-        
+
         {showMoreTlds && (
           <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
             {ALL_CATEGORY_ENTRIES.map(([category, tlds]) => (
@@ -197,22 +231,32 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                     size="sm"
                     className="h-5 text-xs px-1.5"
                     onClick={() => {
-                      const allSelected = tlds.every(t => selectedTlds.includes(t));
+                      const allSelected = tlds.every((t) =>
+                        selectedTlds.includes(t),
+                      );
                       if (allSelected) {
-                        setSelectedTlds(prev => prev.filter(t => !tlds.includes(t)));
+                        setSelectedTlds((prev) =>
+                          prev.filter((t) => !tlds.includes(t)),
+                        );
                       } else {
-                        setSelectedTlds(prev => [...new Set([...prev, ...tlds])]);
+                        setSelectedTlds((prev) => [
+                          ...new Set([...prev, ...tlds]),
+                        ]);
                       }
                     }}
                   >
-                    {tlds.every(t => selectedTlds.includes(t)) ? 'Deselect all' : 'Select all'}
+                    {tlds.every((t) => selectedTlds.includes(t))
+                      ? "Deselect all"
+                      : "Select all"}
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {tlds.map(tld => (
+                  {tlds.map((tld) => (
                     <Badge
                       key={tld}
-                      variant={selectedTlds.includes(tld) ? "default" : "outline"}
+                      variant={
+                        selectedTlds.includes(tld) ? "default" : "outline"
+                      }
                       className="cursor-pointer transition-colors text-xs"
                       onClick={() => toggleTld(tld)}
                     >
@@ -225,53 +269,60 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
           </div>
         )}
       </div>
-      
+
       {/* Error */}
       {error && (
         <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
           {error}
         </div>
       )}
-      
+
       {/* Fallback notice: show when ResellerClub API was not used */}
-      {results.length > 0 && searchSource === 'fallback' && searchMessage && (
+      {results.length > 0 && searchSource === "fallback" && searchMessage && (
         <div className="flex items-start gap-2 text-sm bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 dark:border-amber-400/30 p-3 rounded-md">
           <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
           <p>{searchMessage}</p>
         </div>
       )}
-      
+
       {/* Results */}
       {results.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">
-            {results.filter(r => r.available).length} available of {results.length} checked
-            {searchSource === 'resellerclub' && (
-              <span className="text-green-600 dark:text-green-400 ml-2">(Live from ResellerClub)</span>
-            )}
-            {results.some(r => r.unverified) && results.some(r => r.available) && searchSource !== 'resellerclub' && (
-              <span className="text-yellow-500 ml-2">
-                (Results via DNS lookup — register to confirm)
+            {results.filter((r) => r.available).length} available of{" "}
+            {results.length} checked
+            {searchSource === "resellerclub" && (
+              <span className="text-green-600 dark:text-green-400 ml-2">
+                (Live from ResellerClub)
               </span>
             )}
-            {results.some(r => r.unverified) && !results.some(r => r.available) && searchSource !== 'resellerclub' && (
-              <span className="text-yellow-500 ml-2">
-                (API unavailable — results may be inaccurate)
-              </span>
-            )}
+            {results.some((r) => r.unverified) &&
+              results.some((r) => r.available) &&
+              searchSource !== "resellerclub" && (
+                <span className="text-yellow-500 ml-2">
+                  (Results via DNS lookup — register to confirm)
+                </span>
+              )}
+            {results.some((r) => r.unverified) &&
+              !results.some((r) => r.available) &&
+              searchSource !== "resellerclub" && (
+                <span className="text-yellow-500 ml-2">
+                  (API unavailable — results may be inaccurate)
+                </span>
+              )}
           </h3>
-          
+
           <div className="grid gap-3">
-            {results.map(result => (
-              <Card 
+            {results.map((result) => (
+              <Card
                 key={result.domain}
                 className={cn(
                   "transition-all hover:shadow-md",
-                  result.available 
-                    ? "border-green-500/50 hover:border-green-500 cursor-pointer" 
+                  result.available
+                    ? "border-green-500/50 hover:border-green-500 cursor-pointer"
                     : result.unverified
                       ? "opacity-70 border-yellow-500/30"
-                      : "opacity-60"
+                      : "opacity-60",
                 )}
                 onClick={() => result.available && handleSelect(result)}
               >
@@ -293,7 +344,9 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                       )}
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-lg">{result.domain}</span>
+                          <span className="font-semibold text-lg">
+                            {result.domain}
+                          </span>
                           {result.premium && (
                             <Badge variant="secondary" className="gap-1">
                               <Star className="h-3 w-3" />
@@ -301,32 +354,40 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                             </Badge>
                           )}
                           {result.available && result.unverified && (
-                            <Badge variant="outline" className="gap-1 text-yellow-600 border-yellow-500/50">
+                            <Badge
+                              variant="outline"
+                              className="gap-1 text-yellow-600 border-yellow-500/50"
+                            >
                               <AlertCircle className="h-3 w-3" />
                               Likely Available
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {result.available 
-                            ? (result.unverified ? 'Likely available — register to confirm' : 'Available for registration')
+                          {result.available
+                            ? result.unverified
+                              ? "Likely available — register to confirm"
+                              : "Available for registration"
                             : result.unverified
-                              ? 'Likely registered — unable to verify via registrar'
-                              : 'Already registered'}
+                              ? "Likely registered — unable to verify via registrar"
+                              : "Already registered"}
                         </p>
                       </div>
                     </div>
-                    
+
                     {result.available && (
                       <div className="text-right flex items-center gap-4">
                         <div>
                           <p className="font-bold text-xl">
                             {formatPrice(result.retailPrices.register[1] || 0)}
-                            <span className="text-sm font-normal text-muted-foreground">/year</span>
+                            <span className="text-sm font-normal text-muted-foreground">
+                              /year
+                            </span>
                           </p>
                           {result.retailPrices.renew[1] && (
                             <p className="text-xs text-muted-foreground">
-                              Renews at {formatPrice(result.retailPrices.renew[1])}/yr
+                              Renews at{" "}
+                              {formatPrice(result.retailPrices.renew[1])}/yr
                             </p>
                           )}
                         </div>
@@ -343,26 +404,30 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
           </div>
         </div>
       )}
-      
+
       {/* Empty State */}
-      {keyword && keyword.length >= 2 && !isSearching && results.length === 0 && !error && (
-        <div className="text-center py-12">
-          <Globe className="h-16 w-16 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No results found</h3>
-          <p className="text-muted-foreground mt-1">
-            Try a different keyword or select more extensions
-          </p>
-        </div>
-      )}
-      
+      {keyword &&
+        keyword.length >= 2 &&
+        !isSearching &&
+        results.length === 0 &&
+        !error && (
+          <div className="text-center py-12">
+            <Globe className="h-16 w-16 mx-auto text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-medium">No results found</h3>
+            <p className="text-muted-foreground mt-1">
+              Try a different keyword or select more extensions
+            </p>
+          </div>
+        )}
+
       {/* Initial State */}
       {!keyword && results.length === 0 && !isSearching && (
         <div className="text-center py-12 border-2 border-dashed rounded-lg">
           <Globe className="h-16 w-16 mx-auto text-muted-foreground" />
           <h3 className="mt-4 text-lg font-medium">Find Your Perfect Domain</h3>
           <p className="text-muted-foreground mt-1 max-w-md mx-auto">
-            Enter a keyword above to search for available domains. 
-            We&apos;ll check availability across multiple TLDs instantly.
+            Enter a keyword above to search for available domains. We&apos;ll
+            check availability across multiple TLDs instantly.
           </p>
         </div>
       )}

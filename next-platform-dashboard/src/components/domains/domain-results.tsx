@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { DomainSearchResult } from "@/types/domain";
 
-import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DOMAIN_CURRENCY } from "@/lib/locale-config";
 interface DomainResultsProps {
   results: DomainSearchResult[];
   onSelect: (domain: DomainSearchResult) => void;
@@ -23,7 +23,7 @@ export function DomainResults({
 }: DomainResultsProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DOMAIN_CURRENCY,
     }).format(price);
   };
@@ -63,7 +63,7 @@ export function DomainResults({
     );
   }
 
-  const availableCount = results.filter(r => r.available).length;
+  const availableCount = results.filter((r) => r.available).length;
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -80,14 +80,14 @@ export function DomainResults({
       </div>
 
       <div className="grid gap-3">
-        {results.map(result => (
+        {results.map((result) => (
           <Card
             key={result.domain}
             className={cn(
               "transition-all",
               result.available
                 ? "border-green-500/50 hover:border-green-500 hover:shadow-md cursor-pointer"
-                : "opacity-60"
+                : "opacity-60",
             )}
             onClick={() => result.available && onSelect(result)}
           >
@@ -105,7 +105,9 @@ export function DomainResults({
                   )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-lg">{result.domain}</span>
+                      <span className="font-semibold text-lg">
+                        {result.domain}
+                      </span>
                       {result.premium && (
                         <Badge variant="secondary" className="gap-1">
                           <Star className="h-3 w-3 fill-current" />
@@ -114,7 +116,9 @@ export function DomainResults({
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {result.available ? 'Available for registration' : 'Already registered'}
+                      {result.available
+                        ? "Available for registration"
+                        : "Already registered"}
                     </p>
                   </div>
                 </div>
@@ -123,15 +127,39 @@ export function DomainResults({
                   <div className="text-right flex items-center gap-4">
                     <div>
                       <p className="font-bold text-xl">
-                        {formatPrice(Number(result.retailPrices.register[1] ?? result.retailPrices.register['1' as any]) || 0)}
-                        <span className="text-sm font-normal text-muted-foreground">/yr</span>
+                        {formatPrice(
+                          Number(
+                            result.retailPrices.register[1] ??
+                              result.retailPrices.register["1" as any],
+                          ) || 0,
+                        )}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /yr
+                        </span>
                       </p>
-                      {(Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0) > 0 && 
-                       (Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0) !== (Number(result.retailPrices.register[1] ?? result.retailPrices.register['1' as any]) || 0) && (
-                        <p className="text-xs text-muted-foreground">
-                          Renews at {formatPrice(Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0)}/yr
-                        </p>
-                      )}
+                      {(Number(
+                        result.retailPrices.renew[1] ??
+                          result.retailPrices.renew["1" as any],
+                      ) || 0) > 0 &&
+                        (Number(
+                          result.retailPrices.renew[1] ??
+                            result.retailPrices.renew["1" as any],
+                        ) || 0) !==
+                          (Number(
+                            result.retailPrices.register[1] ??
+                              result.retailPrices.register["1" as any],
+                          ) || 0) && (
+                          <p className="text-xs text-muted-foreground">
+                            Renews at{" "}
+                            {formatPrice(
+                              Number(
+                                result.retailPrices.renew[1] ??
+                                  result.retailPrices.renew["1" as any],
+                              ) || 0,
+                            )}
+                            /yr
+                          </p>
+                        )}
                     </div>
                     <Button size="sm" className="gap-2">
                       <ShoppingCart className="h-4 w-4" />

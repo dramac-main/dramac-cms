@@ -42,7 +42,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, FolderOpen, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  FolderOpen,
+  AlertTriangle,
+} from "lucide-react";
 import {
   ShoppingCart,
   Car,
@@ -98,20 +105,33 @@ function getIconComponent(iconValue: string | null): LucideIcon | null {
 }
 
 const DEFAULT_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
-  "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280", "#14b8a6",
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#6b7280",
+  "#14b8a6",
 ];
 
 interface ExpenseCategoryManagerProps {
   siteId: string;
 }
 
-export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) {
+export function ExpenseCategoryManager({
+  siteId,
+}: ExpenseCategoryManagerProps) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [budgetSpending, setBudgetSpending] = useState<CategoryBudgetSpend[]>([]);
+  const [budgetSpending, setBudgetSpending] = useState<CategoryBudgetSpend[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
+  const [editingCategory, setEditingCategory] =
+    useState<ExpenseCategory | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Form state
@@ -172,7 +192,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
 
     startTransition(async () => {
       try {
-        const budgetCents = monthlyBudget ? Math.round(parseFloat(monthlyBudget) * 100) : 0;
+        const budgetCents = monthlyBudget
+          ? Math.round(parseFloat(monthlyBudget) * 100)
+          : 0;
         if (editingCategory) {
           await updateExpenseCategory(editingCategory.id, {
             name: name.trim(),
@@ -295,7 +317,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
                   <button
                     type="button"
                     className={`h-8 w-8 rounded border flex items-center justify-center text-xs transition-all ${
-                      !icon ? "border-foreground bg-muted" : "border-muted hover:border-muted-foreground"
+                      !icon
+                        ? "border-foreground bg-muted"
+                        : "border-muted hover:border-muted-foreground"
                     }`}
                     onClick={() => setIcon("")}
                     title="No icon"
@@ -345,7 +369,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
                   <SelectContent>
                     <SelectItem value="">None (top-level)</SelectItem>
                     {categories
-                      .filter((c) => !c.parentId && c.id !== editingCategory?.id)
+                      .filter(
+                        (c) => !c.parentId && c.id !== editingCategory?.id,
+                      )
                       .map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name}
@@ -357,7 +383,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
             </div>
             <DialogFooter>
               <Button onClick={handleSave} disabled={isPending}>
-                {isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {isPending && (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                )}
                 {editingCategory ? "Save Changes" : "Create"}
               </Button>
             </DialogFooter>
@@ -373,7 +401,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
         ) : (
           <div className="space-y-1">
             {topLevel.map((cat) => {
-              const spending = budgetSpending.find((b) => b.categoryId === cat.id);
+              const spending = budgetSpending.find(
+                (b) => b.categoryId === cat.id,
+              );
               return (
                 <div key={cat.id}>
                   <CategoryRow
@@ -384,7 +414,9 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
                     level={0}
                   />
                   {childrenOf(cat.id).map((child) => {
-                    const childSpending = budgetSpending.find((b) => b.categoryId === child.id);
+                    const childSpending = budgetSpending.find(
+                      (b) => b.categoryId === child.id,
+                    );
                     return (
                       <CategoryRow
                         key={child.id}
@@ -428,7 +460,10 @@ function CategoryRow({
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {IconComp ? (
-          <IconComp className="h-4 w-4 shrink-0" style={{ color: category.color }} />
+          <IconComp
+            className="h-4 w-4 shrink-0"
+            style={{ color: category.color }}
+          />
         ) : (
           <span
             className="h-3 w-3 rounded-full shrink-0"
@@ -449,9 +484,14 @@ function CategoryRow({
                 className={`h-1.5 ${spending.isOverBudget ? "[&>div]:bg-destructive" : ""}`}
               />
             </div>
-            <span className={`text-xs whitespace-nowrap ${spending.isOverBudget ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-              {spending.isOverBudget && <AlertTriangle className="h-3 w-3 inline mr-0.5" />}
-              K{(spending.spent / 100).toFixed(0)} / K{(spending.monthlyBudget / 100).toFixed(0)}
+            <span
+              className={`text-xs whitespace-nowrap ${spending.isOverBudget ? "text-destructive font-medium" : "text-muted-foreground"}`}
+            >
+              {spending.isOverBudget && (
+                <AlertTriangle className="h-3 w-3 inline mr-0.5" />
+              )}
+              K{(spending.spent / 100).toFixed(0)} / K
+              {(spending.monthlyBudget / 100).toFixed(0)}
             </span>
           </div>
         )}

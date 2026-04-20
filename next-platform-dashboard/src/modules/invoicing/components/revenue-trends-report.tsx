@@ -68,11 +68,7 @@ export function RevenueTrendsReport() {
             <Download className="h-4 w-4 mr-1" />
             Export CSV
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-          >
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-1" />
             Print
           </Button>
@@ -109,7 +105,15 @@ export function RevenueTrendsReport() {
                     <p className="text-xs text-muted-foreground">
                       {source.count} transaction{source.count !== 1 ? "s" : ""}
                       {sourceData.totalRevenue > 0 && (
-                        <> &middot; {((source.amount / sourceData.totalRevenue) * 100).toFixed(0)}%</>
+                        <>
+                          {" "}
+                          &middot;{" "}
+                          {(
+                            (source.amount / sourceData.totalRevenue) *
+                            100
+                          ).toFixed(0)}
+                          %
+                        </>
                       )}
                     </p>
                   </div>

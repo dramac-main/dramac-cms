@@ -6,36 +6,42 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Session 10 — INVFIX-08 Reports Overhaul ✅
+## Latest: Session 10 Verification — INVFIX-08 Carryover Still Open
 
-### Session 10 (July 2026)
+### Session 10 Audit (April 20, 2026)
 
-**INVFIX-08: Reports Overhaul — Cross-Module Revenue/Client Reporting, Export/Print Polish — COMPLETE**
+The current repo does **not** contain a later INVFIX session commit after `355ae75f` (`INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports`).
 
-Closed all INVFIX-08 deliverables. ~12 files changed (3 new, ~9 modified). Cross-module revenue and client activity reports, report hub categorization, print CSS, export/print buttons on all reports.
+The report code still reflects the original cross-module report pass plus the earlier post-audit fixes, but the Session 10 carryover closure itself did not land.
 
-#### Deliverables:
+#### Current Implemented Report Baseline
 
-1. **Cross-module report types**: 6 new types in `report-types.ts` — `RevenueBySource`, `CrossModuleRevenue`, `CrossModulePeriodEntry`, `CrossModuleClientReport`, `CrossModuleClientRow`.
+1. **Cross-module revenue/client report actions and UI remain present**: `getCrossModuleRevenue()`, `getCrossModuleClients()`, `exportCrossModuleCSV()`, and the `cross-module-report.tsx` route/page are still intact.
+2. **Earlier post-audit correctness fixes remain present**: report-hub dashboard routing, pre-slice client total aggregation, and centralized CSV escaping/serialization are still in place.
+3. **Revenue trends still includes the initial INVFIX-08 uplift only**: source breakdown cards plus CSV export and print button remain wired.
+4. **Print support remains standardized**: report pages still expose print buttons and the shared print CSS remains the effective print/export baseline.
 
-2. **Cross-module server actions**: 3 new functions in `report-actions.ts` (~350 lines) — `getCrossModuleRevenue` (queries payments + ecom orders + bookings, monthly breakdown by source), `getCrossModuleClients` (merges clients by email across modules, ranks by total revenue), `exportCrossModuleCSV` (revenue + clients export).
+#### Still-Open INVFIX-08 Carryover Confirmed By Code Audit
 
-3. **Cross-module report component**: New `cross-module-report.tsx` (~400 lines) — Tabs with Revenue Overview (4 KPI cards, PieChart, stacked AreaChart, monthly table) and Client Activity (2 KPI cards, stacked BarChart top 10, full client detail table). DateRangeFilter, CSV export, print button.
+- `getCashFlowReport()` still only uses invoicing payments and expenses. It does not include e-commerce revenue, booking revenue, or projected cash flow.
+- `revenue-trends-report.tsx` still lacks compare periods, growth indicators, and client-segment analysis.
+- `getProfitAndLoss()` / `pnl-report.tsx` still lack gross margin, YTD comparison, and broader operating-expense completion beyond the base income/expense grouping.
+- `getARAgingReport()` / `ar-aging-report.tsx` still lack drilldowns, weighted DSO, and collection-probability wiring. A reusable AI risk hook exists elsewhere (`ai-actions.ts` + `client-risk-badge.tsx`) but is not consumed here.
+- `getTaxSummary()` / `tax-summary-report.tsx` still lack filing-period breakdown and tax-filing export structure.
+- `getExpenseReport()` / `expense-report.tsx` still lack budget-vs-actual and YoY trend completion. Vendor totals exist in the data shape, but the report surface still behaves like the original base report.
+- Reports still expose CSV + print only. There is no true PDF export path or explicit product decision that browser print is the standardized PDF route.
 
-4. **Revenue trends enhancement**: `revenue-trends-report.tsx` enhanced with revenue-by-source breakdown cards (from getCrossModuleRevenue), CSV export button, print button.
+#### Validation
 
-5. **Report hub categorization**: `report-hub.tsx` restructured from flat 6-card grid to categorized sections — Accounting (4 cards: P&L, AR Aging, Tax Summary, Expense) + Insights (3 cards: Top Clients, Revenue Trends, Cross-Module Revenue with Globe icon).
+- `git log --oneline -8` still tops out at `355ae75f` for INVFIX work.
+- Current full TypeScript baseline still fails in the marketing module only; no report-file compile errors were found.
+- Report-file diagnostics only surfaced non-blocking Tailwind utility suggestions in `cash-flow-chart.tsx` and `expense-report.tsx`.
 
-6. **Print CSS + print buttons**: Added `@media print` rules in `globals.css` (hide sidebar/nav/header/.no-print, full-width main, recharts page-break, table header repeat). Added Printer import + print button to all 6 existing report components (pnl, ar-aging, tax-summary, expense, top-clients, revenue-trends) + cross-module.
+#### Planning Impact
 
-7. **Cross-module route page**: New `reports/cross-module/page.tsx`.
-
-#### New files:
-
-- `src/modules/invoicing/components/cross-module-report.tsx`
-- `src/app/(dashboard)/dashboard/sites/[siteId]/invoicing/reports/cross-module/page.tsx`
-
-#### TSC: 0 invoicing errors (135 total — reduced from 352 baseline due to prior marketing fixes)
+- Session 11 must remain **INVFIX-08 carryover closure only**.
+- Do **not** begin INVFIX-09 until the report carryover above is actually implemented and re-audited clean.
+- Realistic remaining roadmap from here: **4 focused sessions** if INVFIX-10 + INVFIX-11 are merged, or **5 sessions** if they stay separate.
 
 ### Previous: Session 9 — INVFIX-07 Expense System Closure ✅
 
@@ -170,8 +176,8 @@ All INVFIX-06 features implemented and verified:
 ### Next Steps
 
 - **Domain system remaining work**: Transfer-out UI (backend exists, no UI), transfer status polling/webhooks, super admin domain pricing controls
-- **INVFIX Session 8 should be INVFIX-07 only**: the expense subsystem already exists, but approval thresholds/notifications, receipt viewer, category budgets/overspend alerts, and mileage/per-diem closure are still open.
-- **Do not bundle INVFIX-08 into the next session**: reports overhaul already has a baseline, but cross-module revenue, export, and central hub completion are large enough to merit their own follow-up session.
+- **INVFIX next session should start with INVFIX-08 carryover**: close the remaining report-spec gaps before treating reports as complete.
+- **INVFIX-09 should not be bundled blindly on top of incomplete INVFIX-08**: only move into the email-system phase if the reports carryover fully closes first.
 - **Repo path note**: `invfix-06-po-receive-vendor-enhance.sql` lives under the repo-root `migrations/` folder, not `next-platform-dashboard/migrations/`.
 - Do NOT reintroduce Stripe into the invoicing module
 

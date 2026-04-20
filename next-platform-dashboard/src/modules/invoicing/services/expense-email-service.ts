@@ -2,6 +2,7 @@
 
 import { getResend, isEmailEnabled, getEmailFrom } from "@/lib/email/resend-client";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import { formatCurrency } from "../services/currency-service";
 
@@ -16,6 +17,50 @@ export type ExpenseEmailType =
   | "rejected";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
+
+async function getApproverEmails(
+  supabase: any,
+  agencyId: string | null | undefined,
+): Promise<string[]> {
+  if (!agencyId) return [];
+
+  const { data: memberships } = await supabase
+    .from("agency_members")
+    .select("user_id, role")
+    .eq("agency_id", agencyId)
+    .in("role", ["owner", "admin"]);
+
+  const userIds = (memberships || []).map((member: any) => member.user_id);
+  if (userIds.length === 0) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("email")
+    .in("id", userIds);
+
+  return Array.from(
+    new Set(
+      (profiles || [])
+        .map((profile: any) => profile.email)
+        .filter((email: unknown): email is string => typeof email === "string" && email.length > 0),
+    ),
+  );
+}
+
+async function getSubmitterEmail(
+  supabase: any,
+  userId: string | null | undefined,
+): Promise<string | null> {
+  if (!userId) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", userId)
+    .single();
+
+  return profile?.email || null;
+}
 
 /**
  * Send expense notification email.
@@ -36,7 +81,8 @@ export async function sendExpenseNotification(
   }
 
   try {
-    const supabase = await createClient() as any;
+    const supabase = (await createClient()) as any;
+    const adminClient = createAdminClient() as any;
 
     // Get the expense
     const { data: expense } = await supabase
@@ -46,6 +92,12 @@ export async function sendExpenseNotification(
       .single();
     if (!expense) return { success: false, error: "Expense not found" };
 
+    const { data: site } = await supabase
+      .from("sites")
+      .select("agency_id")
+      .eq("id", siteId)
+      .single();
+
     // Get settings for company name / email
     const { data: settings } = await supabase
       .from(INV_TABLES.settings)
@@ -54,8 +106,23 @@ export async function sendExpenseNotification(
       .single();
 
     const companyName = settings?.company_name || "Your Company";
-    const adminEmail = settings?.company_email;
-    if (!adminEmail) return { success: false, error: "No admin email configured" };
+    const fallbackEmail = settings?.company_email || null;
+
+    let recipientEmails: string[] = [];
+    if (type === "submitted") {
+      recipientEmails = await getApproverEmails(adminClient, site?.agency_id);
+    } else {
+      const submitterEmail = await getSubmitterEmail(adminClient, expense.created_by);
+      recipientEmails = submitterEmail ? [submitterEmail] : [];
+    }
+
+    if (recipientEmails.length === 0 && fallbackEmail) {
+      recipientEmails = [fallbackEmail];
+    }
+
+    if (recipientEmails.length === 0) {
+      return { success: false, error: "No recipient email configured" };
+    }
 
     const amount = formatCurrency(expense.amount, expense.currency || "ZMW");
     const { subject, html } = renderExpenseEmail(type, {
@@ -64,12 +131,12 @@ export async function sendExpenseNotification(
       expenseNumber: expense.expense_number || expenseId.slice(0, 8),
       companyName,
       rejectionReason: expense.rejection_reason || null,
-      expenseUrl: `${APP_URL}/sites/${siteId}/invoicing/expenses/${expenseId}`,
+      expenseUrl: `${APP_URL}/dashboard/sites/${siteId}/invoicing/expenses/${expenseId}`,
     });
 
     await resend.emails.send({
       from: getEmailFrom(),
-      to: [adminEmail],
+      to: recipientEmails,
       subject,
       html,
     });
@@ -111,7 +178,7 @@ function renderExpenseEmail(
           <a href="${expenseUrl}" style="display:inline-block;padding:10px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">View Expense</a>
         </div>
       </div>
-      <p style="margin-top:16px;font-size:12px;color:#9ca3af;text-align:center;">Sent by ${companyName} via DMSuite</p>
+      <p style="margin-top:16px;font-size:12px;color:#9ca3af;text-align:center;">Sent by ${companyName} via Dramac</p>
     </div>`;
 
   switch (type) {
