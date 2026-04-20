@@ -90,9 +90,9 @@ export function EmailTemplateEditor() {
     [templates],
   );
 
-  const handlePreview = useCallback(() => {
+  const handlePreview = useCallback(async () => {
     if (!selectedType) return;
-    const result = previewTemplate(selectedType, editSubject, editBody);
+    const result = await previewTemplate(selectedType, editSubject, editBody);
     setPreview(result);
   }, [selectedType, editSubject, editBody]);
 

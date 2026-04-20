@@ -402,13 +402,13 @@ export async function renderTemplate(
 
 /**
  * Preview a template with example variable values.
- * Synchronous — uses only default template examples.
+ * Uses only default template examples.
  */
-export function previewTemplate(
+export async function previewTemplate(
   templateType: EmailTemplateType,
   customSubject?: string | null,
   customBody?: string | null,
-): RenderedEmail {
+): Promise<RenderedEmail> {
   const template = DEFAULT_TEMPLATES.find((t) => t.type === templateType);
   if (!template) {
     return { subject: "Preview", body: "Template not found" };

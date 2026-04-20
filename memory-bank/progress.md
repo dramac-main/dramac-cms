@@ -854,6 +854,17 @@ Transformed the client portal from a passive site viewer into a full business op
 - Supabase types regenerated (580K chars) — zero portal TS errors
 - tsc requires `NODE_OPTIONS="--max-old-space-size=8192"` due to large types file
 
+## Previous Update: Notification System Overhaul III ✅ (April 2026) — commit b123ad1e
+
+### Final closure of the notification pipeline (3 files, 136 insertions)
+
+1. **`web-push.ts` admin client fix** — All 3 DB-query functions (`sendPushToUser`, `sendPushToConversation`, `sendPushToSiteAgents`) replaced `createClient()` (needs HTTP cookies) with `createAdminClient()` (service-role key, context-free). Critical for fire-and-forget IIFEs.
+2. **Full web push coverage** — `pushToOwner()` added to remaining 10 of 19 `notify*` functions: `notifyOrderShipped`, `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyPaymentProofUploaded`, `notifyLowStock`, `notifyQuoteAccepted`, `notifyQuoteRejected`, `notifyBookingPaymentProofUploaded`, `notifyQuoteAmendmentRequested`. All 19 functions now have full in-app + email + web push.
+3. **`notificationTypeInfo` TypeScript fix** — `Record<NotificationType, ...>` (47 types) was missing 12 domain/email provisioning entries. All 12 added.
+4. **DB migration applied via MCP** — `notifications.type` CHECK constraint expanded from ~35 to 47 types via `mcp_supabase_apply_migration` (project `nfirsqmyxmmtbignofgb`).
+
+Preceded by **Notification System Overhaul II** (commit `551034be`): payment enforcement bypass fix, `cancelled_by` constraint fix, realtime bell user_id scoping, `updateAppointment` cancel/payment pipeline, booking UI routing, live chat conversation auto-notify, web push for 9 of 19 functions.
+
 ## Previous Update: Email Recipient Routing Fix ✅ (April 2026) — commit cdd20df0
 
 ### Critical Bug Fix (1 file, +311 -590)
