@@ -82,6 +82,9 @@ export async function updateInvoicingSettings(
     paymentInstructions: "payment_instructions",
     bankTransferInstructions: "bank_transfer_instructions",
     mobileMoneyInstructions: "mobile_money_instructions",
+    expenseApprovalThreshold: "expense_approval_threshold",
+    expenseAutoApproveBelowThreshold: "expense_auto_approve_below_threshold",
+    mileageRatePerKm: "mileage_rate_per_km",
     timezone: "timezone",
     metadata: "metadata",
   };

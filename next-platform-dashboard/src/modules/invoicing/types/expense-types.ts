@@ -34,6 +34,7 @@ export interface ExpenseCategory {
   color: string;
   icon: string | null;
   parentId: string | null;
+  monthlyBudget: number;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -70,6 +71,9 @@ export interface Expense {
   tags: string[];
   metadata: Record<string, unknown>;
   createdBy: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
 

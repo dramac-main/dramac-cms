@@ -78,6 +78,9 @@ export interface InvoicingSettings {
   paymentInstructions: string | null;
   bankTransferInstructions: string | null;
   mobileMoneyInstructions: string | null;
+  expenseApprovalThreshold: number;
+  expenseAutoApproveBelowThreshold: boolean;
+  mileageRatePerKm: number;
   timezone: string;
   metadata: Record<string, unknown>;
   createdAt: string;

@@ -24,6 +24,7 @@ import type {
   Vendor,
   BillStats,
 } from "../types";
+import type { InvoiceActivity } from "../types/activity-types";
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -141,9 +142,13 @@ export async function getBills(
 
 // ─── getBill ───────────────────────────────────────────────────
 
-export async function getBill(
-  billId: string,
-): Promise<Bill & { vendor?: Vendor | null; lineItems: BillLineItem[] }> {
+export async function getBill(billId: string): Promise<
+  Bill & {
+    vendor?: Vendor | null;
+    lineItems: BillLineItem[];
+    activity: InvoiceActivity[];
+  }
+> {
   const supabase = await getModuleClient();
 
   const { data, error } = await supabase
@@ -168,9 +173,17 @@ export async function getBill(
     .eq("bill_id", billId)
     .order("sort_order", { ascending: true });
 
+  const { data: activityData } = await supabase
+    .from(INV_TABLES.invoiceActivity)
+    .select("*")
+    .eq("entity_type", "bill")
+    .eq("entity_id", billId)
+    .order("created_at", { ascending: false });
+
   return {
     ...bill,
     lineItems: mapRecords<BillLineItem>(lineItemsData || []),
+    activity: mapRecords<InvoiceActivity>(activityData || []),
   };
 }
 

@@ -11,6 +11,8 @@ import type {
   CreateExpenseInput,
 } from "../types/expense-types";
 import type { InvoiceActivity } from "../types/activity-types";
+import { getInvoicingSettings } from "./settings-actions";
+import { sendExpenseNotification } from "../services/expense-email-service";
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -196,46 +198,62 @@ export async function createExpense(
 
   const today = new Date().toISOString().split("T")[0];
 
+  // Check auto-approve settings
+  const settings = await getInvoicingSettings(siteId);
+  const threshold = settings?.expenseApprovalThreshold ?? 50000;
+  const autoApprove = settings?.expenseAutoApproveBelowThreshold ?? false;
+  const shouldAutoApprove = autoApprove && input.amount < threshold;
+
+  const initialStatus: ExpenseStatus = shouldAutoApprove ? "approved" : "pending";
+
+  const insertData: Record<string, unknown> = {
+    site_id: siteId,
+    category_id: input.categoryId || null,
+    vendor_id: input.vendorId || null,
+    status: initialStatus,
+    date: input.date || today,
+    amount: input.amount,
+    currency: input.currency || "ZMW",
+    exchange_rate: 1,
+    tax_rate_id: input.taxRateId || null,
+    tax_amount: 0,
+    description: input.description,
+    receipt_url: input.receiptUrl || null,
+    receipt_filename: input.receiptFilename || null,
+    payment_method: input.paymentMethod || null,
+    payment_reference: input.paymentReference || null,
+    is_billable: input.isBillable ?? false,
+    is_billed: false,
+    billed_invoice_id: null,
+    contact_id: input.contactId || null,
+    company_id: input.companyId || null,
+    notes: input.notes || null,
+    tags: input.tags || [],
+    metadata: {},
+    created_by: user?.id || null,
+  };
+
+  if (shouldAutoApprove) {
+    insertData.approved_by = null;
+    insertData.approved_at = new Date().toISOString();
+  }
+
   const { data: exp, error } = await supabase
     .from(INV_TABLES.expenses)
-    .insert({
-      site_id: siteId,
-      category_id: input.categoryId || null,
-      vendor_id: input.vendorId || null,
-      status: "pending" as ExpenseStatus,
-      date: input.date || today,
-      amount: input.amount,
-      currency: input.currency || "ZMW",
-      exchange_rate: 1,
-      tax_rate_id: input.taxRateId || null,
-      tax_amount: 0,
-      description: input.description,
-      receipt_url: input.receiptUrl || null,
-      receipt_filename: input.receiptFilename || null,
-      payment_method: input.paymentMethod || null,
-      payment_reference: input.paymentReference || null,
-      is_billable: input.isBillable ?? false,
-      is_billed: false,
-      billed_invoice_id: null,
-      contact_id: input.contactId || null,
-      company_id: input.companyId || null,
-      notes: input.notes || null,
-      tags: input.tags || [],
-      metadata: {},
-      created_by: user?.id || null,
-    })
+    .insert(insertData)
     .select("*")
     .single();
   if (error) throw new Error(error.message);
 
+  const actionLabel = shouldAutoApprove ? "created (auto-approved)" : "created";
   await logActivity(
     supabase,
     siteId,
     exp.id,
     "expense",
-    "created",
-    `Expense created: ${input.description}`,
-    "user",
+    actionLabel,
+    `Expense ${actionLabel}: ${input.description}`,
+    shouldAutoApprove ? "system" : "user",
     user?.id,
     user?.email,
   );
@@ -244,7 +262,15 @@ export async function createExpense(
     expenseId: exp.id,
     amount: input.amount,
     description: input.description,
+    autoApproved: shouldAutoApprove,
   });
+
+  // Send email notification
+  try {
+    await sendExpenseNotification(siteId, exp.id, shouldAutoApprove ? "auto_approved" : "submitted");
+  } catch {
+    // Non-blocking
+  }
 
   return mapRecord<Expense>(exp);
 }
@@ -348,11 +374,14 @@ export async function approveExpense(expenseId: string): Promise<void> {
   if (current.status !== "pending")
     throw new Error("Only pending expenses can be approved");
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from(INV_TABLES.expenses)
     .update({
       status: "approved" as ExpenseStatus,
-      updated_at: new Date().toISOString(),
+      approved_by: user?.id || null,
+      approved_at: now,
+      updated_at: now,
     })
     .eq("id", expenseId);
   if (error) throw new Error(error.message);
@@ -363,7 +392,7 @@ export async function approveExpense(expenseId: string): Promise<void> {
     expenseId,
     "expense",
     "approved",
-    "Expense approved",
+    `Expense approved by ${user?.email || "unknown"}`,
     "user",
     user?.id,
     user?.email,
@@ -375,7 +404,14 @@ export async function approveExpense(expenseId: string): Promise<void> {
     expenseId,
     amount: current.amount,
     description: current.description,
+    approvedBy: user?.id,
   });
+
+  try {
+    await sendExpenseNotification(current.site_id, expenseId, "approved");
+  } catch {
+    // Non-blocking
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -400,12 +436,15 @@ export async function rejectExpense(
   if (current.status !== "pending")
     throw new Error("Only pending expenses can be rejected");
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from(INV_TABLES.expenses)
     .update({
       status: "rejected" as ExpenseStatus,
-      notes: reason,
-      updated_at: new Date().toISOString(),
+      rejection_reason: reason,
+      approved_by: user?.id || null,
+      approved_at: now,
+      updated_at: now,
     })
     .eq("id", expenseId);
   if (error) throw new Error(error.message);
@@ -416,7 +455,7 @@ export async function rejectExpense(
     expenseId,
     "expense",
     "rejected",
-    `Expense rejected: ${reason}`,
+    `Expense rejected by ${user?.email || "unknown"}: ${reason}`,
     "user",
     user?.id,
     user?.email,
@@ -429,7 +468,14 @@ export async function rejectExpense(
     amount: current.amount,
     description: current.description,
     reason,
+    rejectedBy: user?.id,
   });
+
+  try {
+    await sendExpenseNotification(current.site_id, expenseId, "rejected");
+  } catch {
+    // Non-blocking
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -663,6 +709,7 @@ export async function createExpenseCategory(
     color?: string;
     icon?: string | null;
     parentId?: string | null;
+    monthlyBudget?: number;
   },
 ): Promise<ExpenseCategory> {
   const supabase = await getModuleClient();
@@ -685,6 +732,7 @@ export async function createExpenseCategory(
       color: input.color || "#6B7280",
       icon: input.icon || null,
       parent_id: input.parentId || null,
+      monthly_budget: input.monthlyBudget ?? 0,
       is_active: true,
       sort_order: nextSort,
     })
@@ -704,6 +752,7 @@ export async function updateExpenseCategory(
     parentId?: string | null;
     isActive?: boolean;
     sortOrder?: number;
+    monthlyBudget?: number;
   },
 ): Promise<ExpenseCategory> {
   const supabase = await getModuleClient();
@@ -716,6 +765,7 @@ export async function updateExpenseCategory(
   if (input.parentId !== undefined) updates.parent_id = input.parentId;
   if (input.isActive !== undefined) updates.is_active = input.isActive;
   if (input.sortOrder !== undefined) updates.sort_order = input.sortOrder;
+  if (input.monthlyBudget !== undefined) updates.monthly_budget = input.monthlyBudget;
 
   const { data, error } = await supabase
     .from(INV_TABLES.expenseCategories)
@@ -748,4 +798,72 @@ export async function deleteExpenseCategory(
     .delete()
     .eq("id", categoryId);
   if (error) throw new Error(error.message);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY BUDGET SPENDING
+// ═══════════════════════════════════════════════════════════════
+
+export interface CategoryBudgetSpend {
+  categoryId: string;
+  categoryName: string;
+  monthlyBudget: number;
+  spent: number;
+  remaining: number;
+  percentUsed: number;
+  isOverBudget: boolean;
+}
+
+export async function getCategoryBudgetSpending(
+  siteId: string,
+  month?: string, // YYYY-MM format, defaults to current month
+): Promise<CategoryBudgetSpend[]> {
+  const supabase = await getModuleClient();
+
+  const now = new Date();
+  const targetMonth = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [year, mon] = targetMonth.split("-").map(Number);
+  const startDate = `${year}-${String(mon).padStart(2, "0")}-01`;
+  const endDate = new Date(year, mon, 0).toISOString().split("T")[0]; // last day of month
+
+  // Get categories with budgets
+  const { data: categories } = await supabase
+    .from(INV_TABLES.expenseCategories)
+    .select("id, name, monthly_budget")
+    .eq("site_id", siteId)
+    .gt("monthly_budget", 0);
+
+  if (!categories || categories.length === 0) return [];
+
+  // Get expenses for the month grouped by category
+  const { data: expenses } = await supabase
+    .from(INV_TABLES.expenses)
+    .select("category_id, amount, status")
+    .eq("site_id", siteId)
+    .gte("date", startDate)
+    .lte("date", endDate)
+    .in("status", ["pending", "approved", "paid"]);
+
+  const spendMap = new Map<string, number>();
+  for (const exp of expenses || []) {
+    if (exp.category_id) {
+      spendMap.set(exp.category_id, (spendMap.get(exp.category_id) || 0) + exp.amount);
+    }
+  }
+
+  return categories.map((cat: any) => {
+    const budget = cat.monthly_budget || 0;
+    const spent = spendMap.get(cat.id) || 0;
+    const remaining = Math.max(0, budget - spent);
+    const percentUsed = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+    return {
+      categoryId: cat.id,
+      categoryName: cat.name,
+      monthlyBudget: budget,
+      spent,
+      remaining,
+      percentUsed,
+      isOverBudget: spent > budget,
+    };
+  });
 }

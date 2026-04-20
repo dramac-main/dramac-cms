@@ -69,18 +69,18 @@ Verified all six audit blockers are resolved:
 
 All INVFIX-06 features implemented and verified:
 
-- **PO Receive Tracking**: `po-receive-form.tsx` (dialog with line-item quantity tracking), `receivePurchaseOrder()` action, `getPoReceipts()` action, `mod_invmod01_po_receipts` DB table, `received_date`/`received_by` columns on POs. Receipts displayed in PO detail history section.
-- **Bill Payment Recording**: `bill-payment-dialog.tsx` wired into `bill-detail.tsx` (visible when `canPay`), `recordBillPayment()` action with status transition + activity logging + automation events. Amounts cards (Total/Paid/Outstanding) on bill detail.
+- **PO Receive Tracking**: `po-receive-form.tsx` (dialog with line-item quantity tracking), `receivePurchaseOrder()` action, `getPoReceipts()` action, `mod_invmod01_po_receipts` DB table, `received_date`/`received_by` columns on POs, and receiver audit data persisted during receipt recording. Receipts displayed in PO detail history section.
+- **Bill Payment Recording**: `bill-payment-dialog.tsx` wired into `bill-detail.tsx` (visible when `canPay`), `recordBillPayment()` action with status transition + activity logging + automation events. Amounts cards (Total/Paid/Outstanding) plus visible payment history on bill detail.
 - **Three-Way Match**: `three-way-match.tsx` dialog wired into bill-detail when `purchaseOrderId` exists, `getThreeWayMatchData()` action comparing PO/bill/receipt quantities with match status badges and variance display.
 - **Vendor Enhancements**: Bank details (name, account, branch), payment terms, preferred method, currency, vendor rating fields. `vendor-form.tsx` updated with bank/payment fields. `vendor-detail.tsx` updated with metrics display + banking card. `getVendorStats()` action.
-- **Migration**: `invfix-06-po-receive-vendor-enhance.sql` applied to live Supabase.
+- **Migration**: `migrations/invfix-06-po-receive-vendor-enhance.sql` applied to live Supabase.
 - **Types**: `POReceipt`, `ReceiptInput`, `ThreeWayMatchLine`, `MatchStatus`, `VendorStats` added to `vendor-types.ts`.
 
-**Note on bill payment history:** Individual bill payments are not stored as separate records (no `bill_payments` table). `recordBillPayment()` updates aggregate `amount_paid`/`amount_due` on the bill. The amounts cards suffice for INVFIX-06 scope.
+**Note on bill payment history:** Individual bill payments are not stored as separate records (no `bill_payments` table). `recordBillPayment()` updates aggregate `amount_paid`/`amount_due` on the bill, and bill detail now surfaces the logged payment history from bill activity entries.
 
 ### Files Modified/Created in Session 7
 
-**Modified (16):**
+**Modified (17):**
 
 1. `recurring-engine-service.ts` — Added `sendPreGenerationNotice()` function
 2. `purchase-order-detail.tsx` — Added "Goods Received" history section displaying receipts
@@ -95,9 +95,10 @@ All INVFIX-06 features implemented and verified:
 11. `view/[token]/route.ts` — Mapping improvements (from Session 6)
 12. `public-payment-form.tsx` — onlinePaymentEnabled gating (from Session 6)
 13. `invoicing-constants.ts` — PAYMENT_METHOD_LABELS added
-14. `migrations/invfix-04-05-payment-settings.sql` — Complete with DROP/ADD/RPC/indexes
-15. `memory-bank/activeContext.md` — This update
-16. `memory-bank/progress.md` — Status update
+14. `invoice-activity-log.tsx` — Bill payment history icon support
+15. `migrations/invfix-04-05-payment-settings.sql` — Complete with DROP/ADD/RPC/indexes
+16. `memory-bank/activeContext.md` — This update
+17. `memory-bank/progress.md` — Status update
 
 **New (3):**
 
@@ -108,71 +109,14 @@ All INVFIX-06 features implemented and verified:
 ### Next Steps
 
 - **Domain system remaining work**: Transfer-out UI (backend exists, no UI), transfer status polling/webhooks, super admin domain pricing controls
-- **INVFIX-07**: Expenses — Approval Workflow, Receipt Viewer, Budgets
+- **INVFIX Session 8 should be INVFIX-07 only**: the expense subsystem already exists, but approval thresholds/notifications, receipt viewer, category budgets/overspend alerts, and mileage/per-diem closure are still open.
+- **Do not bundle INVFIX-08 into the next session**: reports overhaul already has a baseline, but cross-module revenue, export, and central hub completion are large enough to merit their own follow-up session.
+- **Repo path note**: `invfix-06-po-receive-vendor-enhance.sql` lives under the repo-root `migrations/` folder, not `next-platform-dashboard/migrations/`.
 - Do NOT reintroduce Stripe into the invoicing module
 
-## Previous: Session 7 — INVFIX-04/05 Closed + INVFIX-06 Complete ✅
+## Historical Notes
 
-### Session 7 (July 2026)
-
-### April 2026 Hotfix Findings
-
-The user's escalation was correct: Stripe was still present inside the invoicing module even though platform billing is Paddle-based, invoice/settings saves had real runtime breakage, and item prices could be entered with the wrong decimal semantics.
-
-**Root causes confirmed during debugging:**
-
-1. `settings-actions.ts` still mapped `stripeSecretKey -> stripe_secret_key`, but the live `mod_invmod01_settings` table does not have a `stripe_secret_key` column.
-2. `invoice-actions.ts` was still returning raw Supabase snake_case rows cast to camelCase TypeScript types, which broke invoice list/detail/public rendering after create/update.
-3. `items-catalog.tsx` asked users for `Unit Price (cents)` and stored the raw input directly, which caused visible decimal-place errors across the module.
-4. `app/api/invoicing/view/[token]/route.ts` was returning `discount_total` / `tax_total` instead of the actual `discount_amount` / `tax_amount` columns.
-
-**What landed in the working tree:**
-
-1. Removed Stripe-specific invoice-module UI/configuration from `invoicing-settings-form.tsx`, `public-payment-form.tsx`, `payment-types.ts`, `invoicing-constants.ts`, `payment-method-icon.tsx`, and the public payment API route.
-2. `settings-actions.ts` no longer attempts to update Stripe fields, so invoicing settings saves are aligned with the live DB schema.
-3. `invoice-actions.ts` now uses `mapRecord()` / `mapRecords()` on invoice read/create/update/public-token returns.
-4. `items-catalog.tsx` now accepts normal decimal currency entry and converts to cents internally.
-5. `app/api/invoicing/view/[token]/route.ts` now maps public invoice totals from `discount_amount` and `tax_amount`.
-6. Removed the last Stripe-specific label/color fallback from invoicing report code so the active invoice module no longer contains Stripe-specific implementation paths.
-
-**Current architectural direction:**
-
-- Paddle remains the platform billing/payment system.
-- The invoicing module is now aligned to manual collection flows (bank transfer, mobile money, cash, cheque, other) rather than embedded Stripe card collection.
-
-## Previous: Session 5 Audit — INVFIX-04 + INVFIX-05 Still Open ⚠️
-
-### Session 5 (INVFIX-04 Carryover + INVFIX-05): Significant Progress, Not Closed
-
-**What definitely landed in the working tree:**
-
-1. `settings-actions.ts` — Added missing fieldMap entries for `bankTransferInstructions`, `mobileMoneyInstructions`, `stripePublishableKey`, and `stripeEnabled`
-2. `payment-actions.ts` — Added `mapRecord()` / `mapRecords()` coverage for payment reads, plus receipt/export helpers
-3. `payment-list.tsx` — Added status filter, CSV export, reconciliation entry point, and correct payment-detail navigation
-4. `public-payment-form.tsx` — Expanded manual method instructions and added Stripe-facing UI state
-5. `recurring-actions.ts` — Added `getRecurringStats()` and cleaned up recurring/invoice mapping
-6. `recurring-engine-service.ts` — Added retry logic, `last_generated_at` idempotency check, and failure logging
-7. `recurring-list.tsx` / `recurring-detail.tsx` — Added summary cards, failed-generation alert, and better action error handling
-
-**Blocking carryover still remaining after audit:**
-
-1. `public-payment-form.tsx` + `pay/[token]/route.ts` do **not** implement a real Stripe checkout/payment-intent flow. The Stripe button falls back to a success state when no checkout URL is returned, and the API only records a pending payment.
-2. `public-payment-form.tsx` exposes Stripe UI from `stripeEnabled` + publishable key alone; `onlinePaymentEnabled` is fetched but not used to gate the card option.
-3. `invoicing-settings-form.tsx` only captures Stripe publishable key/toggle; the INVFIX-04 spec still calls for a real provider configuration path.
-4. `payment-actions.ts` defines `generateReceiptNumber()` but `getPaymentReceipt()` still derives the receipt number from `payment_number` instead of using a persisted dedicated receipt sequence.
-5. `recurring-form.tsx` still lacks client notification options and an in-form next-12-occurrence preview with amounts.
-6. `RecurringSchedulePreview` remains detail-page-only and still defaults to 10 upcoming dates.
-7. `recurring-actions.ts` still copies `recurring.client_name`, `recurring.client_email`, and `recurring.client_address` into generated invoices instead of resolving current linked client/company/customer data at generation time.
-8. `recurring-engine-service.ts` adds retry/logging, but still has no actual processing lock claim, no site-owner alert email, and no structured generation-history persistence.
-9. Repo portability risk: the live database already has the new payment-settings columns, but no matching SQL migration was found under `next-platform-dashboard/migrations` during audit.
-
-**Audit verdict:** INVFIX-04 and INVFIX-05 are **not closed** yet. TSC remains 219 (baseline) with no new broad regression signal.
-
-### Next Steps
-
-1. **Re-audit INVFIX-04 using the new manual-only payment direction**: confirm receipt numbering, reconciliation flow, and public payment UX all close cleanly without Stripe.
-2. **Continue INVFIX-05 carryover**: recurring notification options, in-form next-12 preview, current linked-client resolution on generation, and cron robustness still remain open.
-3. **Do not start INVFIX-06** until the payments + recurring carryover is re-audited clean.
+Earlier Session 5/6 carryover audit details are preserved in `progress.md`. Treat the Session 7 completion block above as the current invoicing source of truth.
 
 ## Previous: INVFIX-04 — Implemented, Session 5 Improved It, Final Closure Still Pending
 

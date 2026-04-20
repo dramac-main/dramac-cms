@@ -24,6 +24,7 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
   marked_sent: Send,
   viewed: Eye,
   payment_recorded: CreditCard,
+  bill_payment_recorded: CreditCard,
   voided: Ban,
   duplicated: Copy,
 };

@@ -100,6 +100,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
     onlinePaymentEnabled: false,
     bankTransferInstructions: "",
     mobileMoneyInstructions: "",
+    expenseApprovalThreshold: 50000,
+    expenseAutoApproveBelowThreshold: false,
+    mileageRatePerKm: 350,
   });
 
   // Tax rate creation
@@ -143,6 +146,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
             onlinePaymentEnabled: s.onlinePaymentEnabled ?? false,
             bankTransferInstructions: s.bankTransferInstructions ?? "",
             mobileMoneyInstructions: s.mobileMoneyInstructions ?? "",
+            expenseApprovalThreshold: s.expenseApprovalThreshold ?? 50000,
+            expenseAutoApproveBelowThreshold: s.expenseAutoApproveBelowThreshold ?? false,
+            mileageRatePerKm: s.mileageRatePerKm ?? 350,
           });
         }
         setTaxRates(rates);
@@ -303,6 +309,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
           <TabsTrigger value="tax">Tax Rates</TabsTrigger>
           <TabsTrigger value="late-fees">Late Fees</TabsTrigger>
           <TabsTrigger value="online-payments">Online Payments</TabsTrigger>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
         </TabsList>
 
         {/* General Tab */}
@@ -972,6 +979,105 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Expenses Tab */}
+        <TabsContent value="expenses" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Expense Approval</CardTitle>
+              <CardDescription>
+                Configure the expense approval workflow and thresholds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="expenseApprovalThreshold">
+                  Approval Threshold (amount in {form.defaultCurrency})
+                </Label>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Expenses above this amount always require manual approval.
+                </p>
+                <Input
+                  id="expenseApprovalThreshold"
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={form.expenseApprovalThreshold / 100}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      expenseApprovalThreshold: Math.round(
+                        parseFloat(e.target.value || "0") * 100,
+                      ),
+                    })
+                  }
+                  placeholder="500.00"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current: K{(form.expenseApprovalThreshold / 100).toFixed(2)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={form.expenseAutoApproveBelowThreshold}
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, expenseAutoApproveBelowThreshold: v })
+                  }
+                />
+                <div>
+                  <Label>Auto-approve below threshold</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Expenses below K{(form.expenseApprovalThreshold / 100).toFixed(2)} will be automatically approved on submission.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Mileage &amp; Per-Diem</CardTitle>
+              <CardDescription>
+                Configure rates for mileage reimbursement.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="mileageRatePerKm">
+                  Mileage Rate per Kilometre ({form.defaultCurrency})
+                </Label>
+                <Input
+                  id="mileageRatePerKm"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.mileageRatePerKm / 100}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      mileageRatePerKm: Math.round(
+                        parseFloat(e.target.value || "0") * 100,
+                      ),
+                    })
+                  }
+                  placeholder="3.50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current: K{(form.mileageRatePerKm / 100).toFixed(2)} per km
+                </p>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Mileage and per-diem expense types can be created as expense categories.
+                  The mileage rate here is used for reference and future automated calculations.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         </TabsContent>

@@ -14,6 +14,7 @@ import {
 import { ExpenseStatusBadge } from "./expense-status-badge";
 import { InvoiceActivityLog } from "./invoice-activity-log";
 import { AmountDisplay } from "./amount-display";
+import { ExpenseReceiptViewer } from "./expense-receipt-viewer";
 import {
   Card,
   CardContent,
@@ -44,9 +45,6 @@ import {
   CheckCircle,
   XCircle,
   Trash2,
-  ExternalLink,
-  Receipt,
-  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -155,7 +153,6 @@ export function ExpenseDetail({ siteId, expenseId }: ExpenseDetailProps) {
   const canEdit = !expense.isBilled && expense.status !== "void";
   const canApprove = expense.status === "pending";
   const canDelete = !expense.isBilled && expense.status !== "void";
-  const isImage = expense.receiptUrl?.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i);
 
   return (
     <div className="space-y-6">
@@ -380,50 +377,18 @@ export function ExpenseDetail({ siteId, expenseId }: ExpenseDetailProps) {
               <TabsContent value="receipt" className="mt-4">
                 <Card>
                   <CardContent className="pt-6">
-                    {isImage ? (
-                      <div className="space-y-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={expense.receiptUrl}
-                          alt="Receipt"
-                          className="max-w-full rounded-lg border"
-                        />
-                        <Button variant="outline" size="sm" asChild>
-                          <a
-                            href={expense.receiptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1.5" />
-                            Open Full Size
-                          </a>
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">
-                              {expense.receiptFilename || "Receipt"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              PDF Document
-                            </p>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <a
-                            href={expense.receiptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1.5" />
-                            View Receipt
-                          </a>
-                        </Button>
-                      </div>
-                    )}
+                    <ExpenseReceiptViewer
+                      receiptUrl={expense.receiptUrl}
+                      receiptFilename={expense.receiptFilename}
+                      mode="compact"
+                    />
+                    <div className="mt-3">
+                      <ExpenseReceiptViewer
+                        receiptUrl={expense.receiptUrl}
+                        receiptFilename={expense.receiptFilename}
+                        mode="full"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -484,6 +449,37 @@ export function ExpenseDetail({ siteId, expenseId }: ExpenseDetailProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Approval Status */}
+          {(expense.status === "approved" || expense.status === "rejected") && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">
+                  {expense.status === "approved" ? "Approval" : "Rejection"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {expense.approvedAt && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      {expense.status === "approved" ? "Approved" : "Rejected"} on
+                    </span>
+                    <p className="font-medium">
+                      {new Date(expense.approvedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                {expense.status === "rejected" && expense.rejectionReason && (
+                  <div>
+                    <span className="text-muted-foreground">Reason</span>
+                    <p className="font-medium text-destructive">
+                      {expense.rejectionReason}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

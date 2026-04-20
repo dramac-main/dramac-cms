@@ -211,7 +211,7 @@
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
 | INVFIX-12 | Delivery Notes, Route Cleanup, Admin Dashboard, Polish       | 📋 Not Started |
 
-**Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (10-session plan + prompts)
+**Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (13-session plan + prompts)
 
 **Scope:** Overhaul of existing invoicing module (187 files, 19 DB tables, 13 tabs). Fixes critical bugs (invoice number race condition, settings not auto-populating), adds missing features (delivery notes, email templates, dunning, reconciliation), expands Chiko AI to client portal, cleans up dead routes.
 
@@ -223,7 +223,9 @@
 
 **Session 6 post-audit note (April 18, 2026):** The code pass improved INVFIX-04/05 substantially, but a deeper audit found the work was not fully production-closed yet. **Resolved in Session 7** — see below.
 
-**Session 7 (July 2026):** Closed all 6 INVFIX-04/05 audit blockers: live schema verified complete (Stripe dropped, new columns/RPCs/indexes present), payment/receipt numbering hardened with advisory locks + unique constraints, receipt identifiers persisted at creation, pre-generation notification implemented in recurring engine, email sender uses shared `getEmailFrom()`. Then completed INVFIX-06: PO receive tracking (form + actions + receipt history display), bill payment recording (dialog + action + amounts cards), 3-way match (dialog + action + variance display), vendor enhancements (bank details + stats + rating). Migration `invfix-06-po-receive-vendor-enhance.sql` applied. 0 invoicing TSC errors, 219 baseline. 19 files modified/created.
+**Session 7 (July 2026):** Closed all 6 INVFIX-04/05 audit blockers: live schema verified complete (Stripe dropped, new columns/RPCs/indexes present), payment/receipt numbering hardened with advisory locks + unique constraints, receipt identifiers persisted at creation, pre-generation notification implemented in recurring engine, email sender uses shared `getEmailFrom()`. Then completed INVFIX-06: PO receive tracking (form + actions + receipt history display + persisted `received_by` audit field), bill payment recording (dialog + action + amounts cards + visible payment history), 3-way match (dialog + action + variance display), vendor enhancements (bank details + stats + rating). Migration `migrations/invfix-06-po-receive-vendor-enhance.sql` applied. 0 invoicing TSC errors, 219 baseline.
+
+**Next session recommendation:** Session 8 should be **INVFIX-07 only**. Expense list/form/detail/category/report surfaces already exist, but approval thresholds/notifications, receipt viewer, category budgets/overspend alerts, and mileage/per-diem closure are still open. Do **not** bundle INVFIX-08 until expense closure is clean.
 
 ---
 

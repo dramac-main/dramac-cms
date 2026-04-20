@@ -7,6 +7,8 @@ import {
   createExpenseCategory,
   updateExpenseCategory,
   deleteExpenseCategory,
+  getCategoryBudgetSpending,
+  type CategoryBudgetSpend,
 } from "../actions/expense-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,8 +42,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, FolderOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FolderOpen, AlertTriangle } from "lucide-react";
+import {
+  ShoppingCart,
+  Car,
+  Plane,
+  Building2,
+  Utensils,
+  Phone,
+  Monitor,
+  Briefcase,
+  Wrench,
+  Heart,
+  GraduationCap,
+  Package,
+  Fuel,
+  Zap,
+  Wifi,
+  Shield,
+  Printer,
+  Truck,
+  Users,
+  Gift,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+
+const ICON_OPTIONS: { value: string; label: string; icon: LucideIcon }[] = [
+  { value: "shopping-cart", label: "Shopping", icon: ShoppingCart },
+  { value: "car", label: "Vehicle", icon: Car },
+  { value: "plane", label: "Travel", icon: Plane },
+  { value: "building-2", label: "Office", icon: Building2 },
+  { value: "utensils", label: "Meals", icon: Utensils },
+  { value: "phone", label: "Phone", icon: Phone },
+  { value: "monitor", label: "Equipment", icon: Monitor },
+  { value: "briefcase", label: "Business", icon: Briefcase },
+  { value: "wrench", label: "Maintenance", icon: Wrench },
+  { value: "heart", label: "Health", icon: Heart },
+  { value: "graduation-cap", label: "Training", icon: GraduationCap },
+  { value: "package", label: "Supplies", icon: Package },
+  { value: "fuel", label: "Fuel", icon: Fuel },
+  { value: "zap", label: "Utilities", icon: Zap },
+  { value: "wifi", label: "Internet", icon: Wifi },
+  { value: "shield", label: "Insurance", icon: Shield },
+  { value: "printer", label: "Printing", icon: Printer },
+  { value: "truck", label: "Shipping", icon: Truck },
+  { value: "users", label: "Team", icon: Users },
+  { value: "gift", label: "Gifts", icon: Gift },
+];
+
+function getIconComponent(iconValue: string | null): LucideIcon | null {
+  if (!iconValue) return null;
+  return ICON_OPTIONS.find((o) => o.value === iconValue)?.icon || null;
+}
 
 const DEFAULT_COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
@@ -54,6 +108,7 @@ interface ExpenseCategoryManagerProps {
 
 export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [budgetSpending, setBudgetSpending] = useState<CategoryBudgetSpend[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
@@ -63,6 +118,8 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState(DEFAULT_COLORS[0]);
+  const [icon, setIcon] = useState("");
+  const [monthlyBudget, setMonthlyBudget] = useState("");
   const [parentId, setParentId] = useState("");
 
   useEffect(() => {
@@ -72,8 +129,12 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
   async function loadCategories() {
     setLoading(true);
     try {
-      const data = await getExpenseCategories(siteId);
+      const [data, spending] = await Promise.all([
+        getExpenseCategories(siteId),
+        getCategoryBudgetSpending(siteId),
+      ]);
       setCategories(data);
+      setBudgetSpending(spending);
     } catch {
       toast.error("Failed to load categories");
     } finally {
@@ -86,6 +147,8 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
     setName("");
     setDescription("");
     setColor(DEFAULT_COLORS[0]);
+    setIcon("");
+    setMonthlyBudget("");
     setParentId("");
     setDialogOpen(true);
   }
@@ -95,6 +158,8 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
     setName(cat.name);
     setDescription(cat.description || "");
     setColor(cat.color || DEFAULT_COLORS[0]);
+    setIcon(cat.icon || "");
+    setMonthlyBudget(cat.monthlyBudget ? String(cat.monthlyBudget / 100) : "");
     setParentId(cat.parentId || "");
     setDialogOpen(true);
   }
@@ -107,11 +172,14 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
 
     startTransition(async () => {
       try {
+        const budgetCents = monthlyBudget ? Math.round(parseFloat(monthlyBudget) * 100) : 0;
         if (editingCategory) {
           await updateExpenseCategory(editingCategory.id, {
             name: name.trim(),
             description: description.trim() || null,
             color,
+            icon: icon || null,
+            monthlyBudget: budgetCents,
             parentId: parentId || null,
           });
           toast.success("Category updated");
@@ -120,6 +188,8 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
             name: name.trim(),
             description: description.trim() || null,
             color,
+            icon: icon || null,
+            monthlyBudget: budgetCents,
             parentId: parentId || null,
           });
           toast.success("Category created");
@@ -220,6 +290,53 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
                 </div>
               </div>
               <div>
+                <Label>Icon</Label>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  <button
+                    type="button"
+                    className={`h-8 w-8 rounded border flex items-center justify-center text-xs transition-all ${
+                      !icon ? "border-foreground bg-muted" : "border-muted hover:border-muted-foreground"
+                    }`}
+                    onClick={() => setIcon("")}
+                    title="No icon"
+                  >
+                    —
+                  </button>
+                  {ICON_OPTIONS.map((opt) => {
+                    const IconComp = opt.icon;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`h-8 w-8 rounded border flex items-center justify-center transition-all ${
+                          icon === opt.value
+                            ? "border-foreground bg-muted"
+                            : "border-muted hover:border-muted-foreground"
+                        }`}
+                        onClick={() => setIcon(opt.value)}
+                        title={opt.label}
+                      >
+                        <IconComp className="h-4 w-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <Label>Monthly Budget (ZMW)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={monthlyBudget}
+                  onChange={(e) => setMonthlyBudget(e.target.value)}
+                  placeholder="0.00 (no limit)"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Leave at 0 or empty for no budget limit.
+                </p>
+              </div>
+              <div>
                 <Label>Parent Category</Label>
                 <Select value={parentId} onValueChange={setParentId}>
                   <SelectTrigger>
@@ -255,25 +372,33 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
           </div>
         ) : (
           <div className="space-y-1">
-            {topLevel.map((cat) => (
-              <div key={cat.id}>
-                <CategoryRow
-                  category={cat}
-                  onEdit={openEdit}
-                  onDelete={handleDelete}
-                  level={0}
-                />
-                {childrenOf(cat.id).map((child) => (
+            {topLevel.map((cat) => {
+              const spending = budgetSpending.find((b) => b.categoryId === cat.id);
+              return (
+                <div key={cat.id}>
                   <CategoryRow
-                    key={child.id}
-                    category={child}
+                    category={cat}
+                    spending={spending}
                     onEdit={openEdit}
                     onDelete={handleDelete}
-                    level={1}
+                    level={0}
                   />
-                ))}
-              </div>
-            ))}
+                  {childrenOf(cat.id).map((child) => {
+                    const childSpending = budgetSpending.find((b) => b.categoryId === child.id);
+                    return (
+                      <CategoryRow
+                        key={child.id}
+                        category={child}
+                        spending={childSpending}
+                        onEdit={openEdit}
+                        onDelete={handleDelete}
+                        level={1}
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>
@@ -283,30 +408,52 @@ export function ExpenseCategoryManager({ siteId }: ExpenseCategoryManagerProps) 
 
 function CategoryRow({
   category,
+  spending,
   onEdit,
   onDelete,
   level,
 }: {
   category: ExpenseCategory;
+  spending?: CategoryBudgetSpend;
   onEdit: (cat: ExpenseCategory) => void;
   onDelete: (id: string) => void;
   level: number;
 }) {
+  const IconComp = getIconComponent(category.icon);
+
   return (
     <div
       className="flex items-center justify-between py-2 px-2 rounded-md hover:bg-muted/50 group"
       style={{ paddingLeft: `${level * 24 + 8}px` }}
     >
-      <div className="flex items-center gap-2">
-        <span
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: category.color }}
-        />
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {IconComp ? (
+          <IconComp className="h-4 w-4 shrink-0" style={{ color: category.color }} />
+        ) : (
+          <span
+            className="h-3 w-3 rounded-full shrink-0"
+            style={{ backgroundColor: category.color }}
+          />
+        )}
         <span className="font-medium text-sm">{category.name}</span>
         {category.description && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground truncate">
             — {category.description}
           </span>
+        )}
+        {spending && spending.monthlyBudget > 0 && (
+          <div className="flex items-center gap-2 ml-auto mr-2">
+            <div className="w-24">
+              <Progress
+                value={Math.min(spending.percentUsed, 100)}
+                className={`h-1.5 ${spending.isOverBudget ? "[&>div]:bg-destructive" : ""}`}
+              />
+            </div>
+            <span className={`text-xs whitespace-nowrap ${spending.isOverBudget ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+              {spending.isOverBudget && <AlertTriangle className="h-3 w-3 inline mr-0.5" />}
+              K{(spending.spent / 100).toFixed(0)} / K{(spending.monthlyBudget / 100).toFixed(0)}
+            </span>
+          </div>
         )}
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

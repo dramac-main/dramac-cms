@@ -732,6 +732,9 @@ export async function receivePurchaseOrder(
   receipts: ReceiptInput[],
 ): Promise<{ receipts: POReceipt[]; newStatus: POStatus }> {
   const supabase = await getModuleClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: po } = await supabase
     .from(INV_TABLES.purchaseOrders)
@@ -742,10 +745,10 @@ export async function receivePurchaseOrder(
 
   if (!po) throw new Error("Purchase order not found");
 
-  if (
-    !["sent", "acknowledged", "partially_received"].includes(po.status)
-  ) {
-    throw new Error("PO must be sent, acknowledged, or partially received to receive goods");
+  if (!["sent", "acknowledged", "partially_received"].includes(po.status)) {
+    throw new Error(
+      "PO must be sent, acknowledged, or partially received to receive goods",
+    );
   }
 
   const lineItems: PurchaseOrderLineItem[] = po.metadata?.lineItems || [];
@@ -759,7 +762,9 @@ export async function receivePurchaseOrder(
       throw new Error(`Invalid line index: ${r.lineIndex}`);
     }
     if (r.receivedQuantity <= 0) {
-      throw new Error(`Received quantity must be positive for line ${r.lineIndex}`);
+      throw new Error(
+        `Received quantity must be positive for line ${r.lineIndex}`,
+      );
     }
   }
 
@@ -773,6 +778,7 @@ export async function receivePurchaseOrder(
       line_index: r.lineIndex,
       received_quantity: r.receivedQuantity,
       received_date: now,
+      received_by: user?.id || null,
       notes: r.notes || null,
     }));
 
@@ -781,7 +787,8 @@ export async function receivePurchaseOrder(
     .insert(insertRows)
     .select("*");
 
-  if (insertErr) throw new Error(`Failed to record receipts: ${insertErr.message}`);
+  if (insertErr)
+    throw new Error(`Failed to record receipts: ${insertErr.message}`);
 
   // Calculate total received per line across all receipts
   const { data: allReceipts } = await supabase
@@ -818,6 +825,7 @@ export async function receivePurchaseOrder(
   };
   if (allFullyReceived) {
     updateData.received_date = now;
+    updateData.received_by = user?.id || null;
   }
 
   await supabase
@@ -829,23 +837,21 @@ export async function receivePurchaseOrder(
     supabase,
     siteId,
     poId,
-    allFullyReceived ? "purchase_order_received" : "purchase_order_partial_receipt",
+    allFullyReceived
+      ? "purchase_order_received"
+      : "purchase_order_partial_receipt",
     `PO ${po.po_number}: ${receipts.length} line(s) received → ${newStatus}`,
   );
 
   if (allFullyReceived) {
     try {
-      await emitAutomationEvent(
-        siteId,
-        "accounting.purchase_order.received",
-        {
-          poNumber: po.po_number,
-          vendorId: po.vendor_id,
-          totalAmountCents: po.total,
-          currency: po.currency,
-          purchaseOrderId: poId,
-        },
-      );
+      await emitAutomationEvent(siteId, "accounting.purchase_order.received", {
+        poNumber: po.po_number,
+        vendorId: po.vendor_id,
+        totalAmountCents: po.total,
+        currency: po.currency,
+        purchaseOrderId: poId,
+      });
     } catch {
       // non-critical
     }

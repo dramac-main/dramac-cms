@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useTransition, useRef } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Bill, BillLineItem, Vendor } from "../types";
+import type { InvoiceActivity } from "../types/activity-types";
 import {
   getBill,
   approveBill,
@@ -13,6 +14,7 @@ import {
 import { BillPaymentDialog } from "./bill-payment-dialog";
 import { ThreeWayMatch } from "./three-way-match";
 import { AmountDisplay } from "./amount-display";
+import { InvoiceActivityLog } from "./invoice-activity-log";
 import { BILL_STATUS_CONFIG } from "../lib/invoicing-constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,14 @@ interface BillDetailProps {
 export function BillDetail({ siteId, billId }: BillDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [bill, setBill] = useState<Bill | null>(null);
+  const [bill, setBill] = useState<
+    | (Bill & {
+        vendor?: Vendor | null;
+        lineItems: BillLineItem[];
+        activity: InvoiceActivity[];
+      })
+    | null
+  >(null);
   const [lineItems, setLineItems] = useState<BillLineItem[]>([]);
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,6 +129,9 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
     bill.status === "overdue";
   const canVoid =
     bill.status !== "void" && bill.status !== "paid" && bill.amountPaid === 0;
+  const paymentActivity = bill.activity.filter(
+    (entry) => entry.action === "bill_payment_recorded",
+  );
 
   return (
     <div className="space-y-6">
@@ -271,6 +283,15 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InvoiceActivityLog activities={paymentActivity} />
+            </CardContent>
+          </Card>
 
           {/* Line Items */}
           <Card>
