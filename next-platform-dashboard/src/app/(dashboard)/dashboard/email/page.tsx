@@ -95,9 +95,9 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">10GB Storage</h4>
+              <h4 className="font-medium mb-1">Up to 50GB Storage</h4>
               <p className="text-sm text-muted-foreground">
-                Generous storage per mailbox
+                5GB, 10GB, or 50GB per mailbox depending on plan
               </p>
             </div>
             <div className="p-4 border rounded-lg">

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +30,7 @@ import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions
 import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
-import { Loader2, AlertCircle, Tag, TrendingDown, RefreshCw, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, AlertCircle, Tag, TrendingDown, RefreshCw, Check, ChevronDown, ChevronUp, Mail, Shield, HardDrive, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -502,38 +503,72 @@ export function EmailPurchaseWizard() {
     });
   }
 
+  // Period label helper
+  const getPeriodLabel = (m: number) => {
+    if (m === 1) return 'Monthly';
+    if (m === 3) return 'Quarterly';
+    if (m === 6) return 'Semi-Annual';
+    if (m === 12) return 'Annual';
+    return `${m} Months`;
+  };
+
+  const selectedMeta = resolvePlanMeta(selectedPlan);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* ================================================================ */}
-      {/* Step 1: Plan Selector */}
+      {/* Step 1: Choose Your Plan */}
       {/* ================================================================ */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-foreground">Select a plan</p>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">1</div>
+          <h2 className="text-base font-semibold">Choose Your Plan</h2>
+        </div>
 
         {pricingLoading ? (
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-3 gap-4">
             {[0, 1, 2].map(i => (
-              <div key={i} className="h-36 rounded-xl border bg-muted/30 animate-pulse" />
+              <div key={i} className="rounded-xl border bg-muted/20 animate-pulse">
+                <div className="h-3 bg-muted/60 rounded-t-xl" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 w-24 bg-muted/40 rounded" />
+                  <div className="h-8 w-20 bg-muted/40 rounded" />
+                  <div className="space-y-2">
+                    <div className="h-3 w-full bg-muted/30 rounded" />
+                    <div className="h-3 w-3/4 bg-muted/30 rounded" />
+                    <div className="h-3 w-5/6 bg-muted/30 rounded" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : pricingError ? (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5 flex flex-col items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive" />
-            <p className="text-sm text-destructive text-center">{pricingError}</p>
-            <Button variant="outline" size="sm" onClick={loadPricing}>
-              <RefreshCw className="h-3 w-3 mr-2" />
-              Retry
-            </Button>
-          </div>
+          <Card className="border-destructive/30">
+            <CardContent className="flex flex-col items-center gap-3 py-8">
+              <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-destructive" />
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-destructive">Unable to load pricing</p>
+                <p className="text-sm text-muted-foreground mt-1">{pricingError}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={loadPricing}>
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <div className={cn(
-            "grid gap-3",
-            availablePlans.length === 1 ? "grid-cols-1" :
+            "grid gap-4",
+            availablePlans.length === 1 ? "grid-cols-1 max-w-sm" :
             availablePlans.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"
           )}>
             {availablePlans.map(({ key, meta }) => {
               const pricing = allPricing[key];
               const startingPrice = pricing ? getStartingPrice(pricing) : null;
+              const yearlyRate = pricing ? getPerMonthRate(pricing, 1, 12) : null;
+              const yearlySavings = pricing ? getSavingsPercent(pricing, 1, 12) : 0;
               const isSelected = selectedPlan === key;
 
               return (
@@ -542,49 +577,93 @@ export function EmailPurchaseWizard() {
                   type="button"
                   onClick={() => setSelectedPlan(key)}
                   className={cn(
-                    "relative text-left rounded-xl border p-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "group relative text-left rounded-xl border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden",
                     isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border bg-card hover:border-primary/40 hover:bg-accent/20"
+                      ? "border-primary shadow-md shadow-primary/10"
+                      : "border-border hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
+                  {/* Colored top bar */}
+                  <div className={cn(
+                    "h-1.5 w-full transition-colors",
+                    isSelected ? "bg-primary" : "bg-muted group-hover:bg-primary/30"
+                  )} />
+
                   {meta.isPopular && (
-                    <Badge className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[10px] px-2 py-0 h-5">
-                      Most Popular
+                    <Badge className="absolute top-4 right-3 bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                      Popular
                     </Badge>
                   )}
 
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                      <Check className="h-3 w-3 text-primary-foreground" />
+                  <div className="p-5">
+                    {/* Plan name & tagline */}
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2">
+                        <HardDrive className={cn("h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground")} />
+                        <h3 className={cn("font-semibold", isSelected && "text-primary")}>
+                          {meta.name}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{meta.tagline}</p>
                     </div>
-                  )}
 
-                  <div className="flex items-start gap-2 mb-3 pr-6">
-                    <div>
-                      <p className={cn("font-semibold text-sm", isSelected && "text-primary")}>
-                        {meta.name} Email
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{meta.tagline}</p>
+                    {/* Pricing */}
+                    <div className="mb-4">
+                      {startingPrice != null ? (
+                        <>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold">{formatCurrency(startingPrice, "USD")}</span>
+                            <span className="text-xs text-muted-foreground">/mo</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">per mailbox · billed monthly</p>
+                          {yearlyRate != null && yearlySavings > 0 && (
+                            <p className="text-[11px] text-green-600 dark:text-green-400 mt-0.5">
+                              {formatCurrency(yearlyRate, "USD")}/mo billed annually (save {yearlySavings}%)
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Pricing unavailable</p>
+                      )}
                     </div>
-                    {startingPrice != null && (
-                      <div className="ml-auto text-right shrink-0">
-                        <p className="text-sm font-bold">
-                          {formatCurrency(startingPrice, "USD")}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">/mo/mailbox</p>
+
+                    {/* Storage highlight */}
+                    {meta.storageGB > 0 && (
+                      <div className={cn(
+                        "rounded-lg px-3 py-2 mb-3 text-xs font-medium",
+                        isSelected ? "bg-primary/10 text-primary" : "bg-muted text-foreground"
+                      )}>
+                        {meta.storageGB} GB storage per mailbox
                       </div>
                     )}
+
+                    {/* Features */}
+                    <ul className="space-y-1.5">
+                      {meta.features.map(f => (
+                        <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <Check className={cn("h-3.5 w-3.5 shrink-0 mt-0.5", isSelected ? "text-primary" : "text-green-500")} />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <ul className="space-y-1">
-                    {meta.features.slice(0, 4).map(f => (
-                      <li key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Check className="h-3 w-3 text-primary shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Selection indicator */}
+                  <div className={cn(
+                    "px-5 py-3 text-center text-xs font-medium border-t transition-colors",
+                    isSelected
+                      ? "bg-primary/5 text-primary border-primary/20"
+                      : "bg-muted/30 text-muted-foreground border-border"
+                  )}>
+                    {isSelected ? (
+                      <span className="flex items-center justify-center gap-1.5">
+                        <Check className="h-3.5 w-3.5" />
+                        Selected
+                      </span>
+                    ) : (
+                      "Select Plan"
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -593,10 +672,16 @@ export function EmailPurchaseWizard() {
       </div>
 
       {/* ================================================================ */}
-      {/* Step 2: Configuration + Pricing */}
+      {/* Step 2: Configure Your Order */}
       {/* ================================================================ */}
       <Card>
-        <CardContent className="pt-5">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">2</div>
+            <CardTitle className="text-base">Configure Your Order</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
@@ -606,223 +691,235 @@ export function EmailPurchaseWizard() {
                 name="domainName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Domain</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5">
+                      <Globe className="h-3.5 w-3.5" />
+                      Domain Name
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="yourdomain.com" {...field} className="font-mono" />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      Your email addresses will be @{field.value || 'yourdomain.com'}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Mailboxes + Period */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="numberOfAccounts"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mailboxes</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {[1, 2, 3, 5, 10, 15, 20, 25, 50, 100].map(n => (
-                            <SelectItem key={n} value={String(n)}>
-                              {n} {n === 1 ? "Mailbox" : "Mailboxes"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Mailboxes */}
+              <FormField
+                control={form.control}
+                name="numberOfAccounts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5" />
+                      Number of Mailboxes
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[1, 2, 3, 5, 10, 15, 20, 25, 50, 100].map(n => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} {n === 1 ? "Mailbox" : "Mailboxes"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="months"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Billing Period</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availableMonths.map(m => {
-                            const p = allPricing[selectedPlan];
-                            const s = p ? getSavingsPercent(p, numberOfAccounts, m) : 0;
-                            return (
-                              <SelectItem key={m} value={String(m)}>
-                                <span className="flex items-center gap-2">
-                                  {m === 1 ? '1 Month' : `${m} Months`}
-                                  {s > 0 && (
-                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                                      Save {s}%
-                                    </span>
-                                  )}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Billing Period — Visual tiles */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5" />
+                  Billing Period
+                </label>
+                <div className={cn(
+                  "grid gap-2",
+                  availableMonths.length <= 2 ? "grid-cols-2" :
+                  availableMonths.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"
+                )}>
+                  {availableMonths.map(m => {
+                    const p = allPricing[selectedPlan];
+                    const perMonth = p ? getPerMonthRate(p, numberOfAccounts, m) : null;
+                    const savingsPct = p ? getSavingsPercent(p, numberOfAccounts, m) : 0;
+                    const isActive = m === months;
+                    const bestValue = m === 12 && savingsPct > 0;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => form.setValue('months', String(m))}
+                        className={cn(
+                          "relative rounded-lg border-2 p-3 text-center transition-all",
+                          isActive
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/40"
+                        )}
+                      >
+                        {bestValue && (
+                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0 h-5 whitespace-nowrap">
+                            Best Value
+                          </Badge>
+                        )}
+                        {!bestValue && savingsPct > 0 && (
+                          <Badge
+                            className={cn(
+                              "absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] px-2 py-0 h-5 whitespace-nowrap",
+                              isActive
+                                ? "bg-green-600 text-white"
+                                : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                            )}
+                          >
+                            Save {savingsPct}%
+                          </Badge>
+                        )}
+                        <p className={cn(
+                          "text-sm font-semibold",
+                          isActive ? "text-primary" : "text-foreground"
+                        )}>
+                          {getPeriodLabel(m)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {m === 1 ? '1 month' : `${m} months`}
+                        </p>
+                        {perMonth != null && (
+                          <p className={cn(
+                            "text-xs font-medium mt-1.5",
+                            isActive ? "text-primary" : "text-foreground"
+                          )}>
+                            {formatCurrency(perMonth, "USD")}<span className="text-muted-foreground font-normal">/mo</span>
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <Separator />
 
               {/* ============================================================ */}
-              {/* Pricing Summary */}
+              {/* Step 3: Order Summary */}
               {/* ============================================================ */}
-              {pricingLoading ? (
-                <div className="bg-muted/50 border rounded-lg p-8 flex flex-col items-center justify-center gap-3">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Loading pricing...</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">3</div>
+                  <h3 className="text-base font-semibold">Order Summary</h3>
                 </div>
-              ) : pricingError ? (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex flex-col items-center gap-3">
-                  <AlertCircle className="h-6 w-6 text-destructive" />
-                  <p className="text-sm text-destructive">{pricingError}</p>
-                  <Button variant="outline" size="sm" onClick={loadPricing}>
-                    <RefreshCw className="h-3 w-3 mr-2" />
-                    Retry
-                  </Button>
-                </div>
-              ) : pricingDetails?.total != null ? (
-                <div className="space-y-4">
-                  {/* Period comparison tiles */}
-                  {availableMonths.length > 1 && (
-                    <div className={cn("grid gap-2", availableMonths.length <= 3 ? "grid-cols-3" : "grid-cols-4")}>
-                      {availableMonths.map(m => {
-                        const p = allPricing[selectedPlan];
-                        const perMonth = p ? getPerMonthRate(p, numberOfAccounts, m) : null;
-                        const savingsPct = p ? getSavingsPercent(p, numberOfAccounts, m) : 0;
-                        const isActive = m === months;
-                        return (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => form.setValue('months', String(m))}
-                            className={cn(
-                              "relative rounded-lg border p-2.5 text-center transition-all",
-                              isActive
-                                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
-                            {savingsPct > 0 && (
-                              <Badge
-                                className={cn(
-                                  "absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-1.5 py-0 h-4",
-                                  isActive
-                                    ? "bg-green-600 text-white"
-                                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                )}
-                              >
-                                -{savingsPct}%
-                              </Badge>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mb-0.5">
-                              {m === 1 ? '1 mo' : `${m} mo`}
-                            </p>
-                            <p className={cn("text-xs font-semibold", isActive && "text-primary")}>
-                              {perMonth != null ? formatCurrency(perMonth, "USD") : '—'}
-                            </p>
-                            <p className="text-[9px] text-muted-foreground">/mo</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
 
-                  {/* Price breakdown */}
-                  <div className="bg-gradient-to-br from-muted/50 to-muted border rounded-xl p-5 space-y-2 text-sm">
-                    {/* Hero rate */}
-                    <div className="flex items-start justify-between mb-1">
-                      <div>
-                        <div className="flex items-baseline gap-2">
-                          {pricingDetails.savings > 0 && pricingDetails.monthlyRefRate != null && (
-                            <span className="text-lg text-muted-foreground line-through">
-                              {formatCurrency(pricingDetails.monthlyRefRate, "USD")}
-                            </span>
-                          )}
-                          <span className="text-3xl font-bold">
-                            {formatCurrency(pricingDetails.perMonthPerAccount || 0, "USD")}
-                          </span>
-                          <span className="text-muted-foreground text-xs">/mo per mailbox</span>
+                {pricingLoading ? (
+                  <div className="border rounded-xl p-8 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Calculating pricing...</p>
+                  </div>
+                ) : pricingError ? (
+                  <div className="border border-destructive/20 bg-destructive/5 rounded-xl p-6 flex flex-col items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                    <p className="text-sm text-destructive">{pricingError}</p>
+                    <Button variant="outline" size="sm" onClick={loadPricing}>
+                      <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                      Retry
+                    </Button>
+                  </div>
+                ) : pricingDetails?.total != null ? (
+                  <div className="border rounded-xl overflow-hidden">
+                    {/* Summary header */}
+                    <div className="bg-muted/50 px-5 py-3 border-b">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{selectedMeta.name} Email</p>
+                          <p className="text-xs text-muted-foreground">
+                            {numberOfAccounts} mailbox{numberOfAccounts > 1 ? 'es' : ''} · {getPeriodLabel(months)}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {resolvePlanMeta(selectedPlan).name} Email · {months}-month term
-                        </p>
+                        {pricingDetails.savings > 0 && (
+                          <Badge className="bg-green-600 hover:bg-green-600 text-white">
+                            <TrendingDown className="h-3 w-3 mr-1" />
+                            {pricingDetails.savings}% off
+                          </Badge>
+                        )}
                       </div>
-                      {pricingDetails.savings > 0 && (
-                        <Badge className="bg-green-600 hover:bg-green-600 text-white shrink-0">
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                          Save {pricingDetails.savings}%
-                        </Badge>
+                    </div>
+
+                    {/* Price details */}
+                    <div className="px-5 py-4 space-y-3 text-sm">
+                      {/* Per-account rate */}
+                      <div className="flex items-baseline justify-between">
+                        <div>
+                          <span className="text-muted-foreground">Per mailbox rate</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-baseline gap-2">
+                            {pricingDetails.savings > 0 && pricingDetails.monthlyRefRate != null && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {formatCurrency(pricingDetails.monthlyRefRate, "USD")}
+                              </span>
+                            )}
+                            <span className="font-semibold">
+                              {formatCurrency(pricingDetails.perMonthPerAccount || 0, "USD")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">/mo</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Line items */}
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>{numberOfAccounts} mailbox{numberOfAccounts > 1 ? 'es' : ''} × {months} month{months > 1 ? 's' : ''}</span>
+                        <span>{formatCurrency(pricingDetails.total, "USD")}</span>
+                      </div>
+
+                      {pricingDetails.savings > 0 && pricingDetails.monthlyRefRate != null && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span className="flex items-center gap-1">
+                            <Tag className="h-3 w-3" />
+                            {getPeriodLabel(months)} discount
+                          </span>
+                          <span>
+                            -{formatCurrency(
+                              pricingDetails.monthlyRefRate * months * numberOfAccounts - pricingDetails.total,
+                              "USD"
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      <Separator />
+
+                      {/* Total */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-base font-semibold">Total due today</span>
+                        <span className="text-xl font-bold">{formatCurrency(pricingDetails.total, "USD")}</span>
+                      </div>
+
+                      {pricingDetails.renewTotal != null &&
+                        pricingDetails.total != null &&
+                        Math.abs(pricingDetails.renewTotal - pricingDetails.total) > 0.01 && (
+                        <p className="text-xs text-muted-foreground text-right">
+                          Renews at {formatCurrency(pricingDetails.renewTotal, "USD")} / {getPeriodLabel(months).toLowerCase()}
+                        </p>
                       )}
                     </div>
-
-                    <Separator />
-
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {numberOfAccounts} mailbox{numberOfAccounts > 1 ? 'es' : ''} × {months} month{months > 1 ? 's' : ''}
-                      </span>
-                      <span className="font-medium">{formatCurrency(pricingDetails.total, "USD")}</span>
-                    </div>
-
-                    {pricingDetails.savings > 0 && pricingDetails.monthlyRefRate != null && (
-                      <div className="flex justify-between text-green-600 dark:text-green-400">
-                        <span className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {months}-month discount
-                        </span>
-                        <span>
-                          -{formatCurrency(
-                            pricingDetails.monthlyRefRate * months * numberOfAccounts - pricingDetails.total,
-                            "USD"
-                          )}
-                        </span>
-                      </div>
-                    )}
-
-                    <Separator />
-
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Total due today</span>
-                      <span className="text-lg">{formatCurrency(pricingDetails.total, "USD")}</span>
-                    </div>
-
-                    {pricingDetails.renewTotal != null &&
-                      pricingDetails.total != null &&
-                      Math.abs(pricingDetails.renewTotal - pricingDetails.total) > 0.01 && (
-                      <p className="text-xs text-muted-foreground text-right">
-                        Renews at {formatCurrency(pricingDetails.renewTotal, "USD")} every {months} month{months > 1 ? 's' : ''}
-                      </p>
-                    )}
                   </div>
-                </div>
-              ) : !pricingLoading && !pricingError ? (
-                <div className="bg-muted p-4 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No pricing available for the selected options. Try different settings.
-                  </p>
-                </div>
-              ) : null}
+                ) : !pricingLoading && !pricingError ? (
+                  <div className="border rounded-xl p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      No pricing available for the selected options. Try different settings.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 pt-1">
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel
                 </Button>
@@ -830,7 +927,7 @@ export function EmailPurchaseWizard() {
                   type="submit"
                   size="lg"
                   disabled={isPending || pricingLoading || !!pricingError || pricingDetails?.total == null}
-                  className="flex-1 sm:flex-none"
+                  className="flex-1"
                 >
                   {isPending ? (
                     <>
@@ -838,15 +935,15 @@ export function EmailPurchaseWizard() {
                       Processing...
                     </>
                   ) : pricingDetails?.total != null ? (
-                    <>Purchase — {formatCurrency(pricingDetails.total, "USD")}</>
+                    <>Continue to Payment — {formatCurrency(pricingDetails.total, "USD")}</>
                   ) : (
                     'Purchase Email'
                   )}
                 </Button>
               </div>
 
-              <p className="text-[11px] text-muted-foreground text-center">
-                Paid upfront for the selected period. Pricing updates automatically.
+              <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                You&apos;ll be redirected to our secure checkout. Paid upfront for the selected period.
               </p>
             </form>
           </Form>
@@ -857,11 +954,11 @@ export function EmailPurchaseWizard() {
       {/* Compare Plans */}
       {/* ================================================================ */}
       {availablePlans.length > 1 && !pricingLoading && (
-        <div className="border rounded-xl overflow-hidden">
+        <Card>
           <button
             type="button"
             onClick={() => setComparePlansOpen(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/40 transition-colors"
+            className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium hover:bg-muted/40 transition-colors"
           >
             <span>Compare all plans</span>
             {comparePlansOpen
@@ -871,14 +968,14 @@ export function EmailPurchaseWizard() {
           </button>
 
           {comparePlansOpen && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-t">
+            <div className="overflow-x-auto border-t">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/40">
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-36">Feature</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground w-36">Feature</th>
                     {availablePlans.map(({ key, meta }) => (
-                      <th key={key} className="text-center px-4 py-2.5 font-medium">
-                        <span className={cn(selectedPlan === key && "text-primary")}>
+                      <th key={key} className="text-center px-4 py-3 font-medium">
+                        <span className={cn(selectedPlan === key && "text-primary font-semibold")}>
                           {meta.name}
                         </span>
                       </th>
@@ -888,21 +985,21 @@ export function EmailPurchaseWizard() {
                 <tbody className="divide-y">
                   {/* Storage */}
                   <tr>
-                    <td className="px-4 py-2.5 text-muted-foreground">Storage</td>
+                    <td className="px-5 py-3 text-muted-foreground">Storage</td>
                     {availablePlans.map(({ key, meta }) => (
-                      <td key={key} className="px-4 py-2.5 text-center font-medium">
+                      <td key={key} className="px-4 py-3 text-center font-medium">
                         {meta.storageGB > 0 ? `${meta.storageGB} GB` : '—'}
                       </td>
                     ))}
                   </tr>
                   {/* Starting price */}
                   <tr className="bg-muted/20">
-                    <td className="px-4 py-2.5 text-muted-foreground">From (1 mo)</td>
+                    <td className="px-5 py-3 text-muted-foreground">Monthly</td>
                     {availablePlans.map(({ key }) => {
                       const p = allPricing[key];
                       const price = p ? getStartingPrice(p) : null;
                       return (
-                        <td key={key} className={cn("px-4 py-2.5 text-center font-semibold", selectedPlan === key && "text-primary")}>
+                        <td key={key} className={cn("px-4 py-3 text-center font-semibold", selectedPlan === key && "text-primary")}>
                           {price != null ? `${formatCurrency(price, 'USD')}/mo` : '—'}
                         </td>
                       );
@@ -910,13 +1007,13 @@ export function EmailPurchaseWizard() {
                   </tr>
                   {/* 12-month price */}
                   <tr>
-                    <td className="px-4 py-2.5 text-muted-foreground">From (12 mo)</td>
+                    <td className="px-5 py-3 text-muted-foreground">Annual</td>
                     {availablePlans.map(({ key }) => {
                       const p = allPricing[key];
                       const price = p ? getPerMonthRate(p, 1, 12) : null;
                       const savings = p ? getSavingsPercent(p, 1, 12) : 0;
                       return (
-                        <td key={key} className="px-4 py-2.5 text-center">
+                        <td key={key} className="px-4 py-3 text-center">
                           {price != null ? (
                             <span className="flex flex-col items-center gap-0.5">
                               <span className={cn("font-semibold", selectedPlan === key && "text-primary")}>
@@ -941,11 +1038,11 @@ export function EmailPurchaseWizard() {
                     'Advanced admin controls',
                   ].map(feature => (
                     <tr key={feature} className="odd:bg-muted/10">
-                      <td className="px-4 py-2.5 text-muted-foreground">{feature}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{feature}</td>
                       {availablePlans.map(({ key, meta }) => (
-                        <td key={key} className="px-4 py-2.5 text-center">
+                        <td key={key} className="px-4 py-3 text-center">
                           {meta.features.includes(feature)
-                            ? <Check className="h-4 w-4 text-primary mx-auto" />
+                            ? <Check className="h-4 w-4 text-green-500 mx-auto" />
                             : <span className="text-muted-foreground/40 text-base leading-none">—</span>
                           }
                         </td>
@@ -956,7 +1053,7 @@ export function EmailPurchaseWizard() {
               </table>
             </div>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

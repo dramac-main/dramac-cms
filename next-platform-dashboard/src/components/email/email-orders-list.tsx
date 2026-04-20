@@ -27,6 +27,36 @@ import {
 } from "lucide-react";
 import type { EmailOrder } from "@/lib/resellerclub/email/types";
 
+// Plan name resolution from product key
+function getPlanDisplayName(productKey: string): string {
+  const PLAN_NAMES: Record<string, string> = {
+    eeliteus: 'Business Email',
+    eelitein: 'Business Email',
+    eeliteuk: 'Business Email',
+    enterpriseemailus: 'Enterprise Email',
+    enterpriseemailin: 'Enterprise Email',
+    titanmailglobal: 'Titan Email',
+    titanmailindia: 'Titan Email',
+  };
+  // Check for Titan Mail plan IDs
+  const titanMatch = productKey.match(/^titanmail(?:global|india)_(\d+)$/);
+  if (titanMatch) {
+    const planId = parseInt(titanMatch[1], 10);
+    const TITAN_NAMES: Record<number, string> = {
+      1762: 'Professional Email',
+      1761: 'Professional Email',
+      1756: 'Business Email',
+      1758: 'Business Email',
+      1757: 'Enterprise Email',
+      1759: 'Enterprise Email',
+      1755: 'Business Email (Trial)',
+      1760: 'Business Email (Trial)',
+    };
+    return TITAN_NAMES[planId] || 'Titan Email';
+  }
+  return PLAN_NAMES[productKey] || 'Business Email';
+}
+
 interface EmailOrdersListProps {
   orders: (EmailOrder & {
     domain?: { id: string; domain_name: string; status: string } | null;
@@ -108,7 +138,7 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
                 {order.client && (
                   <span>Client: {order.client.name}</span>
                 )}
-                <span>Plan: Business Email</span>
+                <span>Plan: {getPlanDisplayName(order.product_key)}</span>
               </div>
             </div>
           </div>
