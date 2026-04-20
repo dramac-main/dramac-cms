@@ -1433,7 +1433,8 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
             items: "{{trigger.items}}",
             total: "{{trigger.total}}",
           },
-          subject_override: "Order Created from Quote — #{{trigger.quoteNumber}}",
+          subject_override:
+            "Order Created from Quote — #{{trigger.quoteNumber}}",
         },
         name: "Email Customer — Order from Quote",
       },
@@ -1450,7 +1451,8 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
             items: "{{trigger.items}}",
             total: "{{trigger.total}}",
           },
-          subject_override: "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
+          subject_override:
+            "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
         },
         name: "Email Owner — Quote Converted to Order",
       },
@@ -1733,7 +1735,8 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
             daysOverdue: "8",
             viewUrl: "{{trigger.viewUrl}}",
           },
-          subject_override: "Second Notice — Invoice {{trigger.invoiceNumber}} is Now Overdue",
+          subject_override:
+            "Second Notice — Invoice {{trigger.invoiceNumber}} is Now Overdue",
         },
         name: "Send Firmer Reminder Email",
       },

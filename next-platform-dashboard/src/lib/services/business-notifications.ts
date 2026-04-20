@@ -166,10 +166,7 @@ async function resolveBusinessOwner(
     .single();
 
   if (!agency?.owner_id) {
-    console.error(
-      "[BusinessNotify] Agency owner not found for site:",
-      siteId,
-    );
+    console.error("[BusinessNotify] Agency owner not found for site:", siteId);
     return null;
   }
 
@@ -223,7 +220,10 @@ async function createClientPortalNotification(
       metadata: (notification.metadata || {}) as unknown as Json,
     } as never);
   } catch (error) {
-    console.error("[BusinessNotify] Error creating portal notification:", error);
+    console.error(
+      "[BusinessNotify] Error creating portal notification:",
+      error,
+    );
   }
 }
 
@@ -1045,7 +1045,11 @@ export async function notifyNewOrder(
       title: `New Order #${data.orderNumber}`,
       message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
       link: `/portal/orders`,
-      metadata: { orderId: data.orderId, orderNumber: data.orderNumber, siteId: data.siteId },
+      metadata: {
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+        siteId: data.siteId,
+      },
     });
 
     // 2. Email to business owner
@@ -1853,7 +1857,11 @@ export async function notifyNewQuote(
       title: `New Quote Request #${data.quoteNumber}`,
       message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
       link: `/portal/quotes`,
-      metadata: { quoteId: data.quoteId, quoteNumber: data.quoteNumber, siteId: data.siteId },
+      metadata: {
+        quoteId: data.quoteId,
+        quoteNumber: data.quoteNumber,
+        siteId: data.siteId,
+      },
     });
 
     // 2 & 3. Emails in parallel

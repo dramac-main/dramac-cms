@@ -137,9 +137,7 @@ function resolveTriggerVariables(
 
   if (value !== null && typeof value === "object") {
     const resolved: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(
-      value as Record<string, unknown>,
-    )) {
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
       resolved[key] = resolveTriggerVariables(val, trigger);
     }
     return resolved;

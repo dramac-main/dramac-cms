@@ -278,8 +278,16 @@ export async function createConversation(data: {
     // Even if auto-assigned, the owner should know about new chats.
     // If NOT assigned, this is critical — the chat would otherwise go unnoticed.
     const chatUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/live-chat`;
-    notifyOwnerOfNewChat(data.siteId, conversation.id, data.subject, data.channel || "widget", chatUrl, assigned)
-      .catch((err) => console.error("[LiveChat] Owner notification error:", err));
+    notifyOwnerOfNewChat(
+      data.siteId,
+      conversation.id,
+      data.subject,
+      data.channel || "widget",
+      chatUrl,
+      assigned,
+    ).catch((err) =>
+      console.error("[LiveChat] Owner notification error:", err),
+    );
 
     // Emit automation event for new conversation
     logAutomationEvent(

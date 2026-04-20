@@ -12,9 +12,9 @@ export function EmailWebmailLink({ domain }: EmailWebmailLinkProps) {
 
   return (
     <Button variant="outline" asChild>
-      <a 
+      <a
         href={webmailUrl}
-        target="_blank" 
+        target="_blank"
         rel="noopener noreferrer"
         aria-label={domain ? `Open webmail for ${domain}` : "Open webmail"}
       >

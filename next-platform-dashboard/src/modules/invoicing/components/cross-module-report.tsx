@@ -9,11 +9,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { DateRangeFilter, getDefaultDateRange } from "./date-range-filter";
 import {
   getCrossModuleRevenue,
@@ -134,6 +135,7 @@ export function CrossModuleReport() {
           <TabsList>
             <TabsTrigger value="revenue">Revenue Overview</TabsTrigger>
             <TabsTrigger value="clients">Client Activity</TabsTrigger>
+            <TabsTrigger value="health">Module Health</TabsTrigger>
           </TabsList>
 
           <TabsContent value="revenue" className="space-y-6 mt-4">
@@ -144,6 +146,16 @@ export function CrossModuleReport() {
 
           <TabsContent value="clients" className="space-y-6 mt-4">
             {clientData && <ClientTab data={clientData} currency={currency} />}
+          </TabsContent>
+
+          <TabsContent value="health" className="space-y-6 mt-4">
+            {revenueData && clientData && (
+              <HealthTab
+                revenueData={revenueData}
+                clientData={clientData}
+                currency={currency}
+              />
+            )}
           </TabsContent>
         </Tabs>
       )}
@@ -533,6 +545,177 @@ function ClientTab({
           )}
         </CardContent>
       </Card>
+    </>
+  );
+}
+
+// ─── Module Health Tab ─────────────────────────────────────────
+
+interface HealthTabProps {
+  revenueData: CrossModuleRevenue;
+  clientData: CrossModuleClientReport;
+  currency: string;
+}
+
+function HealthTab({ revenueData, clientData, currency }: HealthTabProps) {
+  // Derive health metrics from existing data
+  const sources = revenueData.bySource;
+  const invoicingSource = sources.find((s) => s.source === "invoicing");
+  const ecommerceSource = sources.find((s) => s.source === "ecommerce");
+  const bookingSource = sources.find((s) => s.source === "booking");
+
+  const totalRevenue = revenueData.totalRevenue || 1; // avoid div/0
+
+  // Client concentration: top client % of total
+  const topClientRevenue = clientData.clients[0]?.totalRevenue ?? 0;
+  const clientConcentration = Math.round(
+    (topClientRevenue / (clientData.totalRevenue || 1)) * 100,
+  );
+
+  // Revenue diversity: how many sources contribute >10%
+  const activeSources = sources.filter(
+    (s) => s.amount / totalRevenue > 0.1,
+  ).length;
+
+  const modules = [
+    {
+      name: "Invoicing",
+      color: "#3b82f6",
+      revenue: invoicingSource?.amount ?? 0,
+      transactions: invoicingSource?.count ?? 0,
+      share: Math.round(((invoicingSource?.amount ?? 0) / totalRevenue) * 100),
+      status: (invoicingSource?.amount ?? 0) > 0 ? "active" : "inactive",
+    },
+    {
+      name: "E-Commerce",
+      color: "#22c55e",
+      revenue: ecommerceSource?.amount ?? 0,
+      transactions: ecommerceSource?.count ?? 0,
+      share: Math.round(((ecommerceSource?.amount ?? 0) / totalRevenue) * 100),
+      status: (ecommerceSource?.amount ?? 0) > 0 ? "active" : "inactive",
+    },
+    {
+      name: "Bookings",
+      color: "#f59e0b",
+      revenue: bookingSource?.amount ?? 0,
+      transactions: bookingSource?.count ?? 0,
+      share: Math.round(((bookingSource?.amount ?? 0) / totalRevenue) * 100),
+      status: (bookingSource?.amount ?? 0) > 0 ? "active" : "inactive",
+    },
+  ];
+
+  // Overall health score (0-100) based on diversity + activity
+  const healthScore = Math.min(
+    100,
+    activeSources * 25 + // up to 75 for 3 active sources
+      (clientConcentration < 30 ? 25 : clientConcentration < 50 ? 15 : 5), // diversified clients
+  );
+
+  const healthLabel =
+    healthScore >= 70 ? "Healthy" : healthScore >= 40 ? "Fair" : "Needs Work";
+  const healthColor =
+    healthScore >= 70
+      ? "text-green-600"
+      : healthScore >= 40
+        ? "text-yellow-600"
+        : "text-red-600";
+
+  return (
+    <>
+      {/* Overall Platform Health */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Platform Health Score
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <p className={`text-4xl font-bold ${healthColor}`}>
+                {healthScore}
+              </p>
+              <p className={`text-sm font-medium ${healthColor}`}>
+                {healthLabel}
+              </p>
+            </div>
+            <div className="flex-1 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Revenue Sources Active
+                </span>
+                <span className="font-medium">{activeSources} of 3</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Client Concentration (Top Client)
+                </span>
+                <Badge
+                  variant="outline"
+                  className={
+                    clientConcentration > 50
+                      ? "border-red-500 text-red-700"
+                      : clientConcentration > 30
+                        ? "border-yellow-500 text-yellow-700"
+                        : "border-green-500 text-green-700"
+                  }
+                >
+                  {clientConcentration}%
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Clients</span>
+                <span className="font-medium">{clientData.totalClients}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Per-Module Scorecards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {modules.map((mod) => (
+          <Card key={mod.name}>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{mod.name}</CardTitle>
+                <Badge
+                  variant={mod.status === "active" ? "default" : "secondary"}
+                >
+                  {mod.status === "active" ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Revenue</p>
+                <p className="text-xl font-bold">
+                  {formatInvoiceAmount(mod.revenue, currency)}
+                </p>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Transactions</span>
+                <span className="font-medium">{mod.transactions}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Revenue Share</span>
+                <span className="font-medium">{mod.share}%</span>
+              </div>
+              {/* Revenue share bar */}
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${mod.share}%`,
+                    backgroundColor: mod.color,
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </>
   );
 }

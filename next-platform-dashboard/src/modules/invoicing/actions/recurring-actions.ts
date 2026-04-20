@@ -967,6 +967,7 @@ async function generateInvoiceFromTemplate(
   // Auto-send if configured
   if (recurring.auto_send && recurring.client_email) {
     try {
+      // sendInvoice handles both status update and email via template system
       const { sendInvoice } = await import("./invoice-actions");
       await sendInvoice(invoice.id);
     } catch {

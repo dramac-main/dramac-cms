@@ -366,3 +366,38 @@ export async function getPortalCreditNotes(
   if (error) throw new Error(error.message);
   return { creditNotes: data || [], total: count || 0 };
 }
+
+// ─── Send Account Statement Email ─────────────────────────────
+
+/**
+ * Generate a statement for a client and send it via email.
+ */
+export async function sendAccountStatementEmail(
+  siteId: string,
+  clientId: string,
+  fromDate?: string,
+  toDate?: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const to = toDate || new Date().toISOString().split("T")[0];
+    const from = fromDate || new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
+    const periodLabel = `${new Date(from).toLocaleDateString("en-ZM", { month: "short", day: "numeric", year: "numeric" })} – ${new Date(to).toLocaleDateString("en-ZM", { month: "short", day: "numeric", year: "numeric" })}`;
+
+    const { autoSendAccountStatementEmail } = await import(
+      "../services/email-autosend-service"
+    );
+    const result = await autoSendAccountStatementEmail(
+      siteId,
+      clientId,
+      "", // statement body handled by template
+      periodLabel,
+    );
+
+    return { success: result.success, error: result.error };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to send statement",
+    };
+  }
+}

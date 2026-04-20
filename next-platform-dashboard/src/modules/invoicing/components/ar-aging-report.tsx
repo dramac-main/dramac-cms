@@ -3,24 +3,28 @@
 /**
  * ARAgingReport — Accounts Receivable Aging table
  *
- * Phase INV-07: Financial Dashboard
+ * Phase INV-07 + INVFIX-08: Financial Dashboard
  * Summary buckets + per-client breakdown, color-coded by severity.
+ * Includes AI collection probability scoring (loaded on-demand).
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, ShieldAlert, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   getARAgingReport,
   getARAgingInvoices,
   exportReportCSV,
 } from "../actions/report-actions";
+import { getClientRiskScore } from "../actions/ai-actions";
 import { formatInvoiceAmount } from "../lib/invoicing-utils";
 import type {
   ARAgingReport as ARAgingReportType,
+  ARAgingClientRow,
   ARAgingInvoice,
 } from "../types/report-types";
 
@@ -42,6 +46,10 @@ export function ArAgingReport() {
   const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
   const [bucketInvoices, setBucketInvoices] = useState<ARAgingInvoice[]>([]);
   const [bucketLoading, setBucketLoading] = useState(false);
+  const [riskScores, setRiskScores] = useState<
+    Map<string, { probability: number; rating: "low" | "medium" | "high" }>
+  >(new Map());
+  const [riskLoading, setRiskLoading] = useState(false);
   const currency = "ZMW";
 
   useEffect(() => {
@@ -52,6 +60,34 @@ export function ArAgingReport() {
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [siteId]);
+
+  /** Load risk scores for top clients by outstanding amount (max 10) */
+  const loadRiskScores = useCallback(async () => {
+    if (!siteId || !data || data.byClient.length === 0) return;
+    setRiskLoading(true);
+    const topClients = [...data.byClient]
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+    const newScores = new Map(riskScores);
+    for (const client of topClients) {
+      if (newScores.has(client.contactId)) continue;
+      try {
+        const result = await getClientRiskScore(siteId, client.contactId);
+        if (result.data) {
+          // Collection probability is inverse of risk score
+          const probability = Math.max(0, 100 - (result.data.score ?? 50));
+          newScores.set(client.contactId, {
+            probability,
+            rating: result.data.riskRating as "low" | "medium" | "high",
+          });
+        }
+      } catch {
+        // Skip failed scores silently
+      }
+    }
+    setRiskScores(newScores);
+    setRiskLoading(false);
+  }, [siteId, data, riskScores]);
 
   const handleBucketClick = useCallback(
     async (bucketKey: string) => {
@@ -250,8 +286,21 @@ export function ArAgingReport() {
 
           {/* Per-Client Breakdown */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Client Breakdown</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadRiskScores}
+                disabled={riskLoading || data.byClient.length === 0}
+              >
+                {riskLoading ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <ShieldAlert className="h-4 w-4 mr-1" />
+                )}
+                {riskScores.size > 0 ? "Refresh Risk" : "Load Risk Scores"}
+              </Button>
             </CardHeader>
             <CardContent>
               {data.byClient.length === 0 ? (
@@ -272,37 +321,67 @@ export function ArAgingReport() {
                         <th className="text-right py-2 px-3 font-bold">
                           Total
                         </th>
+                        {riskScores.size > 0 && (
+                          <th className="text-center py-2 px-3">
+                            Collection %
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {data.byClient.map((client) => (
-                        <tr
-                          key={client.contactId}
-                          className="border-b last:border-0 hover:bg-muted/50"
-                        >
-                          <td className="py-2 px-3 font-medium">
-                            {client.clientName}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            {formatInvoiceAmount(client.current, currency)}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            {formatInvoiceAmount(client.days1to30, currency)}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            {formatInvoiceAmount(client.days31to60, currency)}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            {formatInvoiceAmount(client.days61to90, currency)}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            {formatInvoiceAmount(client.days90plus, currency)}
-                          </td>
-                          <td className="text-right py-2 px-3 font-bold">
-                            {formatInvoiceAmount(client.total, currency)}
-                          </td>
-                        </tr>
-                      ))}
+                      {data.byClient.map((client) => {
+                        const risk = riskScores.get(client.contactId);
+                        return (
+                          <tr
+                            key={client.contactId}
+                            className="border-b last:border-0 hover:bg-muted/50"
+                          >
+                            <td className="py-2 px-3 font-medium">
+                              {client.clientName}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(client.current, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(client.days1to30, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(client.days31to60, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(client.days61to90, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3">
+                              {formatInvoiceAmount(client.days90plus, currency)}
+                            </td>
+                            <td className="text-right py-2 px-3 font-bold">
+                              {formatInvoiceAmount(client.total, currency)}
+                            </td>
+                            {riskScores.size > 0 && (
+                              <td className="text-center py-2 px-3">
+                                {risk ? (
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      risk.rating === "low"
+                                        ? "border-green-500 text-green-700"
+                                        : risk.rating === "medium"
+                                          ? "border-yellow-500 text-yellow-700"
+                                          : "border-red-500 text-red-700"
+                                    }
+                                  >
+                                    {risk.probability}%
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    —
+                                  </span>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 font-bold">
@@ -337,6 +416,7 @@ export function ArAgingReport() {
                         <td className="text-right py-2 px-3">
                           {formatInvoiceAmount(data.summary.total, currency)}
                         </td>
+                        {riskScores.size > 0 && <td />}
                       </tr>
                     </tfoot>
                   </table>

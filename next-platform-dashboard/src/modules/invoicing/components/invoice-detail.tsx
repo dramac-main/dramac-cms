@@ -24,6 +24,7 @@ import { RefundForm } from "./refund-form";
 import { PaymentMethodIcon } from "./payment-method-icon";
 import { CreditApplyDialog } from "./credit-apply-dialog";
 import { BillableExpenseSelector } from "./billable-expense-selector";
+import { DunningTimeline } from "./dunning-timeline";
 import {
   Card,
   CardContent,
@@ -50,6 +51,7 @@ import {
   calculateLineItemTotals,
 } from "../lib/invoicing-utils";
 import { INVOICE_SOURCE_LABELS } from "../lib/invoicing-constants";
+import { toast } from "sonner";
 
 interface InvoiceDetailProps {
   siteId: string;
@@ -499,6 +501,48 @@ export function InvoiceDetail({ siteId, invoiceId }: InvoiceDetailProps) {
                 ))}
               </CardContent>
             </Card>
+          )}
+
+          {/* Dunning Timeline — only for overdue invoices */}
+          {(invoice.status === "overdue" || (invoice as any).dunningStage > 0) && (
+            <DunningTimeline
+              invoiceId={invoice.id}
+              currentStage={(invoice as any).dunningStage || 0}
+              writeOffFlagged={(invoice as any).writeOffFlagged || false}
+              dunningPaused={(invoice as any).metadata?.dunning_paused || false}
+              onSendReminder={async () => {
+                try {
+                  const { autoSendOverdueReminderEmail } = await import(
+                    "../services/email-autosend-service"
+                  );
+                  await autoSendOverdueReminderEmail(siteId, invoice.id);
+                  toast.success("Reminder sent");
+                } catch {
+                  toast.error("Failed to send reminder");
+                }
+              }}
+              onTogglePause={async (paused: boolean) => {
+                try {
+                  const { createClient } = await import("@/lib/supabase/client");
+                  const supabase = createClient() as any;
+                  const { data: current } = await supabase
+                    .from("mod_invoicing_invoices")
+                    .select("metadata")
+                    .eq("id", invoice.id)
+                    .single();
+                  const metadata = (current?.metadata as Record<string, unknown>) || {};
+                  metadata.dunning_paused = paused;
+                  await supabase
+                    .from("mod_invoicing_invoices")
+                    .update({ metadata, updated_at: new Date().toISOString() })
+                    .eq("id", invoice.id);
+                  toast.success(paused ? "Dunning paused" : "Dunning resumed");
+                  loadInvoice();
+                } catch {
+                  toast.error("Failed to update dunning status");
+                }
+              }}
+            />
           )}
 
           {/* Activity */}

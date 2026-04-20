@@ -137,6 +137,10 @@ export interface ARAgingClientRow {
   days61to90: number;
   days90plus: number;
   total: number;
+  /** AI-assessed collection probability (0-100). Loaded on-demand via risk scoring. */
+  collectionProbability?: number;
+  /** Risk rating from AI scoring */
+  riskRating?: "low" | "medium" | "high";
 }
 
 export interface ARAgingInvoice {

@@ -728,79 +728,58 @@ export async function sendInvoice(
     throw new Error(`Cannot send an invoice with status "${invoice.status}"`);
   }
 
-  // Fetch settings for company info
-  const { data: settings } = await supabase
-    .from(INV_TABLES.settings)
-    .select("*")
-    .eq("site_id", invoice.site_id)
-    .single();
-
-  const companyName = settings?.company_name || "Our Company";
-  const viewUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/invoicing/view/${invoice.view_token}`;
-
-  // Send email via Resend
+  // Send email via template system
   try {
-    const { getResend, isEmailEnabled, getEmailFrom } =
-      await import("@/lib/email/resend-client");
-    if (isEmailEnabled()) {
-      const resend = getResend();
-      if (resend) {
-        const { formatInvoiceAmount } = await import("../lib/invoicing-utils");
-        const formattedAmount = formatInvoiceAmount(
-          invoice.amount_due || invoice.total,
-          invoice.currency,
-        );
-        const dueDate = new Date(invoice.due_date).toLocaleDateString("en-ZM", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
+    const { autoSendInvoiceSentEmail } = await import(
+      "../services/email-autosend-service"
+    );
 
-        await resend.emails.send({
-          from: getEmailFrom(),
-          to: email,
-          cc: emailOptions?.cc || [],
-          bcc: emailOptions?.bcc || [],
-          subject:
-            emailOptions?.subject ||
-            `Invoice ${invoice.invoice_number} from ${companyName}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: ${settings?.brand_color || "#1f2937"}; padding: 24px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">${companyName}</h1>
-              </div>
-              <div style="padding: 32px 24px;">
-                <p>Dear ${invoice.client_name},</p>
-                ${emailOptions?.message ? `<p>${emailOptions.message}</p>` : ""}
-                <p>Please find your invoice details below:</p>
-                <table style="width: 100%; border-collapse: collapse; margin: 24px 0;">
-                  <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Invoice Number</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${invoice.invoice_number}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Amount Due</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 18px; font-weight: bold;">${formattedAmount}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Due Date</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${dueDate}</td>
-                  </tr>
-                </table>
-                <div style="text-align: center; margin: 32px 0;">
-                  <a href="${viewUrl}" style="background: ${settings?.brand_color || "#1f2937"}; color: white; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                    View Invoice
-                  </a>
-                </div>
-                ${settings?.payment_instructions ? `<div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 6px;"><h3 style="margin: 0 0 8px;">Payment Instructions</h3><p style="margin: 0;">${settings.payment_instructions}</p></div>` : ""}
-              </div>
-              <div style="padding: 16px 24px; background: #f9fafb; text-align: center; font-size: 12px; color: #6b7280;">
-                <p>${companyName}${settings?.company_address ? ` | ${settings.company_address}` : ""}</p>
-              </div>
-            </div>
-          `,
-        });
+    if (emailOptions?.cc?.length || emailOptions?.bcc?.length || emailOptions?.subject) {
+      // Custom send with cc/bcc — use template system for rendering but send directly
+      const { getResend, isEmailEnabled, getEmailFrom } =
+        await import("@/lib/email/resend-client");
+      if (isEmailEnabled()) {
+        const resend = getResend();
+        if (resend) {
+          const { renderTemplate } = await import(
+            "../services/email-template-service"
+          );
+          const { formatInvoiceAmount } = await import("../lib/invoicing-utils");
+          const formattedAmount = formatInvoiceAmount(
+            invoice.amount_due || invoice.total,
+            invoice.currency,
+          );
+          const dueDate = new Date(invoice.due_date).toLocaleDateString("en-ZM", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+          const rendered = await renderTemplate(invoice.site_id, "invoice_sent", {
+            clientName: invoice.client_name || "Client",
+            invoiceNumber: invoice.invoice_number || "",
+            amount: formattedAmount,
+            dueDate,
+            currency: invoice.currency || "ZMW",
+          });
+
+          const body = emailOptions?.message
+            ? `<p>${emailOptions.message}</p>\n${rendered.body}`
+            : rendered.body;
+
+          await resend.emails.send({
+            from: getEmailFrom(),
+            to: email,
+            cc: emailOptions.cc || [],
+            bcc: emailOptions.bcc || [],
+            subject: emailOptions.subject || rendered.subject,
+            html: body,
+          });
+        }
       }
+    } else {
+      // Standard send — use auto-send hook
+      await autoSendInvoiceSentEmail(invoice.site_id, invoiceId);
     }
   } catch {
     // Email send failure should not block status update

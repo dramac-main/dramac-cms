@@ -59,6 +59,60 @@ import { Plus, Trash2, Save, Loader2, Wand2, Info, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { CurrencySelector } from "./currency-selector";
+import { EmailTemplateEditor } from "./email-template-editor";
+
+// ─── Notification Event Configuration ────────────────────────
+
+const NOTIFICATION_EVENTS = [
+  {
+    key: "invoice_sent",
+    label: "Invoice Sent",
+    description: "Email client when an invoice is sent or delivered",
+    defaultEnabled: true,
+  },
+  {
+    key: "payment_received",
+    label: "Payment Received",
+    description: "Send payment receipt confirmation to client",
+    defaultEnabled: true,
+  },
+  {
+    key: "overdue_reminder",
+    label: "Overdue Reminder",
+    description: "Automatic reminders for overdue invoices",
+    defaultEnabled: true,
+  },
+  {
+    key: "credit_note_issued",
+    label: "Credit Note Issued",
+    description: "Notify client when a credit note is issued",
+    defaultEnabled: true,
+  },
+  {
+    key: "recurring_invoice",
+    label: "Recurring Invoice Generated",
+    description: "Notify client when a recurring invoice is generated",
+    defaultEnabled: true,
+  },
+  {
+    key: "late_fee_applied",
+    label: "Late Fee Applied",
+    description: "Notify client when a late fee is added to their invoice",
+    defaultEnabled: false,
+  },
+  {
+    key: "dunning_warning",
+    label: "Dunning Warnings",
+    description: "Formal payment demand notices during dunning escalation",
+    defaultEnabled: true,
+  },
+  {
+    key: "account_statement",
+    label: "Account Statement",
+    description: "Allow sending account statement summaries to clients",
+    defaultEnabled: false,
+  },
+] as const;
 
 interface InvoicingSettingsFormProps {
   siteId: string;
@@ -114,11 +168,21 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
   });
   const [addingTax, setAddingTax] = useState(false);
 
+  // Notification event toggles
+  const [notificationToggles, setNotificationToggles] = useState<
+    Record<string, boolean>
+  >({});
+
   useEffect(() => {
     Promise.all([getInvoicingSettings(siteId), getTaxRates(siteId)])
       .then(([s, rates]) => {
         if (s) {
           setSettings(s);
+          // Load notification toggles from metadata
+          const meta = (s as any).metadata || {};
+          if (meta.email_event_settings) {
+            setNotificationToggles(meta.email_event_settings);
+          }
           setForm({
             invoicePrefix: s.invoicePrefix,
             invoiceNumberFormat: s.invoiceNumberFormat,
@@ -255,6 +319,35 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
     }
   };
 
+  const handleSaveNotificationToggles = async () => {
+    setSaving(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient() as any;
+
+      // Read current metadata
+      const { data: current } = await supabase
+        .from("mod_invoicing_settings")
+        .select("metadata")
+        .eq("site_id", siteId)
+        .single();
+
+      const metadata = (current?.metadata as Record<string, unknown>) || {};
+      metadata.email_event_settings = notificationToggles;
+
+      await supabase
+        .from("mod_invoicing_settings")
+        .update({ metadata, updated_at: new Date().toISOString() })
+        .eq("site_id", siteId);
+
+      toast.success("Notification settings saved");
+    } catch {
+      toast.error("Failed to save notification settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAddTaxRate = async () => {
     if (!newTax.name || !newTax.rate) return;
     setAddingTax(true);
@@ -307,13 +400,15 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
       </div>
 
       <Tabs defaultValue="general">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="tax">Tax Rates</TabsTrigger>
           <TabsTrigger value="late-fees">Late Fees</TabsTrigger>
           <TabsTrigger value="online-payments">Online Payments</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         {/* General Tab */}
@@ -1082,6 +1177,45 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                   The mileage rate here is used for reference and future automated calculations.
                 </AlertDescription>
               </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Email Templates Tab */}
+        <TabsContent value="email-templates" className="space-y-4 mt-4">
+          <EmailTemplateEditor />
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Email Notification Events</CardTitle>
+              <CardDescription>
+                Choose which events trigger automatic email notifications to clients.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {NOTIFICATION_EVENTS.map((evt) => (
+                <div key={evt.key} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">{evt.label}</p>
+                    <p className="text-xs text-muted-foreground">{evt.description}</p>
+                  </div>
+                  <Switch
+                    checked={notificationToggles[evt.key] ?? evt.defaultEnabled}
+                    onCheckedChange={(checked) =>
+                      setNotificationToggles((prev) => ({ ...prev, [evt.key]: checked }))
+                    }
+                  />
+                </div>
+              ))}
+              <div className="flex justify-end pt-2">
+                <Button size="sm" onClick={handleSaveNotificationToggles} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                  Save Notifications
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

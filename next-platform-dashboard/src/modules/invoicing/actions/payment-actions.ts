@@ -291,52 +291,18 @@ export async function recordPayment(
     // Non-critical — do not block payment recording
   }
 
-  // 11. Send payment receipt email if client email exists
+  // 11. Send payment receipt email via template system
   try {
     if (invoice.client_email) {
-      const { getResend, isEmailEnabled, getEmailFrom } =
-        await import("@/lib/email/resend-client");
-      if (isEmailEnabled()) {
-        const resend = getResend();
-        if (resend) {
-          const { data: settings } = await supabase
-            .from(INV_TABLES.settings)
-            .select("*")
-            .eq("site_id", invoice.site_id)
-            .single();
-
-          const companyName = settings?.company_name || "Our Company";
-          const remaining = Math.max(0, newAmountDue);
-
-          await resend.emails.send({
-            from: getEmailFrom(),
-            to: invoice.client_email,
-            subject: `Payment Receipt — ${invoice.invoice_number}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: ${settings?.brand_color || "#1f2937"}; padding: 24px; text-align: center;">
-                  <h1 style="color: white; margin: 0; font-size: 24px;">${companyName}</h1>
-                </div>
-                <div style="padding: 32px 24px;">
-                  <p>Dear ${invoice.client_name},</p>
-                  <p>Thank you! We have received your payment.</p>
-                  <table style="width: 100%; border-collapse: collapse; margin: 24px 0;">
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Invoice</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${invoice.invoice_number}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Amount Paid</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formattedAmount}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Method</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${input.paymentMethod}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${input.paymentDate || today}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remaining Balance</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatInvoiceAmount(remaining, invoice.currency || "ZMW")}</td></tr>
-                  </table>
-                  <p style="color: #6b7280; font-size: 14px;">Reference: ${paymentNumber}</p>
-                </div>
-                <div style="padding: 16px 24px; background: #f9fafb; text-align: center; font-size: 12px; color: #9ca3af;">
-                  ${companyName}
-                </div>
-              </div>
-            `,
-          });
-        }
-      }
+      const { autoSendPaymentReceivedEmail } = await import(
+        "../services/email-autosend-service"
+      );
+      await autoSendPaymentReceivedEmail(
+        invoice.site_id,
+        invoiceId,
+        input.amount,
+        input.paymentMethod,
+      );
     }
   } catch {
     // Non-critical — do not block payment recording

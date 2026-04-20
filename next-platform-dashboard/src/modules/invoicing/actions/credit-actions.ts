@@ -127,14 +127,13 @@ export async function getCreditNotes(
 // GET CREDIT NOTE (DETAIL)
 // ═══════════════════════════════════════════════════════════════
 
-export async function getCreditNote(
-  creditNoteId: string,
-): Promise<
-  (CreditNote & {
-    lineItems: CreditNoteLineItem[];
-    applications: CreditApplication[];
-    activity: InvoiceActivity[];
-  }) | null
+export async function getCreditNote(creditNoteId: string): Promise<
+  | (CreditNote & {
+      lineItems: CreditNoteLineItem[];
+      applications: CreditApplication[];
+      activity: InvoiceActivity[];
+    })
+  | null
 > {
   const supabase = await getModuleClient();
 
@@ -319,8 +318,7 @@ export async function updateCreditNote(
   if (input.clientEmail !== undefined)
     updatePayload.client_email = input.clientEmail || null;
   if (input.currency !== undefined) updatePayload.currency = input.currency;
-  if (input.issueDate !== undefined)
-    updatePayload.issue_date = input.issueDate;
+  if (input.issueDate !== undefined) updatePayload.issue_date = input.issueDate;
   if (input.reason !== undefined) updatePayload.reason = input.reason || null;
   if (input.notes !== undefined) updatePayload.notes = input.notes || null;
   if (input.internalNotes !== undefined)
@@ -423,10 +421,7 @@ export async function deleteCreditNote(creditNoteId: string): Promise<void> {
     .delete()
     .eq("credit_note_id", creditNoteId);
 
-  await supabase
-    .from(INV_TABLES.creditNotes)
-    .delete()
-    .eq("id", creditNoteId);
+  await supabase.from(INV_TABLES.creditNotes).delete().eq("id", creditNoteId);
 
   await logActivity(
     supabase,
@@ -495,6 +490,15 @@ export async function issueCreditNote(creditNoteId: string): Promise<void> {
   } catch {
     // Non-blocking
   }
+
+  // Auto-send credit note email
+  try {
+    const { autoSendCreditNoteEmail } =
+      await import("../services/email-autosend-service");
+    await autoSendCreditNoteEmail(cn.site_id, creditNoteId);
+  } catch {
+    // Non-blocking
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -533,9 +537,7 @@ export async function applyCreditToInvoice(
 
   const blockedStatuses: InvoiceStatus[] = ["void", "cancelled", "paid"];
   if (blockedStatuses.includes(invoice.status as InvoiceStatus)) {
-    throw new Error(
-      `Cannot apply credit to a ${invoice.status} invoice`,
-    );
+    throw new Error(`Cannot apply credit to a ${invoice.status} invoice`);
   }
 
   // 3. Calculate actual amount
@@ -606,10 +608,7 @@ export async function applyCreditToInvoice(
     .eq("id", invoiceId);
 
   // 7. Log activity on credit note
-  const formattedAmt = formatInvoiceAmount(
-    actualAmount,
-    cn.currency || "ZMW",
-  );
+  const formattedAmt = formatInvoiceAmount(actualAmount, cn.currency || "ZMW");
   await logActivity(
     supabase,
     cn.site_id,
@@ -639,7 +638,10 @@ export async function applyCreditToInvoice(
       amount_due: invoice.amount_due,
       credits_applied: invoice.credits_applied,
     },
-    { amount_due: Math.max(0, newAmountDue), credits_applied: newCreditsApplied },
+    {
+      amount_due: Math.max(0, newAmountDue),
+      credits_applied: newCreditsApplied,
+    },
   );
 
   // 9. Fire automation event

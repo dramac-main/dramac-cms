@@ -21,6 +21,8 @@ import {
   notifyBookingConfirmed,
   notifyBookingCompleted,
   notifyBookingNoShow,
+  notifyBookingPaymentReceived,
+  notifyRefundIssued,
 } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";

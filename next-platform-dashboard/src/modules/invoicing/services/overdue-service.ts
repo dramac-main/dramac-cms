@@ -3,7 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import { emitAutomationEvent } from "@/modules/automation/lib/automation-engine";
-import { sendInvoiceEmail } from "./email-service";
+import {
+  autoSendDunningEmail,
+  autoSendOverdueReminderEmail,
+  autoSendLateFeeEmail,
+} from "./email-autosend-service";
 import type { InvoicingSettings } from "../types";
 
 // ═══════════════════════════════════════════════════════════════
@@ -15,6 +19,7 @@ export interface OverdueCheckResult {
   newOverdue: number;
   remindersSent: number;
   lateFeesApplied: number;
+  dunningEscalations: number;
   errors: string[];
   timestamp: string;
 }
@@ -38,6 +43,7 @@ export async function checkOverdueInvoices(): Promise<OverdueCheckResult> {
     newOverdue: 0,
     remindersSent: 0,
     lateFeesApplied: 0,
+    dunningEscalations: 0,
     errors: [],
     timestamp: new Date().toISOString(),
   };
@@ -61,13 +67,13 @@ export async function checkOverdueInvoices(): Promise<OverdueCheckResult> {
         result.sitesProcessed++;
       } catch (err) {
         result.errors.push(
-          `Site ${siteId}: ${err instanceof Error ? err.message : "unknown error"}`
+          `Site ${siteId}: ${err instanceof Error ? err.message : "unknown error"}`,
         );
       }
     }
   } catch (err) {
     result.errors.push(
-      `Global error: ${err instanceof Error ? err.message : "unknown error"}`
+      `Global error: ${err instanceof Error ? err.message : "unknown error"}`,
     );
   }
 
@@ -78,7 +84,7 @@ async function processSiteOverdue(
   supabase: any,
   siteId: string,
   today: string,
-  result: OverdueCheckResult
+  result: OverdueCheckResult,
 ): Promise<void> {
   // Load site settings
   const { data: settings } = await supabase
@@ -104,7 +110,7 @@ async function processSiteOverdue(
     const dueDate = new Date(invoice.due_date);
     const todayDate = new Date(today);
     const daysOverdue = Math.floor(
-      (todayDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+      (todayDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     // 1. Mark newly overdue invoices
@@ -115,15 +121,16 @@ async function processSiteOverdue(
 
     // 2. Check and send reminders
     if (settings.overdue_reminder_enabled) {
-      const reminderSchedule: number[] =
-        settings.overdue_reminder_schedule || [7, 14, 30];
+      const reminderSchedule: number[] = settings.overdue_reminder_schedule || [
+        7, 14, 30,
+      ];
       const sent = await checkAndSendReminder(
         supabase,
         siteId,
         invoice,
         daysOverdue,
         reminderSchedule,
-        settings
+        settings,
       );
       if (sent) result.remindersSent++;
     }
@@ -135,10 +142,20 @@ async function processSiteOverdue(
         siteId,
         invoice,
         daysOverdue,
-        settings
+        settings,
       );
       if (applied) result.lateFeesApplied++;
     }
+
+    // 4. Staged dunning escalation (after reminders exhaust)
+    const escalated = await checkAndEscalateDunning(
+      supabase,
+      siteId,
+      invoice,
+      daysOverdue,
+      settings,
+    );
+    if (escalated) result.dunningEscalations++;
   }
 }
 
@@ -148,7 +165,7 @@ async function markInvoiceOverdue(
   supabase: any,
   siteId: string,
   invoice: any,
-  daysOverdue: number
+  daysOverdue: number,
 ): Promise<void> {
   await supabase
     .from(INV_TABLES.invoices)
@@ -187,19 +204,7 @@ async function markInvoiceOverdue(
 
   // Send initial overdue notification email
   if (invoice.client_email) {
-    await sendInvoiceEmail("overdue_reminder", {
-      siteId,
-      invoiceId: invoice.id,
-      invoiceNumber: invoice.invoice_number,
-      clientName: invoice.client_name,
-      clientEmail: invoice.client_email,
-      amountDue: invoice.amount_due,
-      currency: invoice.currency,
-      dueDate: invoice.due_date,
-      daysOverdue,
-      paymentToken: invoice.payment_token,
-      companyName: null, // Will be loaded from settings in email service
-    });
+    await autoSendOverdueReminderEmail(siteId, invoice.id);
   }
 }
 
@@ -211,7 +216,7 @@ async function checkAndSendReminder(
   invoice: any,
   daysOverdue: number,
   reminderSchedule: number[],
-  settings: any
+  settings: any,
 ): Promise<boolean> {
   const reminderCount = invoice.reminder_count || 0;
   const sortedSchedule = [...reminderSchedule].sort((a, b) => a - b);
@@ -233,20 +238,7 @@ async function checkAndSendReminder(
 
   // Send reminder email
   if (invoice.client_email) {
-    await sendInvoiceEmail("overdue_reminder", {
-      siteId,
-      invoiceId: invoice.id,
-      invoiceNumber: invoice.invoice_number,
-      clientName: invoice.client_name,
-      clientEmail: invoice.client_email,
-      amountDue: invoice.amount_due,
-      currency: invoice.currency,
-      dueDate: invoice.due_date,
-      daysOverdue,
-      paymentToken: invoice.payment_token,
-      companyName: settings.company_name || null,
-      reminderTier: reminderCount + 1,
-    });
+    await autoSendOverdueReminderEmail(siteId, invoice.id);
   }
 
   // Update invoice reminder tracking
@@ -283,7 +275,7 @@ async function checkAndApplyLateFee(
   siteId: string,
   invoice: any,
   daysOverdue: number,
-  settings: any
+  settings: any,
 ): Promise<boolean> {
   const graceDays = settings.late_fee_grace_days || 0;
   const feeAmount = settings.late_fee_amount || 0;
@@ -297,9 +289,7 @@ async function checkAndApplyLateFee(
   let lateFeeInCents: number;
   if (settings.late_fee_type === "percentage") {
     // late_fee_amount is stored in basis points (200 = 2%)
-    lateFeeInCents = Math.round(
-      (invoice.amount_due * feeAmount) / 10000
-    );
+    lateFeeInCents = Math.round((invoice.amount_due * feeAmount) / 10000);
   } else {
     // Fixed amount in cents
     lateFeeInCents = feeAmount;
@@ -332,25 +322,142 @@ async function checkAndApplyLateFee(
     actor_type: "system",
     actor_id: null,
     actor_name: "Overdue Service",
-    old_value: JSON.stringify({ total: invoice.total, amountDue: invoice.amount_due }),
-    new_value: JSON.stringify({ total: newTotal, amountDue: newAmountDue, lateFee: lateFeeInCents }),
+    old_value: JSON.stringify({
+      total: invoice.total,
+      amountDue: invoice.amount_due,
+    }),
+    new_value: JSON.stringify({
+      total: newTotal,
+      amountDue: newAmountDue,
+      lateFee: lateFeeInCents,
+    }),
   });
 
   // Send late fee notice email
   if (invoice.client_email) {
-    await sendInvoiceEmail("late_fee_applied", {
-      siteId,
+    await autoSendLateFeeEmail(siteId, invoice.id, lateFeeInCents);
+  }
+
+  return true;
+}
+
+// ─── Staged Dunning Escalation ───────────────────────────────
+
+/**
+ * DUNNING STAGES (days overdue):
+ *   1  → gentle reminder (auto covered by initial overdue detection)
+ *   7  → reminder (covered by overdue_reminder_schedule)
+ *  14  → urgent (first formal dunning)
+ *  21  → final notice
+ *  30  → late fee stage / second formal
+ *  45  → admin follow-up flag
+ *  60  → write-off candidate
+ *
+ * Stages 1-3 (days 14/21/30) → dunning_warning template
+ * Stage 4 (day 45) → dunning_final template
+ * Stage 5 (day 60) → dunning_writeoff template
+ *
+ * Escalation only fires if:
+ * - All normal reminders have been exhausted (reminder_count >= schedule length)
+ * - The dunning_stage hasn't already reached this level
+ * - At least 24 hours since last dunning email
+ */
+
+const DUNNING_STAGES = [
+  { days: 14, stage: 1, type: "warning" as const },
+  { days: 21, stage: 2, type: "warning" as const },
+  { days: 30, stage: 3, type: "warning" as const },
+  { days: 45, stage: 4, type: "final" as const },
+  { days: 60, stage: 5, type: "writeoff" as const },
+];
+
+async function checkAndEscalateDunning(
+  supabase: any,
+  siteId: string,
+  invoice: any,
+  daysOverdue: number,
+  settings: any,
+): Promise<boolean> {
+  // Only escalate if overdue reminders have been exhausted
+  const reminderSchedule: number[] = settings.overdue_reminder_schedule || [
+    1, 7,
+  ];
+  const reminderCount = invoice.reminder_count || 0;
+  if (reminderCount < reminderSchedule.length) return false;
+
+  // Get current dunning stage
+  const currentStage = invoice.dunning_stage || 0;
+
+  // Find the next applicable stage
+  const nextStage = DUNNING_STAGES.find(
+    (s) => daysOverdue >= s.days && s.stage > currentStage,
+  );
+  if (!nextStage) return false;
+
+  // Debounce: at least 24 hours since last dunning action
+  if (invoice.last_dunning_at) {
+    const hoursSince =
+      (Date.now() - new Date(invoice.last_dunning_at).getTime()) / 3600000;
+    if (hoursSince < 24) return false;
+  }
+
+  // Send dunning email
+  if (invoice.client_email) {
+    await autoSendDunningEmail(siteId, invoice.id, nextStage.type);
+  }
+
+  // Update invoice dunning stage
+  const updatePayload: Record<string, unknown> = {
+    dunning_stage: nextStage.stage,
+    last_dunning_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  // At stage 5 (writeoff), flag for review
+  if (nextStage.stage === 5) {
+    updatePayload.write_off_flagged = true;
+  }
+
+  await supabase
+    .from(INV_TABLES.invoices)
+    .update(updatePayload)
+    .eq("id", invoice.id);
+
+  // Log activity
+  const stageLabels: Record<number, string> = {
+    1: "Dunning Warning — Urgent",
+    2: "Dunning Warning — Final Notice",
+    3: "Dunning Warning — Second Formal",
+    4: "Dunning Final Notice — Admin Flag",
+    5: "Flagged for Write-Off",
+  };
+
+  await supabase.from(INV_TABLES.invoiceActivity).insert({
+    site_id: siteId,
+    entity_type: "invoice",
+    entity_id: invoice.id,
+    action: "dunning_escalation",
+    description: `${stageLabels[nextStage.stage]} — ${daysOverdue} days overdue`,
+    actor_type: "system",
+    actor_id: null,
+    actor_name: "Dunning Service",
+    old_value: JSON.stringify({ stage: currentStage }),
+    new_value: JSON.stringify({ stage: nextStage.stage, type: nextStage.type }),
+  });
+
+  // Fire automation event for dunning
+  try {
+    await emitAutomationEvent(siteId, "accounting.invoice.dunning_escalated", {
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoice_number,
       clientName: invoice.client_name,
-      clientEmail: invoice.client_email,
-      lateFeeAmount: lateFeeInCents,
-      newTotal: newTotal,
-      amountDue: newAmountDue,
-      currency: invoice.currency,
-      paymentToken: invoice.payment_token,
-      companyName: settings.company_name || null,
+      daysOverdue,
+      dunningStage: nextStage.stage,
+      dunningType: nextStage.type,
+      writeOffFlagged: nextStage.stage === 4,
     });
+  } catch {
+    // Non-blocking
   }
 
   return true;

@@ -1,6 +1,18 @@
 import { Metadata } from "next";
-import { Mail, ExternalLink, AlertCircle, Shield, Database } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Mail,
+  ExternalLink,
+  AlertCircle,
+  Shield,
+  Database,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
@@ -15,47 +27,47 @@ export const metadata: Metadata = {
 
 async function getClientEmailAccounts(clientId: string) {
   const supabase = await createClient();
-  
+
   // Get domains for this client
   const { data: domains } = await (supabase as any)
-    .from('domains')
-    .select('id, domain_name')
-    .eq('client_id', clientId);
-  
+    .from("domains")
+    .select("id, domain_name")
+    .eq("client_id", clientId);
+
   if (!domains || domains.length === 0) {
     return [];
   }
-  
+
   const domainIds = domains.map((d: any) => d.id);
   const domainMap = new Map(domains.map((d: any) => [d.id, d]));
-  
+
   // Get email orders for these domains
   const { data: orders, error: ordersError } = await (supabase as any)
-    .from('email_orders')
-    .select('id, domain_name, domain_id')
-    .in('domain_id', domainIds)
-    .eq('status', 'active');
-  
+    .from("email_orders")
+    .select("id, domain_name, domain_id")
+    .in("domain_id", domainIds)
+    .eq("status", "active");
+
   if (ordersError || !orders || orders.length === 0) {
     return [];
   }
-  
+
   const orderIds = orders.map((o: any) => o.id);
   const orderDomainMap = new Map(orders.map((o: any) => [o.id, o.domain_name]));
-  
+
   // Get email accounts linked to these orders
   const { data: accounts, error } = await (supabase as any)
-    .from('email_accounts')
-    .select('*')
-    .in('email_order_id', orderIds)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
-  
+    .from("email_accounts")
+    .select("*")
+    .in("email_order_id", orderIds)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
   if (error) {
-    console.error('Error fetching email accounts:', error);
+    console.error("Error fetching email accounts:", error);
     return [];
   }
-  
+
   // Attach domain info from orders
   return (accounts || []).map((a: any) => ({
     ...a,
@@ -78,7 +90,9 @@ export default async function PortalEmailPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Mail className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No email accounts yet</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No email accounts yet
+            </h3>
             <p className="text-muted-foreground text-center mb-4">
               Contact your agency to set up professional email for your domain
             </p>
@@ -102,9 +116,9 @@ export default async function PortalEmailPage() {
                 Log in to your email inbox through webmail
               </p>
               <Button asChild>
-                <a 
-                  href="https://app.titan.email" 
-                  target="_blank" 
+                <a
+                  href="https://app.titan.email"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
@@ -129,11 +143,21 @@ export default async function PortalEmailPage() {
                           {account.email}
                         </CardTitle>
                         {(account.first_name || account.last_name) && (
-                          <CardDescription>{[account.first_name, account.last_name].filter(Boolean).join(' ')}</CardDescription>
+                          <CardDescription>
+                            {[account.first_name, account.last_name]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </CardDescription>
                         )}
                       </div>
-                      <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
-                        {account.status === 'active' ? 'Active' : account.status}
+                      <Badge
+                        variant={
+                          account.status === "active" ? "default" : "secondary"
+                        }
+                      >
+                        {account.status === "active"
+                          ? "Active"
+                          : account.status}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -141,27 +165,41 @@ export default async function PortalEmailPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground mb-1">Domain</p>
-                        <p className="font-medium">{account.domain_name || 'N/A'}</p>
+                        <p className="font-medium">
+                          {account.domain_name || "N/A"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">Status</p>
-                        <p className="font-medium capitalize">{account.status}</p>
+                        <p className="font-medium capitalize">
+                          {account.status}
+                        </p>
                       </div>
                       {account.storage_limit && (
                         <>
                           <div>
-                            <p className="text-muted-foreground mb-1">Storage</p>
+                            <p className="text-muted-foreground mb-1">
+                              Storage
+                            </p>
                             <div className="flex items-center gap-1">
                               <Database className="h-3 w-3 text-muted-foreground" />
                               <p className="font-medium">
-                                {(account.storage_limit / (1024 * 1024 * 1024)).toFixed(1)} GB
+                                {(
+                                  account.storage_limit /
+                                  (1024 * 1024 * 1024)
+                                ).toFixed(1)}{" "}
+                                GB
                               </p>
                             </div>
                           </div>
                           <div>
                             <p className="text-muted-foreground mb-1">Used</p>
                             <p className="font-medium">
-                              {((account.storage_used || 0) / (1024 * 1024 * 1024)).toFixed(2)} GB
+                              {(
+                                (account.storage_used || 0) /
+                                (1024 * 1024 * 1024)
+                              ).toFixed(2)}{" "}
+                              GB
                             </p>
                           </div>
                         </>
@@ -184,7 +222,8 @@ export default async function PortalEmailPage() {
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Email Client Setup</h4>
             <p className="text-sm text-muted-foreground">
-              To configure your email in Outlook, Apple Mail, or other email clients:
+              To configure your email in Outlook, Apple Mail, or other email
+              clients:
             </p>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>Contact your agency for IMAP/SMTP settings</li>
@@ -193,9 +232,12 @@ export default async function PortalEmailPage() {
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Need Additional Email Accounts?</h4>
+            <h4 className="text-sm font-medium">
+              Need Additional Email Accounts?
+            </h4>
             <p className="text-sm text-muted-foreground">
-              Contact your agency to add more email accounts, change passwords, or upgrade storage.
+              Contact your agency to add more email accounts, change passwords,
+              or upgrade storage.
             </p>
           </div>
 
@@ -218,8 +260,12 @@ export default async function PortalEmailPage() {
             <li>Never share your email password with anyone</li>
             <li>Use a strong, unique password for your email account</li>
             <li>Enable two-factor authentication if available</li>
-            <li>Be cautious of phishing emails asking for personal information</li>
-            <li>Contact your agency immediately if you notice suspicious activity</li>
+            <li>
+              Be cautious of phishing emails asking for personal information
+            </li>
+            <li>
+              Contact your agency immediately if you notice suspicious activity
+            </li>
           </ul>
         </CardContent>
       </Card>

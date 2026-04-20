@@ -5,6 +5,24 @@
 
 ---
 
+## Notification System Overhaul ✅
+
+**Commit**: `f5ef7bac` — July 2026
+
+| Fix | Description | File(s) |
+| --- | --- | --- |
+| 1 | Payment enforcement on booking confirmation | booking-actions.ts |
+| 2 | Revived dispatchNotification() from no-op | automation-aware-dispatcher.ts |
+| 3 | Notification bell user_id filter | notification-bell.tsx |
+| 4 | Chat-to-owner notifications | conversation-actions.ts |
+| 5 | DB CHECK constraint (34→47 types) | Supabase migration |
+| 6 | Client portal notifications (16 events) | business-notifications.ts |
+| 7 | Web push integration (all events) | business-notifications.ts |
+
+**DB migration applied**: `add_missing_notification_types` — 13 new types added to CHECK constraint on `notifications` table (project `nfirsqmyxmmtbignofgb`)
+
+---
+
 ## Vercel Route Limit Fix ✅
 
 | Attempt | Commit   | Approach                          | Vercel Routes | Result |
@@ -205,13 +223,13 @@
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | ✅ Complete    |
-| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 🟡 Carryover   |
-| INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | ✅ Complete    |
+| INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 🟡 Carryover   |
 | INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
 | INVFIX-12 | Delivery Notes, Route Cleanup, Admin Dashboard, Polish       | 📋 Not Started |
 
-**Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (13-session plan + prompts)
+**Key files:** `/phases/PHASE-INVFIX-MASTER-GUIDE.md` (full spec), `/phases/PHASE-INVFIX-SESSION-BRIEF.md` (active 15-session plan + prompts)
 
 **Scope:** Overhaul of existing invoicing module (187 files, 19 DB tables, 13 tabs). Fixes critical bugs (invoice number race condition, settings not auto-populating), adds missing features (delivery notes, email templates, dunning, reconciliation), expands Chiko AI to client portal, cleans up dead routes.
 
@@ -258,6 +276,16 @@
 
 **Session 10 verification audit (April 20, 2026):** No new INVFIX commit had landed after `355ae75f` at that point. The report code still matched the earlier cross-module/report-hub/export baseline plus the post-audit fixes above, so Session 11 was kept as a dedicated INVFIX-08 carryover-closure pass.
 
+**Session 11 verification audit (April 20, 2026):** A real carryover-closure commit landed (`b4731f61`) and closed most INVFIX-08 gaps, but the master-guide audit still found four remaining report issues: AR collection probability, projected cash flow in the report surface, filing-oriented tax export, and module-health scorecards.
+
+**Session 12 verification audit (April 20, 2026):** The current working tree appears to have closed the remaining INVFIX-08 report-spec gaps, so INVFIX-08 can now be treated as complete. However, INVFIX-09 is only partially implemented:
+
+- `email-template-service.ts`, `email-template-editor.tsx`, `email-autosend-service.ts`, `dunning-timeline.tsx`, and the staged dunning changes in `overdue-service.ts` are real and substantial.
+- Credit-note issuance and recurring invoice generation now call the new template layer.
+- But the feature is **not complete**: payment emails still use hardcoded HTML in `payment-actions.ts`; overdue reminders and late-fee emails still use the legacy `email-service.ts`; recurring generation currently risks duplicate customer emails; the template editor is not mounted in the settings route; the dunning timeline is not mounted in invoice detail and lacks manual controls; per-event toggles are still missing from settings; and the account-statement send flow was not implemented.
+
+**Next session recommendation:** Session 13 should be **INVFIX-09 closure only**. Do not bundle INVFIX-10 or INVFIX-11 into the next implementation pass. After INVFIX-09 is genuinely closed, the safest remaining plan is Session 14 = INVFIX-10 + INVFIX-11, Session 15 = INVFIX-12.
+
 **Session 11 verification update (April 20, 2026):** A real closure commit now exists locally at `b4731f61`, and it closes most of the carryover. Cross-module cash flow, revenue comparison/segments, gross margin + YTD, AR drilldown + weighted DSO, filing-period UI, and expense budget/YoY/top-vendor work are present in code. However, INVFIX-08 is still not fully closed against the master guide:
 
 - AR aging still has no collection-probability integration despite the existing AI risk hook.
@@ -265,11 +293,13 @@
 - Tax CSV export still omits the filing-period breakdown needed for filing-oriented export.
 - Cross-module report still lacks the module health scorecards promised in the guide.
 
-**Updated next session recommendation:** Session 12 must remain **INVFIX-08 final spec-closure only**. Do not include **INVFIX-09** in the same pass unless those remaining report gaps are actually closed and re-validated.
+**Updated next session recommendation:** Session 12 is now a **gated combined INVFIX-08 + INVFIX-09 pass**. It must begin by closing the remaining INVFIX-08 gaps above, and may only continue into INVFIX-09 after those report gaps are actually closed and re-validated in the same session.
 
 **INVFIX Session 11 (July 2026) — INVFIX-08 Carryover Closure:** Closed ALL 7 remaining report gaps. 8 files changed. Deliverables: (1) cross-module cash flow with ecom/booking data + ComposedChart with net position Line, (2) new `getRevenueTrendsComparison` action with period-over-period + client segments, (3) P&L grossMargin + ytdComparison, (4) AR aging weighted DSO + `getARAgingInvoices` drilldown, (5) tax filing period monthly breakdown, (6) expense topVendors + budgetComparison + yoyComparison, (7) export standardization doc comment (CSV + Print→PDF is the standard). New type: `RevenueTrendsPeriodEntry`. Fixed `ARAgingInvoice` fields. All 6 report components updated. TSC: 0 invoicing errors.
 
-**Next session recommendation:** Session 12 should be **INVFIX-09** (Email System — Templates, Auto-Send, Dunning Escalation).
+**Current execution recommendation:** Session 12 should be a **combined INVFIX-08 final closure + INVFIX-09 implementation session**. Do the report-spec closure first, verify it cleanly, then continue into the email-system phase in the same pass.
+
+**INVFIX Session 13 (April 20 2026) — INVFIX-09 CLOSED:** All 7 gaps implemented. Files changed: `email-template-service.ts` (normalizeVariables + async renderTemplate), `email-autosend-service.ts` (5 new hooks, fixed imports), `invoice-actions.ts` + `payment-actions.ts` (inline HTML → template system), `recurring-actions.ts` (duplicate email removed), `overdue-service.ts` (5-stage dunning 14/21/30/45/60), `dunning-timeline.tsx` (manual controls), `invoicing-settings-form.tsx` (Email Templates + Notifications tabs), `invoice-detail.tsx` (DunningTimeline mounted), `statement-actions.ts` (sendAccountStatementEmail). Post-session TSC fixes: INV_TABLES.clients→invoices contact_id query, createClient() as any cast, String() casts on unknown. TSC: **0 invoicing errors.** Next: **Session 14 = INVFIX-10 + INVFIX-11.**
 
 ---
 
@@ -328,6 +358,7 @@
 | Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
 | Jul 2026 | Billing Flow Deep Audit Session 8: Fix billing page wrong table (subscriptions→paddle_subscriptions), domain search debounce (useState→useRef), checkout successUrl, revalidatePath fixes — commit 94ce88d0         |
 | Jul 2026 | Invoicing INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports                                                                      |
+| Apr 2026 | Invoicing INVFIX-09 CLOSED (Session 13): Email Templates, Auto-Send, Dunning Escalation — 10 files changed, 7 gaps closed, 0 TSC errors. Next: INVFIX-10 + INVFIX-11                                              |
 
 ---
 

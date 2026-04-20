@@ -26,9 +26,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { updateAgencyPricingConfig } from "@/lib/actions/domain-billing";
-import type { TldPricingConfig, TldPricingEntry, PricingMarkupType } from "@/types/domain-pricing";
+import type {
+  TldPricingConfig,
+  TldPricingEntry,
+  PricingMarkupType,
+} from "@/types/domain-pricing";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 interface TldPricingTableProps {
   currentConfig: TldPricingConfig;
   defaultMarkupType: PricingMarkupType;
@@ -38,36 +42,36 @@ interface TldPricingTableProps {
 
 // Popular TLDs with simulated wholesale prices
 const TLD_DATA: Record<string, { wholesale: number; description: string }> = {
-  '.com': { wholesale: 9.99, description: 'Most popular TLD' },
-  '.net': { wholesale: 11.99, description: 'Network/tech sites' },
-  '.org': { wholesale: 10.99, description: 'Organizations' },
-  '.io': { wholesale: 35.99, description: 'Tech startups' },
-  '.co': { wholesale: 25.99, description: 'Companies/Colombia' },
-  '.app': { wholesale: 15.99, description: 'Applications' },
-  '.dev': { wholesale: 13.99, description: 'Developers' },
-  '.xyz': { wholesale: 8.99, description: 'Generic' },
-  '.online': { wholesale: 5.99, description: 'Online presence' },
-  '.store': { wholesale: 12.99, description: 'E-commerce' },
-  '.tech': { wholesale: 14.99, description: 'Technology' },
-  '.ai': { wholesale: 79.99, description: 'AI companies' },
+  ".com": { wholesale: 9.99, description: "Most popular TLD" },
+  ".net": { wholesale: 11.99, description: "Network/tech sites" },
+  ".org": { wholesale: 10.99, description: "Organizations" },
+  ".io": { wholesale: 35.99, description: "Tech startups" },
+  ".co": { wholesale: 25.99, description: "Companies/Colombia" },
+  ".app": { wholesale: 15.99, description: "Applications" },
+  ".dev": { wholesale: 13.99, description: "Developers" },
+  ".xyz": { wholesale: 8.99, description: "Generic" },
+  ".online": { wholesale: 5.99, description: "Online presence" },
+  ".store": { wholesale: 12.99, description: "E-commerce" },
+  ".tech": { wholesale: 14.99, description: "Technology" },
+  ".ai": { wholesale: 79.99, description: "AI companies" },
 };
 
-export function TldPricingTable({ 
-  currentConfig, 
+export function TldPricingTable({
+  currentConfig,
   defaultMarkupType,
   defaultMarkupValue,
-  onUpdate 
+  onUpdate,
 }: TldPricingTableProps) {
   const [search, setSearch] = useState("");
   const [editingTld, setEditingTld] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<TldPricingEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const tlds = Object.keys(TLD_DATA);
-  const filteredTlds = tlds.filter(tld => 
-    tld.toLowerCase().includes(search.toLowerCase())
+  const filteredTlds = tlds.filter((tld) =>
+    tld.toLowerCase().includes(search.toLowerCase()),
   );
-  
+
   const startEdit = (tld: string) => {
     const config = currentConfig[tld] || {
       markup_type: defaultMarkupType,
@@ -77,69 +81,69 @@ export function TldPricingTable({
     setEditingTld(tld);
     setEditValues({ ...config });
   };
-  
+
   const cancelEdit = () => {
     setEditingTld(null);
     setEditValues(null);
   };
-  
+
   const saveEdit = async () => {
     if (!editingTld || !editValues) return;
-    
+
     setIsLoading(true);
     try {
       const newConfig = {
         ...currentConfig,
         [editingTld]: editValues,
       };
-      
+
       const result = await updateAgencyPricingConfig({
         tld_pricing: newConfig,
       });
-      
+
       if (result.success) {
         toast.success(`Pricing for ${editingTld} updated`);
         onUpdate();
       } else {
-        toast.error(result.error || 'Failed to update');
+        toast.error(result.error || "Failed to update");
       }
     } catch {
-      toast.error('An error occurred');
+      toast.error("An error occurred");
     } finally {
       setIsLoading(false);
       setEditingTld(null);
       setEditValues(null);
     }
   };
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
-      style: 'currency',
+      style: "currency",
       currency: DEFAULT_CURRENCY,
     }).format(price);
   };
-  
+
   const calculateRetail = (wholesale: number, tld: string) => {
     const config = currentConfig[tld];
     const type = config?.markup_type || defaultMarkupType;
     const value = config?.markup_value ?? defaultMarkupValue;
-    
+
     switch (type) {
-      case 'percentage':
+      case "percentage":
         return wholesale * (1 + value / 100);
-      case 'fixed':
+      case "fixed":
         return wholesale + value;
-      case 'custom':
+      case "custom":
         return value;
       default:
         return wholesale * 1.3;
     }
   };
-  
+
   const isCustomized = (tld: string) => {
     return tld in currentConfig;
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -157,7 +161,7 @@ export function TldPricingTable({
           <span>{Object.keys(currentConfig).length} customized</span>
         </div>
       </div>
-      
+
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
@@ -172,14 +176,19 @@ export function TldPricingTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTlds.map(tld => {
+            {filteredTlds.map((tld) => {
               const tldInfo = TLD_DATA[tld];
               const wholesale = tldInfo.wholesale;
               const config = currentConfig[tld];
               const isEditing = editingTld === tld;
-              
+
               return (
-                <TableRow key={tld} className={isCustomized(tld) ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}>
+                <TableRow
+                  key={tld}
+                  className={
+                    isCustomized(tld) ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
+                  }
+                >
                   <TableCell className="font-mono font-medium">
                     {tld}
                     {isCustomized(tld) && (
@@ -194,17 +203,19 @@ export function TldPricingTable({
                   <TableCell className="text-right font-mono">
                     {formatPrice(wholesale)}
                   </TableCell>
-                  
+
                   {isEditing && editValues ? (
                     <>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Select
                             value={editValues.markup_type}
-                            onValueChange={(v) => setEditValues({ 
-                              ...editValues, 
-                              markup_type: v as PricingMarkupType 
-                            })}
+                            onValueChange={(v) =>
+                              setEditValues({
+                                ...editValues,
+                                markup_type: v as PricingMarkupType,
+                              })
+                            }
                           >
                             <SelectTrigger className="w-20 h-8">
                               <SelectValue />
@@ -218,46 +229,50 @@ export function TldPricingTable({
                           <Input
                             type="number"
                             value={editValues.markup_value}
-                            onChange={(e) => setEditValues({
-                              ...editValues,
-                              markup_value: parseFloat(e.target.value) || 0,
-                            })}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                markup_value: parseFloat(e.target.value) || 0,
+                              })
+                            }
                             className="w-20 h-8"
                           />
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-primary">
                         {formatPrice(
-                          editValues.markup_type === 'custom'
+                          editValues.markup_type === "custom"
                             ? editValues.markup_value
-                            : editValues.markup_type === 'percentage'
+                            : editValues.markup_type === "percentage"
                               ? wholesale * (1 + editValues.markup_value / 100)
-                              : wholesale + editValues.markup_value
+                              : wholesale + editValues.markup_value,
                         )}
                       </TableCell>
                       <TableCell className="text-center">
                         <Switch
                           checked={editValues.enabled}
-                          onCheckedChange={(checked) => setEditValues({
-                            ...editValues,
-                            enabled: checked,
-                          })}
+                          onCheckedChange={(checked) =>
+                            setEditValues({
+                              ...editValues,
+                              enabled: checked,
+                            })
+                          }
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={saveEdit}
                             disabled={isLoading}
                             className="h-8 w-8"
                           >
                             <Check className="h-4 w-4 text-green-500" />
                           </Button>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={cancelEdit}
                             disabled={isLoading}
                             className="h-8 w-8"
@@ -272,15 +287,19 @@ export function TldPricingTable({
                       <TableCell className="text-right">
                         {config ? (
                           <span className="font-mono">
-                            {config.markup_type === 'percentage' 
+                            {config.markup_type === "percentage"
                               ? `${config.markup_value}%`
-                              : config.markup_type === 'fixed'
+                              : config.markup_type === "fixed"
                                 ? `+${formatPrice(config.markup_value)}`
                                 : formatPrice(config.markup_value)}
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            Default ({defaultMarkupType === 'percentage' ? `${defaultMarkupValue}%` : formatPrice(defaultMarkupValue)})
+                            Default (
+                            {defaultMarkupType === "percentage"
+                              ? `${defaultMarkupValue}%`
+                              : formatPrice(defaultMarkupValue)}
+                            )
                           </span>
                         )}
                       </TableCell>
@@ -288,16 +307,20 @@ export function TldPricingTable({
                         {formatPrice(calculateRetail(wholesale, tld))}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge 
-                          variant={config?.enabled === false ? 'secondary' : 'default'}
-                          className={config?.enabled === false ? '' : 'bg-green-500'}
+                        <Badge
+                          variant={
+                            config?.enabled === false ? "secondary" : "default"
+                          }
+                          className={
+                            config?.enabled === false ? "" : "bg-green-500"
+                          }
                         >
-                          {config?.enabled === false ? 'Disabled' : 'Active'}
+                          {config?.enabled === false ? "Disabled" : "Active"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button 
-                          size="icon" 
+                        <Button
+                          size="icon"
                           variant="ghost"
                           onClick={() => startEdit(tld)}
                           className="h-8 w-8"
@@ -313,7 +336,7 @@ export function TldPricingTable({
           </TableBody>
         </Table>
       </div>
-      
+
       {filteredTlds.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No TLDs found matching &quot;{search}&quot;

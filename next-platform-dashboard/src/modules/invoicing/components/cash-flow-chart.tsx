@@ -3,15 +3,19 @@
 /**
  * CashFlowChart — Bar chart: cash in vs cash out by period
  *
- * Phase INV-07: Financial Dashboard
+ * Phase INV-07 + INVFIX-08: Financial Dashboard
  * Uses Recharts. Green bars for inflows, red for outflows.
+ * Includes AI-powered projected forecast section below historical data.
  */
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { TrendingUp } from "lucide-react";
 import { formatInvoiceAmount } from "../lib/invoicing-utils";
 import { getCashFlowReport } from "../actions/report-actions";
+import { CashFlowForecastChart } from "./cash-flow-forecast-chart";
 import type { CashFlowReport, DateRange } from "../types/report-types";
 import {
   ResponsiveContainer,
@@ -35,6 +39,7 @@ interface CashFlowChartProps {
 export function CashFlowChart({ siteId, dateRange }: CashFlowChartProps) {
   const [data, setData] = useState<CashFlowReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showForecast, setShowForecast] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -86,87 +91,107 @@ export function CashFlowChart({ siteId, dateRange }: CashFlowChartProps) {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Cash Flow</CardTitle>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-green-600 font-medium">
-              In: {formatInvoiceAmount(data.totalIn)}
-            </span>
-            <span className="text-red-600 font-medium">
-              Out: {formatInvoiceAmount(data.totalOut)}
-            </span>
-            <span className="font-bold">
-              Net: {formatInvoiceAmount(data.netCashFlow)}
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis dataKey="period" className="text-xs" />
-            <YAxis
-              className="text-xs"
-              tickFormatter={(v) => `K${v.toLocaleString()}`}
-            />
-            <Tooltip
-              formatter={
-                ((value: number) =>
-                  formatInvoiceAmount(Math.round(value * 100))) as any
-              }
-              labelFormatter={(label: any) => `Period: ${label}`}
-            />
-            <Legend />
-            <Bar dataKey="Cash In" fill="#22c55e" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Cash Out" fill="#ef4444" radius={[4, 4, 0, 0]} />
-            <Line
-              type="monotone"
-              dataKey="Net Position"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-
-        {/* Source breakdown when multi-source data exists */}
-        {hasMultiSource && (
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">
-              Cash-In Sources
-            </p>
-            <div className="grid gap-2 grid-cols-3 text-xs">
-              {data.periods.map((p) => {
-                const inv = p.invoicingIn ?? p.cashIn;
-                const ecom = p.ecommerceIn ?? 0;
-                const book = p.bookingIn ?? 0;
-                if (inv === 0 && ecom === 0 && book === 0) return null;
-                return (
-                  <div key={p.period} className="p-2 rounded border">
-                    <p className="font-medium">{p.period}</p>
-                    <p className="text-green-700">
-                      Invoicing: {formatInvoiceAmount(inv)}
-                    </p>
-                    {ecom > 0 && (
-                      <p className="text-blue-700">
-                        E-commerce: {formatInvoiceAmount(ecom)}
-                      </p>
-                    )}
-                    {book > 0 && (
-                      <p className="text-purple-700">
-                        Bookings: {formatInvoiceAmount(book)}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Cash Flow</CardTitle>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-green-600 font-medium">
+                In: {formatInvoiceAmount(data.totalIn)}
+              </span>
+              <span className="text-red-600 font-medium">
+                Out: {formatInvoiceAmount(data.totalOut)}
+              </span>
+              <span className="font-bold">
+                Net: {formatInvoiceAmount(data.netCashFlow)}
+              </span>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="period" className="text-xs" />
+              <YAxis
+                className="text-xs"
+                tickFormatter={(v) => `K${v.toLocaleString()}`}
+              />
+              <Tooltip
+                formatter={
+                  ((value: number) =>
+                    formatInvoiceAmount(Math.round(value * 100))) as any
+                }
+                labelFormatter={(label: any) => `Period: ${label}`}
+              />
+              <Legend />
+              <Bar dataKey="Cash In" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Cash Out" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Line
+                type="monotone"
+                dataKey="Net Position"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+
+          {/* Source breakdown when multi-source data exists */}
+          {hasMultiSource && (
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-xs text-muted-foreground mb-2 font-medium">
+                Cash-In Sources
+              </p>
+              <div className="grid gap-2 grid-cols-3 text-xs">
+                {data.periods.map((p) => {
+                  const inv = p.invoicingIn ?? p.cashIn;
+                  const ecom = p.ecommerceIn ?? 0;
+                  const book = p.bookingIn ?? 0;
+                  if (inv === 0 && ecom === 0 && book === 0) return null;
+                  return (
+                    <div key={p.period} className="p-2 rounded border">
+                      <p className="font-medium">{p.period}</p>
+                      <p className="text-green-700">
+                        Invoicing: {formatInvoiceAmount(inv)}
+                      </p>
+                      {ecom > 0 && (
+                        <p className="text-blue-700">
+                          E-commerce: {formatInvoiceAmount(ecom)}
+                        </p>
+                      )}
+                      {book > 0 && (
+                        <p className="text-purple-700">
+                          Bookings: {formatInvoiceAmount(book)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Forecast toggle */}
+          <div className="mt-4 pt-4 border-t flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              AI-powered projected cash flow (next 3 months)
+            </p>
+            <Button
+              variant={showForecast ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowForecast(!showForecast)}
+            >
+              <TrendingUp className="h-4 w-4 mr-1" />
+              {showForecast ? "Hide Forecast" : "Show Forecast"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Projected Forecast Section */}
+      {showForecast && <CashFlowForecastChart />}
+    </>
   );
 }

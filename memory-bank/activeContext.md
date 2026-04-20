@@ -4,9 +4,70 @@
 
 ## Current State
 
-The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
+The DRAMAC CMS platform is production-ready and deployed. The notification system has been fully overhauled. **INVFIX-09 is now closed.** Ready to proceed to INVFIX-10.
 
-## Latest: White-Label Supplier Branding Audit ✅
+## Latest: Notification System Overhaul ✅
+
+### Commit: `f5ef7bac` — pushed to main (July 2026)
+
+**Complete notification architecture overhaul across 5 files (+515/-21 lines).**
+
+#### 7 Fixes Applied:
+
+1. **Payment enforcement on booking confirmation** (`booking-actions.ts`): Now checks `require_payment` setting and `payment_status` before allowing status="confirmed"
+2. **Revived dispatchNotification()** (`automation-aware-dispatcher.ts`): Was a no-op stub, now actually calls notification and chat functions
+3. **Notification bell user_id filter** (`notification-bell.tsx`): Added useAuth() + user_id filter to all 3 realtime subscriptions so users only see their own notifications
+4. **Chat-to-owner notifications** (`conversation-actions.ts`): New `notifyOwnerOfNewChat()` with in-app notification + web push
+5. **DB CHECK constraint migration** (Supabase): Added 13 missing notification types to CHECK constraint (47 total, was 34)
+6. **Client portal notifications** (`business-notifications.ts`): New `createClientPortalNotification()` helper inserts into `client_notifications` table for all 16 business events (bookings, orders, quotes, payments, stock, etc.)
+7. **Web push notifications** (`business-notifications.ts`): New `pushToOwner()` helper wraps `sendPushToUser()` with error handling, called from all in-app notification blocks
+
+#### Key Architecture:
+- Two notification tables: `notifications` (dashboard, user_id→auth.users) + `client_notifications` (portal, client_id→clients)
+- Web push via VAPID in `src/lib/actions/web-push.ts`
+- `business-notifications.ts` is the central orchestrator — every function now fires: in-app (dashboard) + email + portal notification + web push
+- Portal notifications include deep links (`/portal/bookings`, `/portal/orders`, `/portal/quotes`, `/portal/products`)
+- Also fixed missing in-app notifications for `notifyBookingConfirmed()` and `notifyBookingCompleted()` (previously email-only)
+
+## Previous: INVFIX Session 12 Verification — INVFIX-08 Closed, INVFIX-09 Partial
+
+### Session 12 verification (April 20, 2026)
+
+Session 12 materially improved the invoicing overhaul and appears to have closed the remaining INVFIX-08 report-spec carryover, but it did **not** finish INVFIX-09 to the quality bar required by the Session 12 prompt.
+
+#### What is now good enough to treat INVFIX-08 as closed
+
+- `ar-aging-report.tsx` now exposes a collection-probability surface using on-demand AI risk scoring.
+- `cash-flow-chart.tsx` now surfaces the existing forecast component in the report experience, while `report-actions.ts` keeps the synchronous report action honest about not embedding forecast data directly.
+- `exportReportCSV("tax")` now includes filing-period rows, and `tax-summary-report.tsx` renders the filing-period table.
+- `cross-module-report.tsx` now includes a module-health tab with scorecards and platform health scoring.
+
+#### What Session 12 really landed for INVFIX-09
+
+- New email-template model and defaults in `email-template-service.ts`
+- New template editor UI in `email-template-editor.tsx`
+- New templated auto-send service in `email-autosend-service.ts`
+- New staged dunning escalation wiring in `overdue-service.ts`
+- New dunning timeline component in `dunning-timeline.tsx`
+- Credit-note and recurring-invoice hooks into the new auto-send service
+
+#### INVFIX-09 — CLOSED (Session 13, April 20 2026)
+
+All 7 gaps implemented and TSC validated at 0 invoicing errors:
+1. `renderTemplate` normalized to async `(siteId, templateType, variables)` + `normalizeVariables()` camelCase→snake_case helper
+2. `email-autosend-service.ts` — replaced `getModuleClient` with `createClient`, added 5 new send hooks
+3. Inline HTML emails in `invoice-actions.ts` + `payment-actions.ts` replaced with template system
+4. `recurring-actions.ts` — removed duplicate email send bug
+5. `overdue-service.ts` — replaced legacy `sendInvoiceEmail` calls; dunning stages updated to 5 (14/21/30/45/60)
+6. `invoicing-settings-form.tsx` — added Email Templates tab + Notifications tab (8 event toggles)
+7. `invoice-detail.tsx` — DunningTimeline mounted in sidebar with Send Reminder + Pause/Resume controls
+8. `statement-actions.ts` — added `sendAccountStatementEmail` action
+
+Post-session TSC fix (same session): `INV_TABLES.clients` (non-existent) replaced with invoice `contact_id` query; `createClient() as any` cast in dunning-timeline; `String()` casts on `unknown` parsedNew fields; removed invalid `siteId` prop from `<EmailTemplateEditor />`.
+
+**Next: Session 14 = INVFIX-10 + INVFIX-11. Session 15 = INVFIX-12.**
+
+## Previous: White-Label Supplier Branding Audit ✅
 
 ### Session 12 (July 2026)
 
@@ -61,9 +122,12 @@ ResellerClub (domain/email provisioning) and Titan (email hosting) are hidden su
 #### Planning impact
 
 - Treat INVFIX-08 as **still open**.
-- Session 12 should remain **INVFIX-08 final spec-closure only**.
-- Do **not** start INVFIX-09 until the remaining report gaps above are closed and re-validated.
-- From the current audited state, the realistic remaining roadmap is **4 focused sessions** if INVFIX-10 and INVFIX-11 are merged, or **5** if they are kept separate.
+- User-directed compression is now active: **Session 12 is a combined session** that must close the remaining INVFIX-08 report-spec gaps first, then roll directly into INVFIX-09 only if report closure is re-validated in the same pass.
+- The remaining roadmap is now targeted at **3 focused sessions**:
+  Session 12 = INVFIX-08 final closure + INVFIX-09
+  Session 13 = INVFIX-10 + INVFIX-11
+  Session 14 = INVFIX-12
+- A 2-session finish is still not the operating plan. Combining INVFIX-10, INVFIX-11, and INVFIX-12 would likely recreate the same verification failures and carryover churn.
 
 ### Previous: Session 11 — Email/Domain Lifecycle Hardening ✅
 
@@ -227,8 +291,10 @@ All INVFIX-06 features implemented and verified:
 
 ### Next Steps
 
-- **INVFIX-08 is not fully closed yet** — Session 12 must finish the remaining report-spec gaps first.
-- **INVFIX-09 is next only after that**: Email System — Templates, Auto-Send, Dunning Escalation
+- **Session 12 is now a gated combined pass** — finish the remaining INVFIX-08 report-spec gaps first, then continue immediately into INVFIX-09 only if reports are genuinely closed and re-validated in the same session.
+- **Remaining target path after that**:
+  Session 13 = INVFIX-10 + INVFIX-11
+  Session 14 = INVFIX-12
 - **Domain system remaining work**: Transfer-out UI (backend exists, no UI), transfer status polling/webhooks, super admin domain pricing controls
 - **Repo path note**: `invfix-06-po-receive-vendor-enhance.sql` lives under the repo-root `migrations/` folder, not `next-platform-dashboard/migrations/`.
 - Do NOT reintroduce Stripe into the invoicing module

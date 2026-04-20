@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { 
-  ArrowLeft, 
-  Mail, 
+import {
+  ArrowLeft,
+  Mail,
   Settings,
   ExternalLink,
   Inbox,
@@ -14,7 +14,13 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDomain } from "@/lib/actions/domains";
@@ -25,26 +31,28 @@ interface EmailPageProps {
   params: Promise<{ domainId: string }>;
 }
 
-export async function generateMetadata({ params }: EmailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: EmailPageProps): Promise<Metadata> {
   const { domainId } = await params;
   const response = await getDomain(domainId);
-  
+
   return {
-    title: response.data?.domain_name 
+    title: response.data?.domain_name
       ? `Email - ${response.data.domain_name} | DRAMAC CMS`
-      : 'Email Accounts | DRAMAC CMS',
+      : "Email Accounts | DRAMAC CMS",
   };
 }
 
 async function EmailContent({ domainId }: { domainId: string }) {
   const response = await getBusinessEmailOrderByDomainId(domainId);
-  
+
   if (!response.success || !response.data) {
     notFound();
   }
-  
+
   const { order, accounts, domain } = response.data;
-  
+
   if (!domain) {
     notFound();
   }
@@ -71,20 +79,21 @@ async function EmailContent({ domainId }: { domainId: string }) {
             </div>
             <h3 className="text-lg font-semibold mb-2">No Business Email</h3>
             <p className="text-muted-foreground text-center mb-6 max-w-md">
-              Purchase professional business email powered by Titan to create email accounts 
-              like info@{domain.domain_name} or support@{domain.domain_name}
+              Purchase professional business email powered by Titan to create
+              email accounts like info@{domain.domain_name} or support@
+              {domain.domain_name}
             </p>
             <div className="flex gap-3">
               <Button asChild>
-                <Link href={`/dashboard/email/purchase?domain=${encodeURIComponent(domain.domain_name)}&domainId=${domainId}`}>
+                <Link
+                  href={`/dashboard/email/purchase?domain=${encodeURIComponent(domain.domain_name)}&domainId=${domainId}`}
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Purchase Email
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/dashboard/email">
-                  View All Email Orders
-                </Link>
+                <Link href="/dashboard/email">View All Email Orders</Link>
               </Button>
             </div>
           </CardContent>
@@ -111,14 +120,18 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Custom Domain</p>
-                  <p className="text-sm text-muted-foreground">user@{domain.domain_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    user@{domain.domain_name}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Webmail Access</p>
-                  <p className="text-sm text-muted-foreground">Access from anywhere</p>
+                  <p className="text-sm text-muted-foreground">
+                    Access from anywhere
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -132,14 +145,18 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Calendar & Contacts</p>
-                  <p className="text-sm text-muted-foreground">Built-in productivity tools</p>
+                  <p className="text-sm text-muted-foreground">
+                    Built-in productivity tools
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Spam Protection</p>
-                  <p className="text-sm text-muted-foreground">Advanced filtering</p>
+                  <p className="text-sm text-muted-foreground">
+                    Advanced filtering
+                  </p>
                 </div>
               </div>
             </div>
@@ -150,21 +167,30 @@ async function EmailContent({ domainId }: { domainId: string }) {
   }
 
   // Email order exists - show management UI
-  const isExpiringSoon = new Date(order.expiry_date).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
+  const isExpiringSoon =
+    new Date(order.expiry_date).getTime() - Date.now() <
+    30 * 24 * 60 * 60 * 1000;
   const isExpired = new Date(order.expiry_date) < new Date();
-  const daysUntilExpiry = Math.ceil((new Date(order.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  
+  const daysUntilExpiry = Math.ceil(
+    (new Date(order.expiry_date).getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24),
+  );
+
   const getStatusBadge = () => {
-    if (order.status === 'Active') {
+    if (order.status === "Active") {
       if (isExpired) {
         return <Badge variant="destructive">Expired</Badge>;
       }
       if (isExpiringSoon) {
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">Expiring Soon</Badge>;
+        return (
+          <Badge className="bg-yellow-500 hover:bg-yellow-600">
+            Expiring Soon
+          </Badge>
+        );
       }
       return <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>;
     }
-    if (order.status === 'Suspended') {
+    if (order.status === "Suspended") {
       return <Badge variant="destructive">Suspended</Badge>;
     }
     return <Badge variant="secondary">{order.status}</Badge>;
@@ -189,7 +215,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
           </Button>
         </div>
       </div>
-      
+
       {/* Email Provider Status */}
       <Card className="border-blue-200 bg-blue-500/5">
         <CardContent className="py-3">
@@ -204,14 +230,19 @@ async function EmailContent({ domainId }: { domainId: string }) {
                   {getStatusBadge()}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {order.number_of_accounts} mailbox{order.number_of_accounts !== 1 ? 'es' : ''} • 
-                  Expires {new Date(order.expiry_date).toLocaleDateString()}
+                  {order.number_of_accounts} mailbox
+                  {order.number_of_accounts !== 1 ? "es" : ""} • Expires{" "}
+                  {new Date(order.expiry_date).toLocaleDateString()}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href="https://app.titan.email" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://app.titan.email"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Webmail
                 </a>
@@ -220,7 +251,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Summary Stats */}
       <div className="grid sm:grid-cols-3 gap-4">
         <Card>
@@ -230,13 +261,15 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <Inbox className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{order.used_accounts}/{order.number_of_accounts}</p>
+                <p className="text-2xl font-bold">
+                  {order.used_accounts}/{order.number_of_accounts}
+                </p>
                 <p className="text-sm text-muted-foreground">Mailboxes Used</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -245,14 +278,14 @@ async function EmailContent({ domainId }: { domainId: string }) {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {accounts.filter(a => a.status === 'active').length}
+                  {accounts.filter((a) => a.status === "active").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Active Accounts</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -263,26 +296,30 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <p className="text-2xl font-bold">
                   {daysUntilExpiry > 0 ? daysUntilExpiry : 0}
                 </p>
-                <p className="text-sm text-muted-foreground">Days Until Renewal</p>
+                <p className="text-sm text-muted-foreground">
+                  Days Until Renewal
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Email Accounts Management */}
-      <DomainEmailAccountsClient 
+      <DomainEmailAccountsClient
         orderId={order.id}
         domainName={domain.domain_name}
         accounts={accounts}
         maxAccounts={order.number_of_accounts}
         usedAccounts={order.used_accounts}
       />
-      
+
       {/* Email Client Configuration Help */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Email Client Configuration</CardTitle>
+          <CardTitle className="text-base">
+            Email Client Configuration
+          </CardTitle>
           <CardDescription>
             Settings for desktop and mobile email clients
           </CardDescription>
@@ -309,7 +346,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 </div>
               </dl>
             </div>
-            
+
             <div>
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <Inbox className="h-4 w-4" />
@@ -339,7 +376,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
 
 export default async function EmailPage({ params }: EmailPageProps) {
   const { domainId } = await params;
-  
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild>
@@ -348,7 +385,7 @@ export default async function EmailPage({ params }: EmailPageProps) {
           Back to Domain
         </Link>
       </Button>
-      
+
       <Suspense fallback={<EmailSkeleton />}>
         <EmailContent domainId={domainId} />
       </Suspense>
