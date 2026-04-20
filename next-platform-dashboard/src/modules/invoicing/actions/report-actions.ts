@@ -29,6 +29,11 @@ import type {
   InvoiceStatusDistribution,
   PaymentMethodDistribution,
   DateRange,
+  CrossModuleRevenue,
+  RevenueBySource,
+  CrossModulePeriodEntry,
+  CrossModuleClientReport,
+  CrossModuleClientRow,
 } from "../types/report-types";
 
 // ─── Helpers ───────────────────────────────────────────────────
@@ -1336,4 +1341,340 @@ export async function fetchRecentInvoices(siteId: string) {
     status: r.status as string,
     issueDate: r.issue_date as string,
   }));
+}
+
+// ─── Cross-Module Revenue Report (INVFIX-08) ──────────────────
+
+export async function getCrossModuleRevenue(
+  siteId: string,
+  dateRange?: DateRange,
+): Promise<CrossModuleRevenue> {
+  const supabase = await getModuleClient();
+  const { start, end } = getDateRangeFilter(dateRange);
+
+  // 1. Invoicing revenue (completed payments)
+  const { data: invPayments } = await supabase
+    .from(INV_TABLES.payments)
+    .select("amount, payment_date")
+    .eq("site_id", siteId)
+    .eq("type", "payment")
+    .eq("status", "completed")
+    .gte("payment_date", start)
+    .lte("payment_date", end);
+
+  // 2. E-commerce revenue (paid/completed orders)
+  const { data: ecomOrders } = await supabase
+    .from("mod_ecommod01_orders")
+    .select("total, created_at")
+    .eq("site_id", siteId)
+    .in("payment_status", ["paid", "completed"])
+    .gte("created_at", start)
+    .lte("created_at", end);
+
+  // 3. Booking revenue (paid appointments)
+  const { data: bookings } = await supabase
+    .from("mod_bookmod01_appointments")
+    .select("payment_amount, start_time")
+    .eq("site_id", siteId)
+    .eq("payment_status", "paid")
+    .gte("start_time", start)
+    .lte("start_time", end);
+
+  const invTotal = (invPayments || []).reduce(
+    (s: number, p: any) => s + (p.amount || 0),
+    0,
+  );
+  const ecomTotal = (ecomOrders || []).reduce(
+    (s: number, o: any) => s + (o.total || 0),
+    0,
+  );
+  const bookTotal = (bookings || []).reduce(
+    (s: number, b: any) => s + (b.payment_amount || 0),
+    0,
+  );
+
+  const bySource: RevenueBySource[] = [
+    {
+      source: "invoicing",
+      label: "Invoicing",
+      amount: invTotal,
+      count: (invPayments || []).length,
+      color: "#3b82f6",
+    },
+    {
+      source: "ecommerce",
+      label: "E-Commerce",
+      amount: ecomTotal,
+      count: (ecomOrders || []).length,
+      color: "#22c55e",
+    },
+    {
+      source: "booking",
+      label: "Bookings",
+      amount: bookTotal,
+      count: (bookings || []).length,
+      color: "#f59e0b",
+    },
+  ];
+
+  // Build monthly breakdown
+  const periodMap = new Map<
+    string,
+    { invoicing: number; ecommerce: number; booking: number }
+  >();
+
+  for (const p of invPayments || []) {
+    const month = (p.payment_date as string).substring(0, 7);
+    const entry = periodMap.get(month) || {
+      invoicing: 0,
+      ecommerce: 0,
+      booking: 0,
+    };
+    entry.invoicing += p.amount || 0;
+    periodMap.set(month, entry);
+  }
+  for (const o of ecomOrders || []) {
+    const month = (o.created_at as string).substring(0, 7);
+    const entry = periodMap.get(month) || {
+      invoicing: 0,
+      ecommerce: 0,
+      booking: 0,
+    };
+    entry.ecommerce += o.total || 0;
+    periodMap.set(month, entry);
+  }
+  for (const b of bookings || []) {
+    const month = (b.start_time as string).substring(0, 7);
+    const entry = periodMap.get(month) || {
+      invoicing: 0,
+      ecommerce: 0,
+      booking: 0,
+    };
+    entry.booking += b.payment_amount || 0;
+    periodMap.set(month, entry);
+  }
+
+  const byPeriod: CrossModulePeriodEntry[] = [...periodMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([period, data]) => ({
+      period,
+      invoicing: data.invoicing,
+      ecommerce: data.ecommerce,
+      booking: data.booking,
+      total: data.invoicing + data.ecommerce + data.booking,
+    }));
+
+  return {
+    period: { start, end },
+    totalRevenue: invTotal + ecomTotal + bookTotal,
+    bySource,
+    byPeriod,
+  };
+}
+
+// ─── Cross-Module Client Report (INVFIX-08) ───────────────────
+
+export async function getCrossModuleClients(
+  siteId: string,
+  dateRange?: DateRange,
+  limit = 50,
+): Promise<CrossModuleClientReport> {
+  const supabase = await getModuleClient();
+  const { start, end } = getDateRangeFilter(dateRange);
+
+  // 1. Invoicing: revenue per client
+  const { data: invData } = await supabase
+    .from(INV_TABLES.invoices)
+    .select("client_name, client_email, total, status, created_at")
+    .eq("site_id", siteId)
+    .gte("created_at", start)
+    .lte("created_at", end);
+
+  // 2. E-commerce: revenue per customer
+  const { data: ecomData } = await supabase
+    .from("mod_ecommod01_orders")
+    .select("customer_name, customer_email, total, created_at")
+    .eq("site_id", siteId)
+    .in("payment_status", ["paid", "completed"])
+    .gte("created_at", start)
+    .lte("created_at", end);
+
+  // 3. Booking: revenue per customer
+  const { data: bookData } = await supabase
+    .from("mod_bookmod01_appointments")
+    .select("customer_name, customer_email, payment_amount, start_time")
+    .eq("site_id", siteId)
+    .eq("payment_status", "paid")
+    .gte("start_time", start)
+    .lte("start_time", end);
+
+  // Merge by email (normalize to lowercase)
+  const clientMap = new Map<
+    string,
+    {
+      name: string;
+      email: string;
+      invRevenue: number;
+      ecomRevenue: number;
+      bookRevenue: number;
+      invCount: number;
+      ecomCount: number;
+      bookCount: number;
+      lastActivity: string;
+    }
+  >();
+
+  function upsert(
+    email: string,
+    name: string,
+    source: "inv" | "ecom" | "book",
+    amount: number,
+    date: string,
+  ) {
+    const key = (email || name || "unknown").toLowerCase().trim();
+    const existing = clientMap.get(key) || {
+      name: name || "Unknown",
+      email: email || "",
+      invRevenue: 0,
+      ecomRevenue: 0,
+      bookRevenue: 0,
+      invCount: 0,
+      ecomCount: 0,
+      bookCount: 0,
+      lastActivity: "",
+    };
+    if (name && existing.name === "Unknown") existing.name = name;
+    if (email && !existing.email) existing.email = email;
+    if (source === "inv") {
+      existing.invRevenue += amount;
+      existing.invCount++;
+    } else if (source === "ecom") {
+      existing.ecomRevenue += amount;
+      existing.ecomCount++;
+    } else {
+      existing.bookRevenue += amount;
+      existing.bookCount++;
+    }
+    if (date > existing.lastActivity) existing.lastActivity = date;
+    clientMap.set(key, existing);
+  }
+
+  for (const inv of invData || []) {
+    if (inv.status === "void" || inv.status === "cancelled") continue;
+    upsert(
+      inv.client_email,
+      inv.client_name,
+      "inv",
+      inv.total || 0,
+      inv.created_at || "",
+    );
+  }
+  for (const o of ecomData || []) {
+    upsert(
+      o.customer_email,
+      o.customer_name,
+      "ecom",
+      o.total || 0,
+      o.created_at || "",
+    );
+  }
+  for (const b of bookData || []) {
+    upsert(
+      b.customer_email,
+      b.customer_name,
+      "book",
+      b.payment_amount || 0,
+      b.start_time || "",
+    );
+  }
+
+  const clients: CrossModuleClientRow[] = [...clientMap.values()]
+    .map((c) => ({
+      clientName: c.name,
+      clientEmail: c.email,
+      invoicingRevenue: c.invRevenue,
+      ecommerceRevenue: c.ecomRevenue,
+      bookingRevenue: c.bookRevenue,
+      totalRevenue: c.invRevenue + c.ecomRevenue + c.bookRevenue,
+      invoiceCount: c.invCount,
+      orderCount: c.ecomCount,
+      bookingCount: c.bookCount,
+      lastActivity: c.lastActivity,
+    }))
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+    .slice(0, limit);
+
+  const totalRevenue = clients.reduce((s, c) => s + c.totalRevenue, 0);
+
+  return {
+    clients,
+    totalClients: clientMap.size,
+    totalRevenue,
+  };
+}
+
+// ─── Cross-Module CSV Export (INVFIX-08) ───────────────────────
+
+export async function exportCrossModuleCSV(
+  reportType: "revenue" | "clients",
+  siteId: string,
+  dateRange?: DateRange,
+): Promise<string> {
+  if (reportType === "revenue") {
+    const data = await getCrossModuleRevenue(siteId, dateRange);
+    const rows = [
+      ["Cross-Module Revenue Report"],
+      [`Period: ${data.period.start} to ${data.period.end}`],
+      [],
+      ["Source", "Revenue (K)", "Transactions"],
+      ...data.bySource.map((s) => [
+        s.label,
+        (s.amount / 100).toFixed(2),
+        s.count.toString(),
+      ]),
+      ["Total", (data.totalRevenue / 100).toFixed(2), ""],
+      [],
+      ["Monthly Breakdown"],
+      ["Month", "Invoicing (K)", "E-Commerce (K)", "Bookings (K)", "Total (K)"],
+      ...data.byPeriod.map((p) => [
+        p.period,
+        (p.invoicing / 100).toFixed(2),
+        (p.ecommerce / 100).toFixed(2),
+        (p.booking / 100).toFixed(2),
+        (p.total / 100).toFixed(2),
+      ]),
+    ];
+    return rows.map((r) => r.join(",")).join("\n");
+  }
+
+  const data = await getCrossModuleClients(siteId, dateRange, 100);
+  const rows = [
+    ["Cross-Module Client Report"],
+    [],
+    [
+      "Client",
+      "Email",
+      "Invoicing (K)",
+      "E-Commerce (K)",
+      "Bookings (K)",
+      "Total (K)",
+      "Invoices",
+      "Orders",
+      "Bookings",
+      "Last Activity",
+    ],
+    ...data.clients.map((c) => [
+      `"${c.clientName}"`,
+      c.clientEmail,
+      (c.invoicingRevenue / 100).toFixed(2),
+      (c.ecommerceRevenue / 100).toFixed(2),
+      (c.bookingRevenue / 100).toFixed(2),
+      (c.totalRevenue / 100).toFixed(2),
+      c.invoiceCount.toString(),
+      c.orderCount.toString(),
+      c.bookingCount.toString(),
+      c.lastActivity,
+    ]),
+  ];
+  return rows.map((r) => r.join(",")).join("\n");
 }

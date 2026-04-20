@@ -1793,6 +1793,39 @@ html.theme-transition *::after {
   .studio-renderer td {
     border: 1px solid #ccc !important;
   }
+
+  /* Invoicing Reports - print-friendly (INVFIX-08) */
+  aside,
+  nav,
+  header,
+  [data-sidebar],
+  [data-print-hidden],
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .recharts-responsive-container {
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
 }
 
 /* =============================================

@@ -204,8 +204,8 @@
 | INVFIX-04 | Payments — Online Processing, Reconciliation, Receipts       | ✅ Complete    |
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
-| INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | 📋 Not Started |
-| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 📋 Not Started |
+| INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | ✅ Complete    |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | ✅ Complete    |
 | INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
 | INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
@@ -226,6 +226,32 @@
 **Session 7 (July 2026):** Closed all 6 INVFIX-04/05 audit blockers: live schema verified complete (Stripe dropped, new columns/RPCs/indexes present), payment/receipt numbering hardened with advisory locks + unique constraints, receipt identifiers persisted at creation, pre-generation notification implemented in recurring engine, email sender uses shared `getEmailFrom()`. Then completed INVFIX-06: PO receive tracking (form + actions + receipt history display + persisted `received_by` audit field), bill payment recording (dialog + action + amounts cards + visible payment history), 3-way match (dialog + action + variance display), vendor enhancements (bank details + stats + rating). Migration `migrations/invfix-06-po-receive-vendor-enhance.sql` applied. 0 invoicing TSC errors, 219 baseline.
 
 **Next session recommendation:** Session 8 should be **INVFIX-07 only**. Expense list/form/detail/category/report surfaces already exist, but approval thresholds/notifications, receipt viewer, category budgets/overspend alerts, and mileage/per-diem closure are still open. Do **not** bundle INVFIX-08 until expense closure is clean.
+
+**Session 8 (July 2026):** Closed INVFIX-07. 18 files changed (+1194/-227). Commit `60c34a6f`. Deliverables:
+
+- **Approval workflow**: Configurable approval threshold in settings (stored in cents), auto-approve below threshold toggle, email notifications for submitted/approved/rejected expenses via Resend. `approveExpense`/`rejectExpense` now store `approved_by`/`approved_at`. Rejection uses dedicated `rejection_reason` column (not `notes`).
+- **Receipt viewer**: New `ExpenseReceiptViewer` component — compact (inline preview + dialog on click) and full modes. Image zoom (0.25x–4x), rotation (90° increments), PDF iframe rendering, download button.
+- **Category budgets**: `monthly_budget` field on categories. `getCategoryBudgetSpending()` returns budget vs actual per category for current month. Progress bars in category manager with overspend alerts (red text + AlertTriangle).
+- **Icon picker**: 20 Lucide icon options for expense categories, rendered in grid.
+- **Mileage**: `mileage_rate_per_km` setting added. Full mileage/per-diem automation deferred — info alert in settings directs users to use categories.
+- **DB migration**: `approved_by`, `approved_at`, `rejection_reason` on expenses; `expense_approval_threshold`, `expense_auto_approve_below_threshold`, `mileage_rate_per_km` on settings; `monthly_budget` on expense_categories; 2 indexes.
+- **New files**: `expense-receipt-viewer.tsx`, `expense-email-service.ts`
+- **TSC**: 0 invoicing errors (352 total, all pre-existing marketing).
+
+**Next session recommendation:** Session 9 should be **INVFIX-08** (Reports Overhaul — Cross-Module Data, Central Hub).
+
+**Session 9 (July 2026):** Closed INVFIX-08. ~12 files changed (3 new, ~9 modified). Deliverables:
+
+- **Cross-module types**: 6 new types in report-types.ts (RevenueBySource, CrossModuleRevenue, CrossModulePeriodEntry, CrossModuleClientReport, CrossModuleClientRow).
+- **Cross-module server actions**: 3 new functions in report-actions.ts (~350 lines): `getCrossModuleRevenue` (payments + ecom orders + bookings, monthly breakdown), `getCrossModuleClients` (merge by email, rank by revenue), `exportCrossModuleCSV` (revenue + clients).
+- **Cross-module report component**: New cross-module-report.tsx (~400 lines) — Revenue tab (PieChart + AreaChart + monthly table) + Client tab (BarChart + detail table). DateRangeFilter, CSV export, print.
+- **Revenue trends enhancement**: Source breakdown cards, CSV export, print button added.
+- **Report hub categorization**: Restructured from flat 6-card grid to Accounting (4) + Insights (3) sections. Cross-Module Revenue card (Globe icon, cyan).
+- **Print CSS + buttons**: @media print rules in globals.css. Printer button added to all 7 report components.
+- **Route page**: New `reports/cross-module/page.tsx`.
+- **TSC**: 0 invoicing errors (135 total — reduced from 352 baseline due to prior marketing fixes).
+
+**Next session recommendation:** Session 10 should be **INVFIX-09** (Email System — Templates, Auto-Send, Dunning Escalation).
 
 ---
 
@@ -282,6 +308,7 @@
 | Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
 | Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
 | Jul 2026 | Billing Flow Deep Audit Session 8: Fix billing page wrong table (subscriptions→paddle_subscriptions), domain search debounce (useState→useRef), checkout successUrl, revalidatePath fixes — commit 94ce88d0         |
+| Jul 2026 | Invoicing INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports                                                                       |
 
 ---
 

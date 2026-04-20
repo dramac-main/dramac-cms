@@ -223,6 +223,55 @@ export interface DateRange {
 }
 
 // ============================================================================
+// CROSS-MODULE REPORTS (INVFIX-08)
+// ============================================================================
+
+/** Revenue broken down by source module */
+export interface RevenueBySource {
+  source: "invoicing" | "ecommerce" | "booking";
+  label: string;
+  amount: number;
+  count: number;
+  color: string;
+}
+
+/** Cross-module revenue report with per-period breakdown */
+export interface CrossModuleRevenue {
+  period: { start: string; end: string };
+  totalRevenue: number;
+  bySource: RevenueBySource[];
+  byPeriod: CrossModulePeriodEntry[];
+}
+
+export interface CrossModulePeriodEntry {
+  period: string;
+  invoicing: number;
+  ecommerce: number;
+  booking: number;
+  total: number;
+}
+
+/** Cross-module client activity report */
+export interface CrossModuleClientReport {
+  clients: CrossModuleClientRow[];
+  totalClients: number;
+  totalRevenue: number;
+}
+
+export interface CrossModuleClientRow {
+  clientName: string;
+  clientEmail: string;
+  invoicingRevenue: number;
+  ecommerceRevenue: number;
+  bookingRevenue: number;
+  totalRevenue: number;
+  invoiceCount: number;
+  orderCount: number;
+  bookingCount: number;
+  lastActivity: string;
+}
+
+// ============================================================================
 // DEPRECATED (kept for backward compatibility)
 // ============================================================================
 

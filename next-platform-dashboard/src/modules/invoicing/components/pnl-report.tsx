@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Download } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,6 +74,15 @@ export function PnlReport() {
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-1" />
             Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="no-print"
+            onClick={() => window.print()}
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            Print
           </Button>
         </div>
       </div>

@@ -6,7 +6,68 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Session 8 — Domain System Comprehensive Fix ✅
+## Latest: Session 10 — INVFIX-08 Reports Overhaul ✅
+
+### Session 10 (July 2026)
+
+**INVFIX-08: Reports Overhaul — Cross-Module Revenue/Client Reporting, Export/Print Polish — COMPLETE**
+
+Closed all INVFIX-08 deliverables. ~12 files changed (3 new, ~9 modified). Cross-module revenue and client activity reports, report hub categorization, print CSS, export/print buttons on all reports.
+
+#### Deliverables:
+
+1. **Cross-module report types**: 6 new types in `report-types.ts` — `RevenueBySource`, `CrossModuleRevenue`, `CrossModulePeriodEntry`, `CrossModuleClientReport`, `CrossModuleClientRow`.
+
+2. **Cross-module server actions**: 3 new functions in `report-actions.ts` (~350 lines) — `getCrossModuleRevenue` (queries payments + ecom orders + bookings, monthly breakdown by source), `getCrossModuleClients` (merges clients by email across modules, ranks by total revenue), `exportCrossModuleCSV` (revenue + clients export).
+
+3. **Cross-module report component**: New `cross-module-report.tsx` (~400 lines) — Tabs with Revenue Overview (4 KPI cards, PieChart, stacked AreaChart, monthly table) and Client Activity (2 KPI cards, stacked BarChart top 10, full client detail table). DateRangeFilter, CSV export, print button.
+
+4. **Revenue trends enhancement**: `revenue-trends-report.tsx` enhanced with revenue-by-source breakdown cards (from getCrossModuleRevenue), CSV export button, print button.
+
+5. **Report hub categorization**: `report-hub.tsx` restructured from flat 6-card grid to categorized sections — Accounting (4 cards: P&L, AR Aging, Tax Summary, Expense) + Insights (3 cards: Top Clients, Revenue Trends, Cross-Module Revenue with Globe icon).
+
+6. **Print CSS + print buttons**: Added `@media print` rules in `globals.css` (hide sidebar/nav/header/.no-print, full-width main, recharts page-break, table header repeat). Added Printer import + print button to all 6 existing report components (pnl, ar-aging, tax-summary, expense, top-clients, revenue-trends) + cross-module.
+
+7. **Cross-module route page**: New `reports/cross-module/page.tsx`.
+
+#### New files:
+
+- `src/modules/invoicing/components/cross-module-report.tsx`
+- `src/app/(dashboard)/dashboard/sites/[siteId]/invoicing/reports/cross-module/page.tsx`
+
+#### TSC: 0 invoicing errors (135 total — reduced from 352 baseline due to prior marketing fixes)
+
+### Previous: Session 9 — INVFIX-07 Expense System Closure ✅
+
+### Session 9 (July 2026)
+
+**INVFIX-07: Expense Approval Workflow, Receipt Viewer, Category Budgets — COMPLETE**
+
+Closed all 4 INVFIX-07 deliverables. 18 files changed (+1194/-227). Commit `60c34a6f`.
+
+#### Deliverables:
+
+1. **Approval workflow with threshold & auto-approve**: Configurable approval threshold in settings (in cents), auto-approve toggle for expenses below threshold, email notifications via Resend for 4 events (submitted, auto_approved, approved, rejected). `approveExpense`/`rejectExpense` now store `approved_by`/`approved_at`. Rejection uses dedicated `rejection_reason` column.
+
+2. **Receipt viewer component**: New `ExpenseReceiptViewer` — compact mode (inline preview, click to open dialog) and full mode (button opens dialog). Supports image zoom (0.25x–4x), 90° rotation, PDF iframe rendering, download. Wired into `expense-detail.tsx`.
+
+3. **Category budgets with overspend alerts**: `monthly_budget` field on categories. `getCategoryBudgetSpending()` action queries current month spending per category. Category manager shows Progress bars with overspend alerts (red + AlertTriangle). Icon picker with 20 Lucide icons.
+
+4. **Mileage/per-diem audit**: `mileage_rate_per_km` setting added to DB + settings form. Full mileage automation deferred — info alert in settings directs users to use expense categories for tracking.
+
+#### New files:
+
+- `src/modules/invoicing/components/expense-receipt-viewer.tsx`
+- `src/modules/invoicing/services/expense-email-service.ts`
+
+#### DB migration:
+
+- `approved_by`, `approved_at`, `rejection_reason` on expenses table
+- `expense_approval_threshold`, `expense_auto_approve_below_threshold`, `mileage_rate_per_km` on settings table
+- `monthly_budget` on expense_categories table
+- 2 indexes on expenses (approved_by, status+site)
+
+#### TSC: 0 invoicing errors (352 total, all pre-existing marketing module)
 
 ### Session 8 (July 2026)
 
