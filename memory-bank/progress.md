@@ -205,7 +205,7 @@
 | INVFIX-05 | Recurring Invoices — Full Lifecycle, Templates, Auto-Send    | ✅ Complete    |
 | INVFIX-06 | Vendors, Bills & POs — Receive Tracking, 3-Way Match         | ✅ Complete    |
 | INVFIX-07 | Expenses — Approval Workflow, Receipt Viewer, Budgets        | ✅ Complete    |
-| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | ✅ Complete    |
+| INVFIX-08 | Reports Overhaul — Cross-Module Data, Central Hub            | 🟡 Carryover   |
 | INVFIX-09 | Email System — Templates, Auto-Send, Dunning Escalation      | 📋 Not Started |
 | INVFIX-10 | Client Portal — Full Invoice Experience, Pay, Statements     | 📋 Not Started |
 | INVFIX-11 | Ask Chiko — Portal Expansion, Sticky Widget, Data Scoping    | 📋 Not Started |
@@ -250,14 +250,22 @@
 - **Print CSS + buttons**: @media print rules in globals.css. Printer button added to all 7 report components.
 
 **Post-audit correction:** INVFIX-08 is not fully closed yet. Follow-up audit fixed broken report-hub routes, corrected cross-module client total aggregation, and replaced raw `row.join(',')` CSV construction with safe escaping/serialization in `report-actions.ts`. Remaining carryover: cash flow is still invoicing-only, revenue trends still lacks compare/growth/segment analysis, AR aging still lacks drilldowns/probability/weighted DSO, tax summary still lacks filing-period breakdown/export, expense report still lacks budget-vs-actual and YoY trends, and report UIs still expose CSV + print rather than a true PDF export flow.
+
 - **Route page**: New `reports/cross-module/page.tsx`.
 - **TSC**: 0 invoicing errors (135 total — reduced from 352 baseline due to prior marketing fixes).
 
 **Next session recommendation:** Session 10 should begin with **INVFIX-08 carryover closure**. Only continue into **INVFIX-09** if the remaining report requirements are fully implemented and validated first.
 
-**Session 10 verification audit (April 20, 2026):** No new INVFIX commit landed after `355ae75f`. Current report code still matches the earlier cross-module/report-hub/export baseline plus the post-audit fixes above. The remaining INVFIX-08 carryover is unchanged: cash flow is still invoicing-only, revenue trends still lacks compare/growth/segment analysis, P&L still lacks YTD/gross-margin completion, AR aging still lacks drilldowns/probability/weighted DSO, tax summary still lacks filing-period breakdown/export, expense report still lacks budget-vs-actual and YoY completion, and the report stack still has no real PDF export path.
+**Session 10 verification audit (April 20, 2026):** No new INVFIX commit had landed after `355ae75f` at that point. The report code still matched the earlier cross-module/report-hub/export baseline plus the post-audit fixes above, so Session 11 was kept as a dedicated INVFIX-08 carryover-closure pass.
 
-**Updated next session recommendation:** Session 11 must remain **INVFIX-08 carryover closure only**. Do not include **INVFIX-09** in the same pass unless reports are actually closed and re-validated.
+**Session 11 verification update (April 20, 2026):** A real closure commit now exists locally at `b4731f61`, and it closes most of the carryover. Cross-module cash flow, revenue comparison/segments, gross margin + YTD, AR drilldown + weighted DSO, filing-period UI, and expense budget/YoY/top-vendor work are present in code. However, INVFIX-08 is still not fully closed against the master guide:
+
+- AR aging still has no collection-probability integration despite the existing AI risk hook.
+- Cash flow report still leaves projected forecast disabled (`hasProjectedData: false`) and does not surface the existing forecast component in the report itself.
+- Tax CSV export still omits the filing-period breakdown needed for filing-oriented export.
+- Cross-module report still lacks the module health scorecards promised in the guide.
+
+**Updated next session recommendation:** Session 12 must remain **INVFIX-08 final spec-closure only**. Do not include **INVFIX-09** in the same pass unless those remaining report gaps are actually closed and re-validated.
 
 **INVFIX Session 11 (July 2026) — INVFIX-08 Carryover Closure:** Closed ALL 7 remaining report gaps. 8 files changed. Deliverables: (1) cross-module cash flow with ecom/booking data + ComposedChart with net position Line, (2) new `getRevenueTrendsComparison` action with period-over-period + client segments, (3) P&L grossMargin + ytdComparison, (4) AR aging weighted DSO + `getARAgingInvoices` drilldown, (5) tax filing period monthly breakdown, (6) expense topVendors + budgetComparison + yoyComparison, (7) export standardization doc comment (CSV + Print→PDF is the standard). New type: `RevenueTrendsPeriodEntry`. Fixed `ARAgingInvoice` fields. All 6 report components updated. TSC: 0 invoicing errors.
 

@@ -6,53 +6,64 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: INVFIX Session 11 — INVFIX-08 Carryover Closure ✅
+## Latest: White-Label Supplier Branding Audit ✅
 
-### INVFIX Session 11 (July 2026)
+### Session 12 (July 2026)
 
-**Closed ALL 7 remaining INVFIX-08 report carryover gaps. 8 files changed. TSC: 0 invoicing errors.**
+**Full white-label audit: removed ALL upstream supplier brand exposure from agency and client-facing UI.**
 
-#### Gap 1: Cross-Module Cash Flow ✅
-- `getCashFlowReport()` rewritten — now queries e-commerce orders (`mod_ecommod01_orders`) and booking appointments (`mod_bookmod01_appointments`) alongside invoicing payments/expenses
-- `cash-flow-chart.tsx` upgraded from `BarChart` to `ComposedChart` with `Line` overlay for net position
-- Source breakdown section shows invoicing/ecommerce/bookings when multi-source data exists
+ResellerClub (domain/email provisioning) and Titan (email hosting) are hidden suppliers — agencies/clients must never see their names.
 
-#### Gap 2: Revenue Trends Comparison ✅
-- New `getRevenueTrendsComparison()` server action — period-over-period comparison with equal-length previous period, monthly breakdowns, client segment analysis (top 10 vs rest via invoice→client lookup in batches of 100)
-- New `RevenueTrendsPeriodEntry` type (simpler than `CrossModulePeriodEntry`)
-- `revenue-trends-report.tsx` — period comparison cards + client revenue segments section
+#### Deliverables:
 
-#### Gap 3: P&L YTD + Gross Margin ✅
-- `getProfitAndLoss()` enhanced — grossMargin (= netProfit, service platform with no COGS), grossMarginPercent, ytdComparison (queries previous year same date range, null if no prior data)
-- `pnl-report.tsx` — 4-col grid with gross margin card + YTD comparison section with TrendingUp/Down icons
+1. **ResellerClub brand removal (6 fixes)**: Balance error now shows generic "provisioning capacity issue", removed "Live from ResellerClub", "Registered via ResellerClub", "via ResellerClub" from email page, "Wholesale" → "Cost" in TLD pricing, "Order ID" → "Registration ID"
 
-#### Gap 4: AR Aging Drilldown + Weighted DSO ✅
-- `getARAgingReport()` enhanced — weighted DSO calculation (`sum(amount × daysOverdue) / sum(amount)`)
-- New `getARAgingInvoices()` drilldown action — returns invoices for a specific aging bucket
-- `ar-aging-report.tsx` — clickable bucket cards with drilldown table (invoice#, client, amount due, due date, days overdue) + DSO display
+2. **Titan brand removal (5 fixes)**: Plan name fallbacks "Titan Email" → "Business Email", aria-label "Open Titan webmail" → "Open webmail", portal text "Titan Mail webmail" → "webmail", removed "app.titan.email" text reference. Functional URLs kept (needed for service).
 
-#### Gap 5: Tax Filing Period Breakdown ✅
-- `getTaxSummary()` enhanced — `byFilingPeriod` monthly grouping of collected/paid/net, updated queries to include `issue_date`/`date` fields
-- `tax-summary-report.tsx` — filing period breakdown table with period, collected (green), paid (red), net (owed/credit indicator), totals footer
+3. **Package card styling**: Added `bg-card` to email plan cards for proper contrast
 
-#### Gap 6: Expense Budget/YoY ✅
-- `getExpenseReport()` enhanced — `topVendors` (top 5), `budgetComparison` (reads `monthly_budget` from categories, scaled to date range), `yoyComparison` (previous year query, monthly groups)
-- `expense-report.tsx` — top vendors panel, budget vs actual table with AlertTriangle for over-budget, YoY comparison card with trend icons
+4. **Audit findings — clean**: No simulated auth codes (false positive), transfer auth code implementation is proper, DNS records are infrastructure values not branding
 
-#### Gap 7: Export Standardization ✅
-- Doc comment added to `report-types.ts` header documenting that CSV + browser Print→PDF is the standardized export path (no dedicated PDF library)
+#### Commit: `1c3297f5` — pushed to main
 
-#### Files Changed (8):
-1. `report-types.ts` — Added `RevenueTrendsPeriodEntry`, fixed `ARAgingInvoice` fields, fixed `yoyComparison.previousByMonth` type, export doc comment
-2. `report-actions.ts` — Enhanced 4 actions + 2 new actions (~400 new lines)
-3. `cash-flow-chart.tsx` — ComposedChart + Line + source breakdown
-4. `pnl-report.tsx` — Gross margin card + YTD comparison
-5. `ar-aging-report.tsx` — Clickable drilldown + weighted DSO
-6. `tax-summary-report.tsx` — Filing period breakdown table
-7. `expense-report.tsx` — Top vendors + budget vs actual + YoY
-8. `revenue-trends-report.tsx` — Period comparison + client segments
+### Previous: INVFIX Session 11 Verification — INVFIX-08 Improved, Still Not Fully Closed
 
-#### TSC: 0 invoicing errors (confirmed clean)
+### INVFIX Session 11 (April 20, 2026 verification)
+
+**A real Session 11 closure commit exists locally (`b4731f61`), and it closes most of the previously identified report carryover. However, a deeper code audit against the master guide shows INVFIX-08 is still not fully spec-complete.**
+
+#### What Session 11 definitely landed
+
+- `getCashFlowReport()` now includes invoicing payments plus e-commerce orders and booking payments, with running net position and source-level cash-in breakdown.
+- `getRevenueTrendsComparison()` now exists and powers period-over-period totals, growth indicators, and top-10-vs-other client segmentation in `revenue-trends-report.tsx`.
+- `getProfitAndLoss()` now exposes `grossMargin`, `grossMarginPercent`, and `ytdComparison`, and `pnl-report.tsx` renders those values.
+- `getARAgingReport()` now computes `weightedDSO`, and `getARAgingInvoices()` enables bucket drilldowns from `ar-aging-report.tsx`.
+- `getTaxSummary()` now returns `byFilingPeriod`, and `tax-summary-report.tsx` renders the filing-period table.
+- `getExpenseReport()` now returns `topVendors`, `budgetComparison`, and `yoyComparison`, and `expense-report.tsx` renders them.
+- `report-types.ts` now documents the standardized export decision: CSV plus browser Print to PDF.
+
+#### Remaining INVFIX-08 gaps after the verification audit
+
+1. **AR aging collection probability is still missing.**
+   The master guide still calls for collection probability based on AI risk scores. The reusable AI hook exists (`getClientRiskScore()` / `client-risk-badge.tsx`), but it is not integrated into `ar-aging-report.tsx` or the AR report data types.
+2. **Projected cash flow is still not integrated into the report surface.**
+   `getCashFlowReport()` hard-codes `hasProjectedData: false`, and the report UI does not surface forecast data. A separate `CashFlowForecastChart` exists under the insights surface, but it is not wired into the cash flow report.
+3. **Tax CSV export is not yet filing-oriented.**
+   `getTaxSummary()` computes `byFilingPeriod`, but `exportReportCSV("tax")` still exports only the by-rate breakdown plus totals, not the filing-period structure needed for tax filing use.
+4. **Cross-module report health scorecards are still absent.**
+   `cross-module-report.tsx` includes revenue and client activity tabs, but it does not yet implement the module health scorecards described in the master guide.
+
+#### Important repo-state note
+
+- `main` is currently **ahead of `origin/main` by 1 commit** (`b4731f61`).
+- There are also current local modifications in several report files, but the report-specific diffs are formatting-only and do not change the audit outcome above.
+
+#### Planning impact
+
+- Treat INVFIX-08 as **still open**.
+- Session 12 should remain **INVFIX-08 final spec-closure only**.
+- Do **not** start INVFIX-09 until the remaining report gaps above are closed and re-validated.
+- From the current audited state, the realistic remaining roadmap is **4 focused sessions** if INVFIX-10 and INVFIX-11 are merged, or **5** if they are kept separate.
 
 ### Previous: Session 11 — Email/Domain Lifecycle Hardening ✅
 
@@ -75,6 +86,7 @@ Addressed 5 systemic concerns raised by user about the email/domain purchase flo
 5. **Email renewal system**: New `email-auto-renew` cron handler (14-day renewal window, queries `auto_renew=true` orders). New `email-expiry-notifications` cron (60/30/14/7/1 day alerts). Both registered in cron dispatcher. DB migration: `auto_renew` + `auto_renew_months` columns on `email_orders`.
 
 #### Files Changed:
+
 - **Modified**: `transactions.ts`, `email-purchase-wizard.tsx`, `business-email.ts`, `provisioning.ts`, `webhook-handlers.ts`, `notifications.ts`, `cron/route.ts`, `cron/[...task]/route.ts`
 - **Created**: `hooks/use-email-pricing.ts`, `cron/email-auto-renew/handler.ts`, `cron/email-expiry-notifications/handler.ts`, `migrations/email-orders-auto-renew.sql`
 - **New notification types**: `email_provisioned`, `email_provisioning_failed`, `domain_provisioned`, `domain_provisioning_failed`, `dns_configured`, `email_auto_renewed`, `email_auto_renew_failed`, `email_expiry_60d/30d/14d/7d/1d`
@@ -215,8 +227,8 @@ All INVFIX-06 features implemented and verified:
 
 ### Next Steps
 
-- **INVFIX-08 is now FULLY CLOSED** — all 7 report carryover gaps implemented and TSC-clean
-- **INVFIX-09 is next**: Email System — Templates, Auto-Send, Dunning Escalation
+- **INVFIX-08 is not fully closed yet** — Session 12 must finish the remaining report-spec gaps first.
+- **INVFIX-09 is next only after that**: Email System — Templates, Auto-Send, Dunning Escalation
 - **Domain system remaining work**: Transfer-out UI (backend exists, no UI), transfer status polling/webhooks, super admin domain pricing controls
 - **Repo path note**: `invfix-06-po-receive-vendor-enhance.sql` lives under the repo-root `migrations/` folder, not `next-platform-dashboard/migrations/`.
 - Do NOT reintroduce Stripe into the invoicing module

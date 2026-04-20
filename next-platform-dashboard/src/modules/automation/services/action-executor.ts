@@ -87,6 +87,68 @@ const CRM_SHORT_ID = "crmmod01";
 const CRM_TABLE_PREFIX = `mod_${CRM_SHORT_ID}`;
 
 // ============================================================================
+// TRIGGER VARIABLE RESOLUTION
+// ============================================================================
+
+/**
+ * Recursively resolve {{trigger.fieldName}} variables in any value.
+ *
+ * System workflow templates use Handlebars-style placeholders like
+ * {{trigger.customerName}} in their action configs. These must be replaced
+ * with the actual values from context.trigger before the action executes —
+ * otherwise raw template syntax leaks into customer-facing emails, chat
+ * messages, and notifications.
+ *
+ * Also handles basic {{#if trigger.X}}...{{else}}...{{/if}} conditionals.
+ */
+function resolveTriggerVariables(
+  value: unknown,
+  trigger: Record<string, unknown> | undefined,
+): unknown {
+  if (!trigger) return value;
+
+  if (typeof value === "string") {
+    // 1) Handle {{#if trigger.X}}...{{else}}...{{/if}} conditionals
+    let result = value.replace(
+      /\{\{#if\s+trigger\.(\w+)\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g,
+      (_match, field: string, ifTrue: string, ifFalse: string | undefined) => {
+        const fieldValue = trigger[field];
+        return fieldValue ? ifTrue : (ifFalse ?? "");
+      },
+    );
+
+    // 2) Handle simple {{trigger.fieldName}} replacements
+    result = result.replace(
+      /\{\{trigger\.(\w+)\}\}/g,
+      (_match, field: string) => {
+        const fieldValue = trigger[field];
+        return fieldValue !== undefined && fieldValue !== null
+          ? String(fieldValue)
+          : "";
+      },
+    );
+
+    return result;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveTriggerVariables(item, trigger));
+  }
+
+  if (value !== null && typeof value === "object") {
+    const resolved: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      resolved[key] = resolveTriggerVariables(val, trigger);
+    }
+    return resolved;
+  }
+
+  return value;
+}
+
+// ============================================================================
 // MAIN EXECUTION FUNCTION
 // ============================================================================
 
@@ -98,29 +160,37 @@ export async function executeAction(
   config: Record<string, unknown>,
   context: ExecutionContext,
 ): Promise<ActionResult> {
+  // Resolve all {{trigger.X}} template variables before dispatching to handlers.
+  // This ensures every action type (email, chat, notification, CRM, etc.)
+  // receives actual values instead of raw template strings.
+  const resolvedConfig = resolveTriggerVariables(
+    config,
+    context.trigger as Record<string, unknown> | undefined,
+  ) as Record<string, unknown>;
+
   const [category, action] = actionType.split(".");
 
   switch (category) {
     case "crm":
-      return executeCrmAction(action, config, context);
+      return executeCrmAction(action, resolvedConfig, context);
     case "ecommerce":
-      return executeEcommerceAction(action, config, context);
+      return executeEcommerceAction(action, resolvedConfig, context);
     case "booking":
-      return executeBookingAction(action, config, context);
+      return executeBookingAction(action, resolvedConfig, context);
     case "chat":
-      return executeChatAction(action, config, context);
+      return executeChatAction(action, resolvedConfig, context);
     case "email":
-      return executeEmailAction(action, config, context);
+      return executeEmailAction(action, resolvedConfig, context);
     case "notification":
-      return executeNotificationAction(action, config, context);
+      return executeNotificationAction(action, resolvedConfig, context);
     case "webhook":
-      return executeWebhookAction(action, config);
+      return executeWebhookAction(action, resolvedConfig);
     case "data":
-      return executeDataAction(action, config, context);
+      return executeDataAction(action, resolvedConfig, context);
     case "transform":
-      return executeTransformAction(action, config);
+      return executeTransformAction(action, resolvedConfig);
     case "flow":
-      return executeFlowAction(action, config);
+      return executeFlowAction(action, resolvedConfig);
     default:
       return {
         status: "failed",

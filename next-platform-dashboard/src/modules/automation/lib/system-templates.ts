@@ -132,23 +132,40 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Booking Confirmed — {{trigger.serviceName}}",
-          body: "Hi {{trigger.customerName}},\n\nYour booking for {{trigger.serviceName}} on {{trigger.startDateFormatted}} at {{trigger.startTimeFormatted}} with {{trigger.staffName}} has been confirmed.\n\nWe look forward to seeing you!",
+          email_type: "booking_confirmed_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            staffName: "{{trigger.staffName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            duration: "{{trigger.durationMinutes}}",
+            price: "{{trigger.price}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+            paymentRequired: "{{trigger.paymentStatus}}",
+            bookingId: "{{trigger.appointmentId}}",
+          },
         },
         name: "Email Customer — Booking Confirmed",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Booking Confirmed — {{trigger.serviceName}} with {{trigger.customerName}}",
-          body: "A booking has been confirmed.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nDate: {{trigger.startDateFormatted}} at {{trigger.startTimeFormatted}}",
+          email_type: "booking_confirmed_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+            confirmedBy: "{{trigger.confirmedBy}}",
+          },
         },
         name: "Email Owner — Booking Confirmed",
       },
@@ -188,23 +205,34 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Booking Cancelled — {{trigger.serviceName}}",
-          body: "Hi {{trigger.customerName}},\n\nYour booking for {{trigger.serviceName}} on {{trigger.startDateFormatted}} at {{trigger.startTimeFormatted}} has been cancelled.\n\nReason: {{trigger.cancellationReason}}\n\nPlease contact us if you have any questions.",
+          email_type: "booking_cancelled_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            bookingId: "{{trigger.appointmentId}}",
+          },
         },
         name: "Email Customer — Booking Cancelled",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Booking Cancelled — {{trigger.serviceName}} with {{trigger.customerName}}",
-          body: "A booking has been cancelled.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nDate: {{trigger.startDateFormatted}} at {{trigger.startTimeFormatted}}\nReason: {{trigger.cancellationReason}}",
+          email_type: "booking_cancelled_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            reason: "{{trigger.cancellationReason}}",
+          },
         },
         name: "Email Owner — Booking Cancelled",
       },
@@ -257,23 +285,35 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Appointment Complete — {{trigger.serviceName}}",
-          body: "Hi {{trigger.customerName}},\n\nYour appointment for {{trigger.serviceName}} has been completed.\n\nThank you for choosing us! We hope to see you again soon.",
+          email_type: "booking_completed_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            staffName: "{{trigger.staffName}}",
+            date: "{{trigger.startDateFormatted}}",
+            price: "{{trigger.price}}",
+            bookingId: "{{trigger.appointmentId}}",
+          },
         },
         name: "Email Customer — Appointment Complete",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Appointment Complete — {{trigger.serviceName}} with {{trigger.customerName}}",
-          body: "An appointment has been completed.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}",
+          email_type: "booking_completed_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            price: "{{trigger.price}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+          },
         },
         name: "Email Owner — Appointment Complete",
       },
@@ -313,12 +353,18 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Missed Appointment — {{trigger.serviceName}}",
-          body: "Hi {{trigger.customerName}},\n\nWe noticed you missed your appointment for {{trigger.serviceName}} scheduled for {{trigger.startDateFormatted}} at {{trigger.startTimeFormatted}}.\n\nPlease contact us to reschedule.",
+          email_type: "booking_no_show_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            bookingId: "{{trigger.appointmentId}}",
+          },
         },
         name: "Email Customer — No Show",
       },
@@ -345,23 +391,36 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Payment Confirmed — {{trigger.serviceName}}",
-          body: "Hi {{trigger.customerName}},\n\nWe've received your payment of {{trigger.currency}} {{trigger.servicePrice}} for {{trigger.serviceName}}.\n\nThank you!",
+          email_type: "booking_payment_received_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            staffName: "{{trigger.staffName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            price: "{{trigger.servicePrice}}",
+            bookingId: "{{trigger.appointmentId}}",
+          },
         },
         name: "Email Customer — Payment Confirmed",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Payment Received — {{trigger.serviceName}} from {{trigger.customerName}}",
-          body: "A payment has been received.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nAmount: {{trigger.currency}} {{trigger.servicePrice}}",
+          email_type: "booking_payment_received_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            serviceName: "{{trigger.serviceName}}",
+            date: "{{trigger.startDateFormatted}}",
+            time: "{{trigger.startTimeFormatted}}",
+            price: "{{trigger.servicePrice}}",
+          },
         },
         name: "Email Owner — Payment Received",
       },
@@ -480,23 +539,40 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Order Confirmation — #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nThank you for your order #{{trigger.orderNumber}}.\n\nTotal: {{trigger.currency}} {{trigger.total}}\n\nWe'll keep you updated on your order status.",
+          email_type: "order_confirmation_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+            paymentProvider: "{{trigger.paymentProvider}}",
+            items: "{{trigger.items}}",
+            subtotal: "{{trigger.subtotal}}",
+            shipping: "{{trigger.shipping}}",
+            tax: "{{trigger.tax}}",
+            total: "{{trigger.total}}",
+            shippingAddress: "{{trigger.shippingAddress}}",
+          },
         },
         name: "Email Customer — Order Confirmation",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "New Order — #{{trigger.orderNumber}} from {{trigger.customerName}}",
-          body: "A new order has been placed.\n\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}} ({{trigger.customerEmail}})\nTotal: {{trigger.currency}} {{trigger.total}}",
+          email_type: "order_confirmation_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+            items: "{{trigger.items}}",
+            total: "{{trigger.total}}",
+          },
         },
         name: "Email Owner — New Order",
       },
@@ -535,12 +611,17 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Order Shipped — #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nYour order #{{trigger.orderNumber}} has been shipped!\n\nCarrier: {{trigger.carrier}}\nTracking: {{trigger.trackingNumber}}\n\nYou'll receive another update when it's delivered.",
+          email_type: "order_shipped_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            trackingNumber: "{{trigger.trackingNumber}}",
+            trackingUrl: "{{trigger.trackingUrl}}",
+          },
         },
         name: "Email Customer — Order Shipped",
       },
@@ -591,12 +672,15 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Order Delivered — #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nYour order #{{trigger.orderNumber}} has been delivered.\n\nThank you for shopping with us!",
+          email_type: "order_delivered_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+          },
         },
         name: "Email Customer — Order Delivered",
       },
@@ -647,23 +731,32 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Order Cancelled — #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nYour order #{{trigger.orderNumber}} has been cancelled.\n\nReason: {{trigger.reason}}\n\nIf this was a mistake, please contact us.",
+          email_type: "order_cancelled_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            reason: "{{trigger.reason}}",
+          },
         },
         name: "Email Customer — Order Cancelled",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Order Cancelled — #{{trigger.orderNumber}} from {{trigger.customerName}}",
-          body: "An order has been cancelled.\n\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}}\nReason: {{trigger.reason}}",
+          email_type: "order_cancelled_owner",
+          data: {
+            orderNumber: "{{trigger.orderNumber}}",
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            total: "{{trigger.total}}",
+            reason: "{{trigger.reason}}",
+          },
         },
         name: "Email Owner — Order Cancelled",
       },
@@ -715,12 +808,17 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Payment Received — Order #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nWe've received your payment of {{trigger.currency}} {{trigger.amount}} for order #{{trigger.orderNumber}}.\n\nThank you!",
+          email_type: "payment_received_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            total: "{{trigger.amount}}",
+            paymentMethod: "{{trigger.paymentMethod}}",
+          },
         },
         name: "Email Customer — Payment Received",
       },
@@ -772,11 +870,17 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Payment Proof Uploaded — Order #{{trigger.orderNumber}}",
-          body: "A customer has uploaded payment proof.\n\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerEmail}}\nFile: {{trigger.fileName}}\nTotal: {{trigger.currency}} {{trigger.total}}\n\nPlease review and approve the payment.",
+          email_type: "payment_proof_uploaded_owner",
+          data: {
+            orderNumber: "{{trigger.orderNumber}}",
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            total: "{{trigger.total}}",
+            fileName: "{{trigger.fileName}}",
+          },
         },
         name: "Email Owner — Payment Proof Uploaded",
       },
@@ -827,12 +931,17 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Refund Issued — Order #{{trigger.orderNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nA refund of {{trigger.currency}} {{trigger.refundAmount}} has been issued for your order #{{trigger.orderNumber}}.\n\nPlease allow a few business days for the refund to appear.",
+          email_type: "refund_issued_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            refundAmount: "{{trigger.refundAmount}}",
+            reason: "{{trigger.reason}}",
+          },
         },
         name: "Email Customer — Refund Issued",
       },
@@ -884,11 +993,16 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Low Stock Alert — {{trigger.productName}}",
-          body: "A product is running low on stock.\n\nProduct: {{trigger.productName}}\nCurrent Stock: {{trigger.currentStock}}\nThreshold: {{trigger.threshold}}\n\nPlease restock soon.",
+          email_type: "low_stock_admin",
+          data: {
+            productName: "{{trigger.productName}}",
+            sku: "{{trigger.sku}}",
+            currentStock: "{{trigger.currentStock}}",
+            threshold: "{{trigger.threshold}}",
+          },
         },
         name: "Email Owner — Low Stock Alert",
       },
@@ -934,23 +1048,37 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "New Quote Request — #{{trigger.quoteNumber}} from {{trigger.customerName}}",
-          body: "A new quote has been requested.\n\nQuote: #{{trigger.quoteNumber}}\nCustomer: {{trigger.customerName}} ({{trigger.customerEmail}})\nTotal: {{trigger.currency}} {{trigger.total}}",
+          email_type: "quote_request_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            customerPhone: "{{trigger.customerPhone}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            itemCount: "{{trigger.itemCount}}",
+            total: "{{trigger.total}}",
+            items: "{{trigger.items}}",
+            currency: "{{trigger.currency}}",
+          },
         },
         name: "Email Owner — Quote Request",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Quote Request Received — #{{trigger.quoteNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nWe've received your quote request #{{trigger.quoteNumber}}.\n\nWe'll review it and get back to you shortly.",
+          email_type: "quote_request_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            itemCount: "{{trigger.itemCount}}",
+            items: "{{trigger.items}}",
+            currency: "{{trigger.currency}}",
+          },
         },
         name: "Email Customer — Quote Request Acknowledgement",
       },
@@ -1002,12 +1130,19 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Your Quote — #{{trigger.quoteNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nPlease find your quote #{{trigger.quoteNumber}}.\n\nTotal: {{trigger.currency}} {{trigger.total}}\nValid Until: {{trigger.validUntil}}\n\nPlease review and let us know if you'd like to proceed.",
+          email_type: "quote_sent_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            totalAmount: "{{trigger.total}}",
+            expiryDate: "{{trigger.validUntil}}",
+            message: "{{trigger.message}}",
+            viewQuoteUrl: "{{trigger.viewQuoteUrl}}",
+          },
         },
         name: "Email Customer — Quote Sent",
       },
@@ -1047,12 +1182,19 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Quote Reminder — #{{trigger.quoteNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nThis is a friendly reminder about your quote #{{trigger.quoteNumber}}.\n\nTotal: {{trigger.currency}} {{trigger.total}}\nValid Until: {{trigger.validUntil}}\n\nPlease let us know if you have any questions.",
+          email_type: "quote_reminder_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            totalAmount: "{{trigger.total}}",
+            expiryDate: "{{trigger.validUntil}}",
+            message: "{{trigger.message}}",
+            viewQuoteUrl: "{{trigger.viewQuoteUrl}}",
+          },
         },
         name: "Email Customer — Quote Reminder",
       },
@@ -1079,22 +1221,32 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Quote Accepted — #{{trigger.quoteNumber}}",
-          body: "A quote has been accepted.\n\nQuote: #{{trigger.quoteNumber}}\nCustomer: {{trigger.customerName}}\nAccepted By: {{trigger.acceptedByName}}\nTotal: {{trigger.currency}} {{trigger.total}}",
+          email_type: "quote_accepted_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            totalAmount: "{{trigger.total}}",
+            acceptedByName: "{{trigger.acceptedByName}}",
+          },
         },
         name: "Email Owner — Quote Accepted",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Quote Accepted — #{{trigger.quoteNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nYour quote #{{trigger.quoteNumber}} has been accepted.\n\nTotal: {{trigger.currency}} {{trigger.total}}\n\nWe'll be in touch about next steps.",
+          email_type: "quote_accepted_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            total: "{{trigger.total}}",
+          },
         },
         name: "Email Customer — Quote Accepted Confirmation",
       },
@@ -1146,11 +1298,17 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Quote Rejected — #{{trigger.quoteNumber}}",
-          body: "A quote has been rejected.\n\nQuote: #{{trigger.quoteNumber}}\nCustomer: {{trigger.customerName}}\nReason: {{trigger.rejectionReason}}",
+          email_type: "quote_rejected_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            totalAmount: "{{trigger.total}}",
+            rejectionReason: "{{trigger.rejectionReason}}",
+          },
         },
         name: "Email Owner — Quote Rejected",
       },
@@ -1202,11 +1360,16 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Quote Amendment Requested — #{{trigger.quoteNumber}}",
-          body: "A customer has requested changes to a quote.\n\nQuote: #{{trigger.quoteNumber}}\nCustomer: {{trigger.customerName}}\nNotes: {{trigger.amendmentNotes}}",
+          email_type: "quote_amendment_requested_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            quoteNumber: "{{trigger.quoteNumber}}",
+            amendmentNotes: "{{trigger.amendmentNotes}}",
+          },
         },
         name: "Email Owner — Amendment Requested",
       },
@@ -1258,23 +1421,36 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.customerEmail}}",
           to_name: "{{trigger.customerName}}",
-          subject: "Order Created from Quote — #{{trigger.quoteNumber}}",
-          body: "Hi {{trigger.customerName}},\n\nYour quote #{{trigger.quoteNumber}} has been converted to order #{{trigger.orderNumber}}.\n\nTotal: {{trigger.currency}} {{trigger.total}}\n\nThank you for your business!",
+          email_type: "order_confirmation_customer",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            paymentStatus: "{{trigger.paymentStatus}}",
+            items: "{{trigger.items}}",
+            total: "{{trigger.total}}",
+          },
+          subject_override: "Order Created from Quote — #{{trigger.quoteNumber}}",
         },
         name: "Email Customer — Order from Quote",
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject:
-            "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
-          body: "A quote has been converted to an order.\n\nQuote: #{{trigger.quoteNumber}}\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}}\nTotal: {{trigger.currency}} {{trigger.total}}",
+          email_type: "order_confirmation_owner",
+          data: {
+            customerName: "{{trigger.customerName}}",
+            customerEmail: "{{trigger.customerEmail}}",
+            orderNumber: "{{trigger.orderNumber}}",
+            items: "{{trigger.items}}",
+            total: "{{trigger.total}}",
+          },
+          subject_override: "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
         },
         name: "Email Owner — Quote Converted to Order",
       },
@@ -1333,11 +1509,14 @@ const FORM_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "New Form Submission — {{trigger.formName}}",
-          body: "A new form has been submitted.\n\nForm: {{trigger.formName}}\nPage: {{trigger.pageUrl}}\n\nPlease check the dashboard for submission details.",
+          email_type: "form_submission_owner",
+          data: {
+            formName: "{{trigger.formName}}",
+            pageUrl: "{{trigger.pageUrl}}",
+          },
         },
         name: "Email Owner — Form Submission",
       },
@@ -1428,11 +1607,14 @@ const CHAT_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Missed Chat — {{trigger.visitorName}}",
-          body: "A customer chat was missed — no agent responded in time.\n\nVisitor: {{trigger.visitorName}}\n\nPlease follow up when possible.",
+          email_type: "chat_missed_notification",
+          data: {
+            visitorName: "{{trigger.visitorName}}",
+            visitorMessage: "{{trigger.messagePreview}}",
+          },
         },
         name: "Email Owner — Missed Chat Alert",
       },
@@ -1506,12 +1688,18 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.contactEmail}}",
-          subject:
-            "Friendly Reminder — Invoice {{trigger.invoiceNumber}} is Past Due",
-          body: "Hi {{trigger.contactName}},\n\nThis is a friendly reminder that invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} was due on {{trigger.dueDate}}.\n\nPlease arrange payment at your earliest convenience.\n\nThank you.",
+          to_name: "{{trigger.contactName}}",
+          email_type: "invoice_overdue_reminder",
+          data: {
+            invoiceNumber: "{{trigger.invoiceNumber}}",
+            dueDate: "{{trigger.dueDate}}",
+            formattedAmountDue: "{{trigger.amountDueFormatted}}",
+            daysOverdue: "1",
+            viewUrl: "{{trigger.viewUrl}}",
+          },
         },
         name: "Send Friendly Reminder Email",
       },
@@ -1533,12 +1721,19 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.contactEmail}}",
-          subject:
-            "Second Notice — Invoice {{trigger.invoiceNumber}} is Now Overdue",
-          body: "Hi {{trigger.contactName}},\n\nInvoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} is now significantly overdue. The original due date was {{trigger.dueDate}}.\n\nPlease arrange immediate payment to avoid any further action.\n\nThank you.",
+          to_name: "{{trigger.contactName}}",
+          email_type: "invoice_overdue_reminder",
+          data: {
+            invoiceNumber: "{{trigger.invoiceNumber}}",
+            dueDate: "{{trigger.dueDate}}",
+            formattedAmountDue: "{{trigger.amountDueFormatted}}",
+            daysOverdue: "8",
+            viewUrl: "{{trigger.viewUrl}}",
+          },
+          subject_override: "Second Notice — Invoice {{trigger.invoiceNumber}} is Now Overdue",
         },
         name: "Send Firmer Reminder Email",
       },
@@ -1584,12 +1779,17 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.contactEmail}}",
-          subject:
-            "Payment Received — Invoice {{trigger.invoiceNumber}}",
-          body: "Hi {{trigger.contactName}},\n\nWe have received your payment of {{trigger.amountPaidFormatted}} for invoice {{trigger.invoiceNumber}}.\n\n{{#if trigger.fullyPaid}}This invoice is now fully paid. Thank you!{{else}}Remaining balance: {{trigger.remainingBalanceFormatted}}{{/if}}\n\nThank you for your prompt payment.",
+          to_name: "{{trigger.contactName}}",
+          email_type: "invoice_payment_received_customer",
+          data: {
+            invoiceNumber: "{{trigger.invoiceNumber}}",
+            formattedAmount: "{{trigger.amountPaidFormatted}}",
+            paymentMethod: "{{trigger.paymentMethod}}",
+            receiptUrl: "{{trigger.receiptUrl}}",
+          },
         },
         name: "Send Receipt Email",
       },
@@ -1669,12 +1869,17 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.contactEmail}}",
-          subject:
-            "Invoice {{trigger.invoiceNumber}} from {{trigger.companyName}}",
-          body: "Hi {{trigger.contactName}},\n\nPlease find your invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} due on {{trigger.dueDate}}.\n\nThank you for your continued business.",
+          to_name: "{{trigger.contactName}}",
+          email_type: "invoice_sent_customer",
+          data: {
+            invoiceNumber: "{{trigger.invoiceNumber}}",
+            formattedTotal: "{{trigger.amountDueFormatted}}",
+            dueDate: "{{trigger.dueDate}}",
+            viewUrl: "{{trigger.viewUrl}}",
+          },
         },
         name: "Auto-Send Invoice Email",
       },
@@ -1687,7 +1892,7 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       "When an invoice is sent, waits 3 days and checks if it has been viewed. If not viewed, sends a follow-up email to the client.",
     category: "System — Invoicing",
     icon: "Send",
-    complexity: "moderate",
+    complexity: "intermediate",
     estimatedSetupTime: "0 minutes",
     tags: ["system", "invoicing", "follow-up", "email"],
     isSystem: true,
@@ -1717,12 +1922,19 @@ const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
       },
       {
         step_type: "action",
-        action_type: "email.send",
+        action_type: "email.send_branded_template",
         action_config: {
           to: "{{trigger.contactEmail}}",
-          subject:
-            "Following Up — Invoice {{trigger.invoiceNumber}}",
-          body: "Hi {{trigger.contactName}},\n\nWe sent invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} a few days ago and wanted to make sure you received it.\n\nThe payment is due on {{trigger.dueDate}}. Please let us know if you have any questions.\n\nThank you.",
+          to_name: "{{trigger.contactName}}",
+          email_type: "invoice_overdue_reminder",
+          data: {
+            invoiceNumber: "{{trigger.invoiceNumber}}",
+            dueDate: "{{trigger.dueDate}}",
+            formattedAmountDue: "{{trigger.amountDueFormatted}}",
+            daysOverdue: "3",
+            viewUrl: "{{trigger.viewUrl}}",
+          },
+          subject_override: "Following Up — Invoice {{trigger.invoiceNumber}}",
         },
         name: "Send Follow-Up Email",
       },
