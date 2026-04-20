@@ -300,6 +300,7 @@ export async function createConversation(data: {
 export async function assignConversation(
   conversationId: string,
   agentId: string,
+  actorName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -379,6 +380,21 @@ export async function assignConversation(
           agentName: agent.display_name,
         });
       }
+
+      // Insert agent-attributed activity message
+      const actor = actorName || "An agent";
+      const systemContent =
+        actorName
+          ? `${actor} assigned this conversation to ${agent.display_name}`
+          : `Conversation assigned to ${agent.display_name}`;
+      await supabase.from("mod_chat_messages").insert({
+        conversation_id: conversationId,
+        site_id: conv.site_id,
+        sender_type: "system",
+        sender_name: actorName || null,
+        content: systemContent,
+        content_type: "system",
+      });
     } catch {
       // Non-fatal — don't fail the assignment if notification fails
     }
@@ -411,6 +427,7 @@ export async function transferConversation(
   conversationId: string,
   toAgentId: string,
   note?: string,
+  fromAgentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -476,12 +493,16 @@ export async function transferConversation(
         .update({ current_chat_count: (newAgent.current_chat_count || 0) + 1 })
         .eq("id", toAgentId);
 
-      // Insert system message
+      // Insert agent-attributed system message
+      const transferContent = fromAgentName
+        ? `${fromAgentName} transferred this conversation to ${newAgent.display_name}`
+        : `Conversation transferred to ${newAgent.display_name}`;
       await supabase.from("mod_chat_messages").insert({
         conversation_id: conversationId,
         site_id: conv.site_id,
         sender_type: "system",
-        content: `Conversation transferred to ${newAgent.display_name}`,
+        sender_name: fromAgentName || null,
+        content: transferContent,
         content_type: "system",
       });
     }
@@ -508,6 +529,7 @@ export async function transferConversation(
 
 export async function resolveConversation(
   conversationId: string,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -568,12 +590,15 @@ export async function resolveConversation(
       }
     }
 
-    // System message
+    // Agent-attributed activity message
     await supabase.from("mod_chat_messages").insert({
       conversation_id: conversationId,
       site_id: conv.site_id,
       sender_type: "system",
-      content: "Conversation resolved",
+      sender_name: agentName || null,
+      content: agentName
+        ? `${agentName} resolved this conversation`
+        : "Conversation resolved",
       content_type: "system",
     });
 
@@ -603,6 +628,7 @@ export async function resolveConversation(
 
 export async function closeConversation(
   conversationId: string,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -663,6 +689,18 @@ export async function closeConversation(
       }
     }
 
+    // Agent-attributed activity message
+    await supabase.from("mod_chat_messages").insert({
+      conversation_id: conversationId,
+      site_id: conv.site_id,
+      sender_type: "system",
+      sender_name: agentName || null,
+      content: agentName
+        ? `${agentName} closed this conversation`
+        : "Conversation closed",
+      content_type: "system",
+    });
+
     // Emit automation event for closed conversation
     logAutomationEvent(
       conv.site_id,
@@ -688,6 +726,7 @@ export async function closeConversation(
 
 export async function reopenConversation(
   conversationId: string,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -720,6 +759,18 @@ export async function reopenConversation(
 
     if (updateError) throw updateError;
 
+    // Agent-attributed activity message
+    await supabase.from("mod_chat_messages").insert({
+      conversation_id: conversationId,
+      site_id: conv.site_id,
+      sender_type: "system",
+      sender_name: agentName || null,
+      content: agentName
+        ? `${agentName} reopened this conversation`
+        : "Conversation reopened",
+      content_type: "system",
+    });
+
     revalidatePath(liveChatPath(conv.site_id));
     return { success: true, error: null };
   } catch (error) {
@@ -731,6 +782,7 @@ export async function reopenConversation(
 export async function updateConversationPriority(
   conversationId: string,
   priority: ConversationPriority,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -749,6 +801,20 @@ export async function updateConversationPriority(
       .eq("id", conversationId);
 
     if (updateError) throw updateError;
+
+    // Agent-attributed activity message
+    if (agentName) {
+      const priorityLabel =
+        priority.charAt(0).toUpperCase() + priority.slice(1);
+      await supabase.from("mod_chat_messages").insert({
+        conversation_id: conversationId,
+        site_id: conv.site_id,
+        sender_type: "system",
+        sender_name: agentName,
+        content: `${agentName} set priority to ${priorityLabel}`,
+        content_type: "system",
+      });
+    }
 
     revalidatePath(liveChatPath(conv.site_id));
     return { success: true, error: null };
@@ -809,6 +875,7 @@ export async function setConversationAiPaused(
   conversationId: string,
   paused: boolean,
   agentName?: string,
+  insertActivityMessage: boolean = false,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -845,6 +912,20 @@ export async function setConversationAiPaused(
       .eq("id", conversationId);
 
     if (updateError) throw updateError;
+
+    // Optionally insert an agent-attributed activity message
+    if (insertActivityMessage && agentName) {
+      await supabase.from("mod_chat_messages").insert({
+        conversation_id: conversationId,
+        site_id: conv.site_id,
+        sender_type: "system",
+        sender_name: agentName,
+        content: paused
+          ? `${agentName} paused AI responses`
+          : `${agentName} resumed AI responses`,
+        content_type: "system",
+      });
+    }
 
     revalidatePath(liveChatPath(conv.site_id));
     return { success: true, error: null };
@@ -1083,5 +1164,35 @@ export async function getConversationStats(
       },
       error: (error as Error).message,
     };
+  }
+}
+
+// =============================================================================
+// AGENT ACTIVITY MESSAGES
+// =============================================================================
+
+/**
+ * Insert an agent-attributed system message into a conversation timeline.
+ * Used by order/quote panels when the agent takes an action (e.g. cancels an
+ * order) so the full team can see exactly who did what and why.
+ */
+export async function insertChatActivityMessage(
+  conversationId: string,
+  siteId: string,
+  content: string,
+  agentName: string,
+): Promise<void> {
+  try {
+    const supabase = await getModuleClient();
+    await supabase.from("mod_chat_messages").insert({
+      conversation_id: conversationId,
+      site_id: siteId,
+      sender_type: "system",
+      sender_name: agentName,
+      content,
+      content_type: "system",
+    });
+  } catch (err) {
+    console.error("[LiveChat] insertChatActivityMessage error:", err);
   }
 }

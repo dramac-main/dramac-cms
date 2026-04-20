@@ -309,7 +309,7 @@ export function ConversationViewWrapper({
   const handleAssign = useCallback(
     (agentId: string) => {
       startTransition(async () => {
-        const result = await assignConversation(conversation.id, agentId);
+        const result = await assignConversation(conversation.id, agentId, userName);
         if (result.error) {
           toast.error(result.error);
         } else {
@@ -327,7 +327,7 @@ export function ConversationViewWrapper({
   // Resolve
   const handleResolve = useCallback(() => {
     startTransition(async () => {
-      const result = await resolveConversation(conversation.id);
+      const result = await resolveConversation(conversation.id, userName);
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -340,7 +340,7 @@ export function ConversationViewWrapper({
   // Close
   const handleClose = useCallback(() => {
     startTransition(async () => {
-      const result = await closeConversation(conversation.id);
+      const result = await closeConversation(conversation.id, userName);
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -353,7 +353,7 @@ export function ConversationViewWrapper({
   // Reopen
   const handleReopen = useCallback(() => {
     startTransition(async () => {
-      const result = await reopenConversation(conversation.id);
+      const result = await reopenConversation(conversation.id, userName);
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -370,6 +370,7 @@ export function ConversationViewWrapper({
         const result = await updateConversationPriority(
           conversation.id,
           priority as ConversationPriority,
+          userName,
         );
         if (result.error) {
           toast.error(result.error);
@@ -391,6 +392,8 @@ export function ConversationViewWrapper({
         const result = await transferConversation(
           conversation.id,
           targetAgentId,
+          undefined,
+          userName,
         );
         if (result.error) {
           toast.error(result.error);
@@ -823,6 +826,7 @@ export function ConversationViewWrapper({
                 orderNumber={orderNum}
                 userId={userId}
                 userName={userName}
+                conversationId={conversation.id}
               />
             ) : null;
           })()}
@@ -838,6 +842,7 @@ export function ConversationViewWrapper({
                 quoteNumber={quoteNum}
                 userId={userId}
                 userName={userName}
+                conversationId={conversation.id}
               />
             ) : null;
           })()}
@@ -853,6 +858,7 @@ export function ConversationViewWrapper({
                 bookingId={bookingId}
                 userId={userId}
                 userName={userName}
+                conversationId={conversation.id}
               />
             ) : null;
           })()}

@@ -618,6 +618,10 @@ export async function updateQuoteStatus(
       }
     } else if (status === "converted") {
       updateData.converted_at = now;
+    } else if (status === "cancelled") {
+      updateData.cancelled_at = now;
+      if (notes) updateData.cancellation_reason = notes.trim();
+      if (userName) updateData.cancelled_by_agent_name = userName;
     }
 
     // Update quote

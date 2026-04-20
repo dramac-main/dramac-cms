@@ -11,6 +11,7 @@ The DRAMAC CMS platform is production-ready and deployed, but the active invoici
 Commit `b123ad1e` — final closure of the notification pipeline. All three layers (in-app bell, email, web push) are now wired across all 19 business-critical events.
 
 ### Overhaul II (commit `551034be`) — fixed
+
 1. Payment enforcement bypass via live chat booking panel
 2. `cancelled_by_check` DB constraint error (`admin` → `staff`)
 3. In-app bell silent on booking confirm/complete/no-show/payment-received
@@ -18,16 +19,18 @@ Commit `b123ad1e` — final closure of the notification pipeline. All three laye
 5. Booking UI routing through `cancelAppointment(id, "staff")`
 6. Live chat silent on auto-created conversations
 7. Notification bell realtime leak (missing `user_id` filter)
-8. Web push added to 9 of 19 notify* functions
+8. Web push added to 9 of 19 notify\* functions
 9. DB migration file written for notifications CHECK constraint
 
 ### Overhaul III (commit `b123ad1e`) — fixed
+
 1. **`web-push.ts` wrong Supabase client** — `createClient()` (needs HTTP cookie context) replaced with `createAdminClient()` in all 3 DB-query functions (`sendPushToUser`, `sendPushToConversation`, `sendPushToSiteAgents`). Critical for fire-and-forget contexts.
-2. **10 notify* functions still missing web push** — `pushToOwner()` added to all remaining: `notifyOrderShipped`, `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyPaymentProofUploaded`, `notifyLowStock`, `notifyQuoteAccepted`, `notifyQuoteRejected`, `notifyBookingPaymentProofUploaded`, `notifyQuoteAmendmentRequested`.
+2. **10 notify\* functions still missing web push** — `pushToOwner()` added to all remaining: `notifyOrderShipped`, `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyPaymentProofUploaded`, `notifyLowStock`, `notifyQuoteAccepted`, `notifyQuoteRejected`, `notifyBookingPaymentProofUploaded`, `notifyQuoteAmendmentRequested`.
 3. **`notificationTypeInfo` TypeScript error** — `Record<NotificationType, ...>` (47 keys) was missing 12 email/domain provisioning entries. All 12 added.
 4. **DB migration applied directly via Supabase MCP** — `notifications.type` CHECK constraint now allows all 47 types. No manual step required.
 
 ### Notification pipeline — final state
+
 - All 19 `notify*` functions in `business-notifications.ts`: **in-app + email + web push ✅**
 - `web-push.ts` DB queries: **`createAdminClient()` — safe in all async contexts ✅**
 - `notificationTypeInfo`: **complete Record<NotificationType, ...> with all 47 entries ✅**
@@ -35,6 +38,7 @@ Commit `b123ad1e` — final closure of the notification pipeline. All three laye
 - Notification bell realtime: **user_id scoped ✅**
 
 ### Architectural decision documented
+
 In-app notifications go to the **agency owner** (the only auth.users account in the current tenancy model). Client-side in-portal notifications remain future work. Emails prefer client email address when available.
 
 ## Previously: INVFIX Session 12 Verification — INVFIX-08 Closed, INVFIX-09 Partial

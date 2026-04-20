@@ -69,6 +69,7 @@ export interface ChatBookingContext {
   cancellationReason: string | null;
   cancelledAt: string | null;
   cancelledBy: string | null;
+  cancelledByAgentName: string | null;
   // Booking settings relevant to agent actions
   requirePayment: boolean;
   autoConfirm: boolean;
@@ -105,7 +106,7 @@ export async function getBookingContextForChat(
       id, customer_name, customer_email, customer_phone, customer_notes,
       status, payment_status, payment_amount,
       start_time, end_time, timezone, created_at,
-      cancellation_reason, cancelled_at, cancelled_by,
+      cancellation_reason, cancelled_at, cancelled_by, cancelled_by_agent_name,
       service:${BOOKING_PREFIX}_services(id, name, price, currency, duration_minutes, color),
       staff:${BOOKING_PREFIX}_staff(id, name, email, avatar_url)
     `,
@@ -157,6 +158,7 @@ export async function getBookingContextForChat(
     cancellationReason: appointment.cancellation_reason,
     cancelledAt: appointment.cancelled_at,
     cancelledBy: appointment.cancelled_by,
+    cancelledByAgentName: appointment.cancelled_by_agent_name ?? null,
     requirePayment: settings?.require_payment ?? false,
     autoConfirm: settings?.auto_confirm ?? false,
   };
@@ -177,6 +179,7 @@ export async function updateBookingStatusFromChat(
   options?: {
     cancellationReason?: string;
     agentName?: string;
+    conversationId?: string;
   },
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
@@ -242,6 +245,7 @@ export async function updateBookingStatusFromChat(
   if (newStatus === "cancelled") {
     updates.cancelled_at = new Date().toISOString();
     updates.cancelled_by = "staff";
+    updates.cancelled_by_agent_name = options?.agentName || null;
     updates.cancellation_reason =
       options?.cancellationReason?.trim() || "Cancelled via live chat";
   }
@@ -481,6 +485,49 @@ export async function updateBookingStatusFromChat(
     }).catch((err) =>
       console.error("[ChatBooking] No-show notification error:", err),
     );
+  }
+
+  // ── Agent activity message in chat timeline ────────────────────────────────
+  // When an agent performs the action from the chat panel and a conversationId
+  // is provided, insert a system-attributed activity record so the full team
+  // can see exactly who changed the booking status and why.
+  if (options?.conversationId && options?.agentName) {
+    const actor = options.agentName;
+    let activityContent: string;
+
+    switch (newStatus) {
+      case "cancelled": {
+        const finalReason =
+          options.cancellationReason?.trim() || "No reason provided";
+        activityContent = `${actor} cancelled this booking — Reason: "${finalReason}"`;
+        break;
+      }
+      case "confirmed":
+        activityContent = `${actor} confirmed this booking`;
+        break;
+      case "completed":
+        activityContent = `${actor} marked this booking as completed`;
+        break;
+      case "no_show":
+        activityContent = `${actor} marked this booking as no-show`;
+        break;
+      default:
+        activityContent = `${actor} changed booking status to ${newStatus}`;
+    }
+
+    db.from("mod_chat_messages")
+      .insert({
+        conversation_id: options.conversationId,
+        site_id: siteId,
+        sender_type: "system",
+        sender_name: actor,
+        content: activityContent,
+        content_type: "system",
+      })
+      .then(() => {})
+      .catch((err: unknown) =>
+        console.error("[ChatBooking] Activity message error:", err),
+      );
   }
 
   return {};

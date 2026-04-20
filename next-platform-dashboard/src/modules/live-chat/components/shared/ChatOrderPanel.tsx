@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Package,
   CreditCard,
@@ -62,6 +63,7 @@ import {
   type ChatOrderContext,
   type ChatStoreInfo,
 } from "@/modules/live-chat/actions/chat-order-actions";
+import { insertChatActivityMessage } from "@/modules/live-chat/actions/conversation-actions";
 import {
   updateOrderStatus,
   updatePaymentProofStatus,
@@ -117,6 +119,7 @@ interface ChatOrderPanelProps {
   orderNumber: string;
   userId: string;
   userName: string;
+  conversationId?: string;
 }
 
 export function ChatOrderPanel({
@@ -124,6 +127,7 @@ export function ChatOrderPanel({
   orderNumber,
   userId,
   userName,
+  conversationId,
 }: ChatOrderPanelProps) {
   const [order, setOrder] = useState<ChatOrderContext | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,6 +144,10 @@ export function ChatOrderPanel({
   const [shippingTrackingNumber, setShippingTrackingNumber] = useState("");
   const [shippingTrackingUrl, setShippingTrackingUrl] = useState("");
   const [isSubmittingShipment, setIsSubmittingShipment] = useState(false);
+
+  // Cancellation dialog state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -161,7 +169,8 @@ export function ChatOrderPanel({
     fetchOrder();
   }, [fetchOrder]);
 
-  // Handle status change — intercepts "shipped" to show shipping dialog
+  // Handle status change — intercepts "shipped" to show shipping dialog,
+  // intercepts "cancelled" to collect a reason before confirming
   const handleStatusChange = useCallback(
     (newStatus: string) => {
       if (!order) return;
@@ -173,6 +182,13 @@ export function ChatOrderPanel({
         setShippingTrackingNumber("");
         setShippingTrackingUrl("");
         setShowShippingDialog(true);
+        return;
+      }
+
+      // If cancelling, open reason dialog before executing
+      if (newStatus === "cancelled") {
+        setCancelReason("");
+        setShowCancelDialog(true);
         return;
       }
 
@@ -203,6 +219,43 @@ export function ChatOrderPanel({
     },
     [order, siteId, userId, userName, fetchOrder],
   );
+
+  // Execute order cancellation after reason is confirmed
+  const handleConfirmCancel = useCallback(() => {
+    if (!order) return;
+    setShowCancelDialog(false);
+    const reason = cancelReason.trim() || undefined;
+
+    startTransition(async () => {
+      const result = await updateOrderStatus(
+        siteId,
+        order.id,
+        "cancelled",
+        userId,
+        userName,
+        reason,
+      );
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Order cancelled");
+        // Insert agent activity message into the chat conversation
+        if (conversationId && userName) {
+          const activityMsg = reason
+            ? `${userName} cancelled this order — Reason: "${reason}"`
+            : `${userName} cancelled this order`;
+          insertChatActivityMessage(
+            conversationId,
+            siteId,
+            activityMsg,
+            userName,
+          ).catch(() => {});
+        }
+        fetchOrder();
+      }
+      setCancelReason("");
+    });
+  }, [order, siteId, userId, userName, cancelReason, conversationId, fetchOrder]);
 
   // Handle shipment form submission
   const handleSubmitShipment = useCallback(async () => {
@@ -750,6 +803,48 @@ export function ChatOrderPanel({
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Cancel Order Dialog — collects cancellation reason before confirming */}
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will cancel the order and reverse any reserved stock.
+                Please provide a reason — this helps the customer understand
+                what happened.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-2">
+              <Label htmlFor="order-cancel-reason" className="text-sm font-medium">
+                Cancellation Reason
+              </Label>
+              <Textarea
+                id="order-cancel-reason"
+                placeholder="e.g. Item out of stock, customer requested cancellation..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="mt-1.5 resize-none"
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {cancelReason.length}/500 — optional but recommended
+              </p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setCancelReason("")}>
+                Keep Order
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmCancel}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Cancel Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

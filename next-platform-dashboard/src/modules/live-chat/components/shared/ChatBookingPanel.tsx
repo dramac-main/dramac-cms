@@ -121,6 +121,7 @@ interface ChatBookingPanelProps {
   bookingId: string;
   userId: string;
   userName: string;
+  conversationId?: string;
 }
 
 export function ChatBookingPanel({
@@ -128,6 +129,7 @@ export function ChatBookingPanel({
   bookingId,
   userId,
   userName,
+  conversationId,
 }: ChatBookingPanelProps) {
   const [booking, setBooking] = useState<ChatBookingContext | null>(null);
   const [loading, setLoading] = useState(true);
@@ -166,11 +168,12 @@ export function ChatBookingPanel({
     (newStatus: string) => {
       if (!booking) return;
 
-      const opts: { cancellationReason?: string; agentName?: string } = {};
+      const opts: { cancellationReason?: string; agentName?: string; conversationId?: string } = {};
       if (newStatus === "cancelled" && cancelReason.trim()) {
         opts.cancellationReason = cancelReason.trim();
       }
       opts.agentName = userName;
+      if (conversationId) opts.conversationId = conversationId;
 
       startTransition(async () => {
         const result = await updateBookingStatusFromChat(
@@ -581,13 +584,15 @@ export function ChatBookingPanel({
                 Cancellation Reason
               </p>
               <p className="text-xs">{booking.cancellationReason}</p>
-              {booking.cancelledBy && (
-                <p className="text-[10px] text-muted-foreground">
-                  Cancelled by {booking.cancelledBy}
-                  {booking.cancelledAt &&
-                    ` on ${formatDate(booking.cancelledAt)}`}
-                </p>
-              )}
+              <p className="text-[10px] text-muted-foreground">
+                {booking.cancelledByAgentName
+                  ? `Cancelled by ${booking.cancelledByAgentName}`
+                  : booking.cancelledBy
+                  ? `Cancelled by ${booking.cancelledBy}`
+                  : "Cancelled"}
+                {booking.cancelledAt &&
+                  ` on ${formatDate(booking.cancelledAt)}`}
+              </p>
             </div>
           </>
         )}

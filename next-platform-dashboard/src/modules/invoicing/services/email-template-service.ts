@@ -265,9 +265,7 @@ const DEFAULT_TEMPLATES: EmailTemplate[] = [
 /**
  * Get all available email templates with per-site overrides merged in.
  */
-export async function getEmailTemplates(
-  siteId: string,
-): Promise<
+export async function getEmailTemplates(siteId: string): Promise<
   (EmailTemplate & {
     customSubject?: string | null;
     customBody?: string | null;

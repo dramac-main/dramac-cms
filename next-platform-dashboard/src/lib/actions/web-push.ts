@@ -51,11 +51,11 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   }
 
   const supabase = createAdminClient();
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions } = (await supabase
     .from(PUSH_TABLE)
     .select("*")
     .eq("user_id", userId)
-    .eq("context", "agent") as { data: PushSubscriptionRow[] | null };
+    .eq("context", "agent")) as { data: PushSubscriptionRow[] | null };
 
   if (!subscriptions?.length) return { sent: 0 };
 
@@ -63,8 +63,11 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   for (const sub of subscriptions) {
     try {
       const success = await sendWebPush(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
+        payload,
       );
       if (success) sent++;
     } catch (err) {
@@ -80,18 +83,21 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
 /**
  * Send push notification to customer(s) in a conversation
  */
-export async function sendPushToConversation(conversationId: string, payload: PushPayload) {
+export async function sendPushToConversation(
+  conversationId: string,
+  payload: PushPayload,
+) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.log("VAPID keys not configured, skipping web push");
     return { sent: 0 };
   }
 
   const supabase = createAdminClient();
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions } = (await supabase
     .from(PUSH_TABLE)
     .select("*")
     .eq("conversation_id", conversationId)
-    .eq("context", "customer") as { data: PushSubscriptionRow[] | null };
+    .eq("context", "customer")) as { data: PushSubscriptionRow[] | null };
 
   if (!subscriptions?.length) return { sent: 0 };
 
@@ -99,8 +105,11 @@ export async function sendPushToConversation(conversationId: string, payload: Pu
   for (const sub of subscriptions) {
     try {
       const success = await sendWebPush(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
+        payload,
       );
       if (success) sent++;
     } catch (err) {
@@ -115,7 +124,10 @@ export async function sendPushToConversation(conversationId: string, payload: Pu
 /**
  * Send push notification to all agents of a site
  */
-export async function sendPushToSiteAgents(siteId: string, payload: PushPayload) {
+export async function sendPushToSiteAgents(
+  siteId: string,
+  payload: PushPayload,
+) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.log("VAPID keys not configured, skipping web push");
     return { sent: 0 };
@@ -140,11 +152,11 @@ export async function sendPushToSiteAgents(siteId: string, payload: PushPayload)
   if (!profiles?.length) return { sent: 0 };
 
   const userIds = profiles.map((p) => p.id);
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions } = (await supabase
     .from(PUSH_TABLE)
     .select("*")
     .in("user_id", userIds)
-    .eq("context", "agent") as { data: PushSubscriptionRow[] | null };
+    .eq("context", "agent")) as { data: PushSubscriptionRow[] | null };
 
   if (!subscriptions?.length) return { sent: 0 };
 
@@ -152,8 +164,11 @@ export async function sendPushToSiteAgents(siteId: string, payload: PushPayload)
   for (const sub of subscriptions) {
     try {
       const success = await sendWebPush(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
+        payload,
       );
       if (success) sent++;
     } catch (err) {
@@ -171,19 +186,23 @@ export async function sendPushToSiteAgents(siteId: string, payload: PushPayload)
  */
 async function sendWebPush(
   subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
-  payload: PushPayload
+  payload: PushPayload,
 ): Promise<boolean> {
   try {
     // For the initial implementation, use a lightweight approach
     // We send a simple POST to the push endpoint with the payload
     // Full VAPID + encryption requires crypto operations
-    
+
     // Use Node.js crypto for VAPID JWT generation
-    const { createSign, createECDH, randomBytes, createCipheriv, createHmac } = await import("crypto");
-    
+    const { createSign, createECDH, randomBytes, createCipheriv, createHmac } =
+      await import("crypto");
+
     // Generate VAPID JWT
-    const vapidToken = await generateVapidJwt(subscription.endpoint, createSign);
-    
+    const vapidToken = await generateVapidJwt(
+      subscription.endpoint,
+      createSign,
+    );
+
     // Encrypt payload
     const payloadBuffer = Buffer.from(JSON.stringify(payload));
     const encrypted = await encryptPayload(
@@ -193,7 +212,7 @@ async function sendWebPush(
       createECDH,
       randomBytes,
       createCipheriv,
-      createHmac
+      createHmac,
     );
 
     const response = await fetch(subscription.endpoint, {
@@ -224,14 +243,16 @@ async function sendWebPush(
  */
 async function generateVapidJwt(
   endpoint: string,
-  createSign: typeof import("crypto").createSign
+  createSign: typeof import("crypto").createSign,
 ) {
   const audience = new URL(endpoint).origin;
   const expiration = Math.floor(Date.now() / 1000) + 12 * 60 * 60; // 12 hours
 
-  const header = Buffer.from(JSON.stringify({ typ: "JWT", alg: "ES256" })).toString("base64url");
+  const header = Buffer.from(
+    JSON.stringify({ typ: "JWT", alg: "ES256" }),
+  ).toString("base64url");
   const payload = Buffer.from(
-    JSON.stringify({ aud: audience, exp: expiration, sub: VAPID_SUBJECT })
+    JSON.stringify({ aud: audience, exp: expiration, sub: VAPID_SUBJECT }),
   ).toString("base64url");
 
   const unsignedToken = `${header}.${payload}`;
@@ -241,13 +262,20 @@ async function generateVapidJwt(
 
   // Create DER-encoded private key
   const privateKeyDer = Buffer.concat([
-    Buffer.from("308141020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420", "hex"),
+    Buffer.from(
+      "308141020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420",
+      "hex",
+    ),
     privateKeyBuffer,
   ]);
 
   const sign = createSign("SHA256");
   sign.update(unsignedToken);
-  const signature = sign.sign({ key: privateKeyDer, format: "der", type: "pkcs8" });
+  const signature = sign.sign({
+    key: privateKeyDer,
+    format: "der",
+    type: "pkcs8",
+  });
 
   // Convert DER signature to raw r||s format
   const rawSig = derToRaw(signature);
@@ -288,7 +316,7 @@ async function encryptPayload(
   createECDH: typeof import("crypto").createECDH,
   randomBytes: typeof import("crypto").randomBytes,
   createCipheriv: typeof import("crypto").createCipheriv,
-  createHmac: typeof import("crypto").createHmac
+  createHmac: typeof import("crypto").createHmac,
 ): Promise<Buffer> {
   // Decode subscriber keys
   const clientPublicKey = Buffer.from(p256dhKey, "base64url");
@@ -315,7 +343,7 @@ async function encryptPayload(
       clientPublicKey,
       serverPublicKey,
     ]),
-    32
+    32,
   );
 
   const contentEncryptionKey = hkdf(
@@ -323,7 +351,7 @@ async function encryptPayload(
     salt,
     ikm,
     Buffer.from("Content-Encoding: aes128gcm\0"),
-    16
+    16,
   );
 
   const nonce = hkdf(
@@ -331,7 +359,7 @@ async function encryptPayload(
     salt,
     ikm,
     Buffer.from("Content-Encoding: nonce\0"),
-    12
+    12,
   );
 
   // Add padding delimiter
@@ -339,7 +367,10 @@ async function encryptPayload(
 
   // Encrypt with AES-128-GCM
   const cipher = createCipheriv("aes-128-gcm", contentEncryptionKey, nonce);
-  const encrypted = Buffer.concat([cipher.update(paddedPayload), cipher.final()]);
+  const encrypted = Buffer.concat([
+    cipher.update(paddedPayload),
+    cipher.final(),
+  ]);
   const tag = cipher.getAuthTag();
 
   // Build aes128gcm header: salt(16) + rs(4) + idlen(1) + keyid(65)
@@ -364,7 +395,7 @@ function hkdf(
   salt: Buffer,
   ikm: Buffer,
   info: Buffer,
-  length: number
+  length: number,
 ): Buffer {
   // Extract
   const prk = createHmac("sha256", salt).update(ikm).digest();

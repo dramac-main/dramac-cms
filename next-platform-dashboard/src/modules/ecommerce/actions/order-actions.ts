@@ -205,7 +205,10 @@ export async function updateOrderStatus(
     updates.delivered_at = new Date().toISOString();
     updates.fulfillment_status = "fulfilled";
   } else if (status === "cancelled") {
+    updates.cancelled_at = new Date().toISOString();
     updates.fulfillment_status = "unfulfilled";
+    if (note) updates.cancellation_reason = note.trim();
+    if (userName) updates.cancelled_by_agent_name = userName;
   }
 
   // Update order

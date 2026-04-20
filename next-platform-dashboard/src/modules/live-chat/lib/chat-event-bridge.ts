@@ -447,9 +447,8 @@ export async function createConversationForEntity(
       }
 
       try {
-        const { sendPushToUser, sendPushToSiteAgents } = await import(
-          "@/lib/actions/web-push"
-        );
+        const { sendPushToUser, sendPushToSiteAgents } =
+          await import("@/lib/actions/web-push");
         const pushPayload = {
           title: `New chat from ${ctx.customerName}`,
           body:
@@ -468,10 +467,7 @@ export async function createConversationForEntity(
           await sendPushToSiteAgents(siteId, pushPayload);
         }
       } catch (err) {
-        console.error(
-          "[ChatEventBridge] web push (create conv) failed:",
-          err,
-        );
+        console.error("[ChatEventBridge] web push (create conv) failed:", err);
       }
     })();
 

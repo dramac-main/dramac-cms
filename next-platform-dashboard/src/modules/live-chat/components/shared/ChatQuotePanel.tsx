@@ -57,6 +57,9 @@ import {
   type ChatQuoteContext,
 } from "@/modules/live-chat/actions/chat-quote-actions";
 import { updateQuoteStatus } from "@/modules/ecommerce/actions/quote-actions";
+import { insertChatActivityMessage } from "@/modules/live-chat/actions/conversation-actions";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   sendQuote,
   convertQuoteToOrder,
@@ -89,6 +92,7 @@ interface ChatQuotePanelProps {
   quoteNumber: string;
   userId: string;
   userName: string;
+  conversationId?: string;
 }
 
 export function ChatQuotePanel({
@@ -96,6 +100,7 @@ export function ChatQuotePanel({
   quoteNumber,
   userId,
   userName,
+  conversationId,
 }: ChatQuotePanelProps) {
   const [quote, setQuote] = useState<ChatQuoteContext | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,6 +109,10 @@ export function ChatQuotePanel({
   const [showFullQuote, setShowFullQuote] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [showConvertConfirm, setShowConvertConfirm] = useState(false);
+
+  // Cancellation dialog state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   const fetchQuote = useCallback(async () => {
     try {
@@ -135,6 +144,13 @@ export function ChatQuotePanel({
         return;
       }
 
+      // Cancellation requires a reason before executing
+      if (newStatus === "cancelled") {
+        setCancelReason("");
+        setShowCancelDialog(true);
+        return;
+      }
+
       startTransition(async () => {
         const result = await updateQuoteStatus(
           siteId,
@@ -155,6 +171,42 @@ export function ChatQuotePanel({
     },
     [quote, siteId, userId, userName, fetchQuote],
   );
+
+  // Execute quote cancellation after reason is confirmed
+  const handleConfirmCancelQuote = useCallback(() => {
+    if (!quote) return;
+    setShowCancelDialog(false);
+    const reason = cancelReason.trim() || undefined;
+
+    startTransition(async () => {
+      const result = await updateQuoteStatus(
+        siteId,
+        quote.id,
+        "cancelled",
+        userId,
+        userName,
+        reason,
+      );
+      if (result.success) {
+        toast.success("Quote cancelled");
+        if (conversationId && userName) {
+          const activityMsg = reason
+            ? `${userName} cancelled this quote — Reason: "${reason}"`
+            : `${userName} cancelled this quote`;
+          insertChatActivityMessage(
+            conversationId,
+            siteId,
+            activityMsg,
+            userName,
+          ).catch(() => {});
+        }
+        fetchQuote();
+      } else {
+        toast.error(result.error || "Failed to cancel quote");
+      }
+      setCancelReason("");
+    });
+  }, [quote, siteId, userId, userName, cancelReason, conversationId, fetchQuote]);
 
   const handleCopyLink = useCallback(() => {
     if (!quote?.accessToken) return;
@@ -593,6 +645,51 @@ export function ChatQuotePanel({
               <AlertDialogAction onClick={confirmConvertToOrder}>
                 <ArrowRightCircle className="h-3.5 w-3.5 mr-1.5" />
                 Convert to Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Cancel Quote Dialog — collects cancellation reason before confirming */}
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel Quote?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will mark the quote as cancelled. Please provide a reason
+                — this will be recorded and included in the customer
+                notification.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-2">
+              <Label
+                htmlFor="quote-cancel-reason"
+                className="text-sm font-medium"
+              >
+                Cancellation Reason
+              </Label>
+              <Textarea
+                id="quote-cancel-reason"
+                placeholder="e.g. Pricing no longer valid, customer requested withdrawal..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="mt-1.5 resize-none"
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {cancelReason.length}/500 — optional but recommended
+              </p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setCancelReason("")}>
+                Keep Quote
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmCancelQuote}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Cancel Quote
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
