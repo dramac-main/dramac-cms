@@ -263,7 +263,8 @@ export function PurchaseOrderDetail({
             </>
           )}
 
-          {(po.status === "acknowledged" || po.status === "partially_received") && (
+          {(po.status === "acknowledged" ||
+            po.status === "partially_received") && (
             <POReceiveForm
               siteId={siteId}
               purchaseOrderId={purchaseOrderId}
@@ -464,7 +465,9 @@ export function PurchaseOrderDetail({
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Item</TableHead>
-                      <TableHead className="text-center">Qty Received</TableHead>
+                      <TableHead className="text-center">
+                        Qty Received
+                      </TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>

@@ -42,6 +42,7 @@ All INVFIX-06 features implemented and verified:
 ### Files Modified/Created in Session 7
 
 **Modified (16):**
+
 1. `recurring-engine-service.ts` — Added `sendPreGenerationNotice()` function
 2. `purchase-order-detail.tsx` — Added "Goods Received" history section displaying receipts
 3. `bill-detail.tsx` — BillPaymentDialog + ThreeWayMatch wired into action bar
@@ -60,6 +61,7 @@ All INVFIX-06 features implemented and verified:
 16. `memory-bank/progress.md` — Status update
 
 **New (3):**
+
 1. `po-receive-form.tsx` — PO receive goods dialog
 2. `three-way-match.tsx` — 3-way match dialog
 3. `migrations/invfix-06-po-receive-vendor-enhance.sql` — PO receipts table, vendor columns

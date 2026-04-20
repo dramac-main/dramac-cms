@@ -5,7 +5,11 @@ import { INV_TABLES } from "../lib/invoicing-constants";
 import { calculateNextDate } from "../lib/invoicing-utils";
 import { _generateInvoiceFromTemplate } from "../actions/recurring-actions";
 import { emitAutomationEvent } from "@/modules/automation/lib/automation-engine";
-import { getResend, isEmailEnabled, getEmailFrom } from "@/lib/email/resend-client";
+import {
+  getResend,
+  isEmailEnabled,
+  getEmailFrom,
+} from "@/lib/email/resend-client";
 
 // ═══════════════════════════════════════════════════════════════
 // PROCESS RECURRING INVOICES (cron entry point)
@@ -328,10 +332,7 @@ async function sendCronAlertEmail(
  * Send a pre-generation notification to the client before the invoice is created.
  * This is triggered when notify_before_generation is true on the recurring template.
  */
-async function sendPreGenerationNotice(
-  supabase: any,
-  recurring: any,
-) {
+async function sendPreGenerationNotice(supabase: any, recurring: any) {
   if (!isEmailEnabled()) return;
 
   try {
@@ -357,7 +358,8 @@ async function sendPreGenerationNotice(
       .eq("recurring_invoice_id", recurring.id);
 
     const estimatedTotal = (templateItems || []).reduce(
-      (sum: number, item: any) => sum + (item.quantity || 0) * (item.unit_price || 0),
+      (sum: number, item: any) =>
+        sum + (item.quantity || 0) * (item.unit_price || 0),
       0,
     );
     const formattedTotal = new Intl.NumberFormat("en-US", {
