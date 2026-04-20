@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Chat Event Bridge
  *
  * Sends proactive AI/system messages into active chat conversations when
@@ -51,7 +51,7 @@ export async function findActiveConversation(
     .select("id")
     .eq("site_id", siteId)
     .eq("visitor_id", visitor.id)
-    .in("status", ["active", "open", "waiting"])
+    .in("status", ["active", "open", "waiting", "pending"])
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -79,15 +79,22 @@ export async function findActiveConversation(
 /**
  * Insert a proactive AI message into an active conversation.
  * The message appears in real-time via Supabase Realtime subscriptions.
+ *
+ * When `pendingApproval` is true the message is inserted as an internal note
+ * (hidden from the customer) with `metadata.pending_agent_approval = true`.
+ * An agent must approve it before the customer can see it.
  */
 export async function sendProactiveMessage(
   siteId: string,
   conversationId: string,
   message: string,
   assistantName: string,
+  options: { pendingApproval?: boolean } = {},
 ): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
+
+  const isStaged = options.pendingApproval === true;
 
   const { error } = await supabase.from("mod_chat_messages").insert({
     conversation_id: conversationId,
@@ -96,10 +103,11 @@ export async function sendProactiveMessage(
     sender_name: assistantName,
     content: message,
     content_type: "text",
-    status: "sent",
+    status: isStaged ? "pending_approval" : "sent",
     is_ai_generated: true,
     ai_confidence: 1.0,
-    is_internal_note: false,
+    is_internal_note: isStaged, // hidden from customer until approved
+    metadata: isStaged ? { pending_agent_approval: true } : {},
   });
 
   if (error) {
@@ -107,19 +115,22 @@ export async function sendProactiveMessage(
     return false;
   }
 
-  // Update conversation last_message info
-  await supabase
-    .from("mod_chat_conversations")
-    .update({
-      last_message_text: message.substring(0, 255),
-      last_message_at: new Date().toISOString(),
-      last_message_by: "ai",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", conversationId);
+  // Only update conversation last_message_text when message is visible to customer.
+  // Staged (pending_approval) messages are internal notes — skip last_message update.
+  if (!isStaged) {
+    await supabase
+      .from("mod_chat_conversations")
+      .update({
+        last_message_text: message.substring(0, 255),
+        last_message_at: new Date().toISOString(),
+        last_message_by: "ai",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", conversationId);
+  }
 
   console.log(
-    "[ChatEventBridge] Proactive message sent to conversation:",
+    `[ChatEventBridge] Proactive message ${isStaged ? "staged for approval" : "sent"} to conversation:`,
     conversationId,
   );
   return true;
@@ -216,7 +227,7 @@ export async function createConversationForEntity(
         .select("id, metadata")
         .eq("site_id", siteId)
         .eq("visitor_id", visitorId)
-        .in("status", ["active", "open", "waiting"])
+        .in("status", ["active", "open", "waiting", "pending"])
         .order("created_at", { ascending: false });
 
       existingConvId =
@@ -230,7 +241,7 @@ export async function createConversationForEntity(
         .select("id, metadata")
         .eq("site_id", siteId)
         .eq("visitor_id", visitorId)
-        .in("status", ["active", "open", "waiting"])
+        .in("status", ["active", "open", "waiting", "pending"])
         .order("created_at", { ascending: false });
 
       existingConvId =
@@ -515,6 +526,7 @@ export async function notifyChatBookingPaymentProofUploaded(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -548,6 +560,7 @@ export async function notifyChatBookingPaymentRejected(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -585,6 +598,7 @@ export async function notifyChatPaymentProofUploaded(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -617,6 +631,7 @@ export async function notifyChatPaymentConfirmed(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -669,6 +684,7 @@ export async function notifyChatOrderStatusChanged(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -702,6 +718,7 @@ export async function notifyChatQuoteConverted(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -732,6 +749,7 @@ export async function notifyChatQuoteRequested(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -764,6 +782,7 @@ export async function notifyChatQuoteSent(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -794,6 +813,7 @@ export async function notifyChatQuoteAccepted(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -827,6 +847,7 @@ export async function notifyChatQuoteRejected(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -858,6 +879,7 @@ export async function notifyChatQuoteAmendmentRequested(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1210,6 +1232,7 @@ export async function bridgeChatImageAsPaymentProof(
         conversationId,
         bridgeMessage,
         assistantName,
+        { pendingApproval: true },
       );
     }
 
@@ -1392,6 +1415,7 @@ async function bridgeChatImageAsBookingPaymentProof(
         conversationId,
         bridgeMessage,
         assistantName,
+        { pendingApproval: true },
       );
     }
 
@@ -1479,6 +1503,7 @@ export async function notifyChatBookingCreated(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1512,6 +1537,7 @@ export async function notifyChatBookingConfirmed(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1547,6 +1573,7 @@ export async function notifyChatBookingCancelled(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1584,6 +1611,7 @@ export async function notifyChatBookingRescheduled(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1615,6 +1643,7 @@ export async function notifyChatBookingCompleted(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }
 
@@ -1645,5 +1674,6 @@ export async function notifyChatBookingPaymentConfirmed(
     conv.conversationId,
     message,
     conv.assistantName,
+    { pendingApproval: true },
   );
 }

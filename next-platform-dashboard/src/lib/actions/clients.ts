@@ -283,6 +283,31 @@ export async function inviteClientToPortal(clientId: string) {
     email: client.email,
   });
 
+  // Send portal invitation email (non-fatal if it fails)
+  try {
+    const { sendBrandedEmail } = await import(
+      "@/lib/email/send-branded-email"
+    );
+    const { getAgencyBranding } = await import("@/lib/queries/branding");
+    const branding = await getAgencyBranding(profile.agency_id);
+    const businessName =
+      branding?.agency_display_name || branding?.agency_name || "our team";
+    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/portal/login`;
+
+    await sendBrandedEmail(profile.agency_id, {
+      to: { email: client.email, name: client.name || client.email },
+      emailType: "portal_client_invitation",
+      data: {
+        clientName: client.name || client.email,
+        businessName,
+        portalUrl,
+      },
+    });
+  } catch (emailErr) {
+    console.error("[Portal Invite] Failed to send invitation email:", emailErr);
+    // Non-fatal — portal access is already enabled
+  }
+
   revalidatePath(`/dashboard/clients/${clientId}`);
   return { success: true };
 }

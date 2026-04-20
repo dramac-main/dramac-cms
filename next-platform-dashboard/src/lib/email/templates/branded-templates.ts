@@ -128,6 +128,23 @@ const portal_team_invitation: BrandedTemplate = {
     `You're Invited!\n\n${data.inviterName} invited you to join ${data.businessName} as a ${data.role}.\n\nAccess the portal: ${data.portalUrl}`,
 };
 
+const portal_client_invitation: BrandedTemplate = {
+  subject: (data) => `Your client portal is ready — ${data.businessName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Welcome to Your Client Portal</h1>
+      <p style="${EMAIL_STYLES.text}">Hi <strong>${data.clientName}</strong>,</p>
+      <p style="${EMAIL_STYLES.text}"><strong>${data.businessName}</strong> has activated your client portal. From here you can view your projects, invoices, bookings, and communicate with our team — all in one place.</p>
+      <p style="${EMAIL_STYLES.text}">Click the button below to access your portal. Enter your email address and we'll send you a magic sign-in link — no password needed.</p>
+      ${emailButton(b, String(data.portalUrl), "Access Your Portal")}
+      <p style="${EMAIL_STYLES.muted}">If you weren't expecting this, you can safely ignore this email.</p>`,
+      `Your client portal at ${data.businessName} is ready`,
+    ),
+  text: (data) =>
+    `Welcome to Your Client Portal\n\nHi ${data.clientName},\n\n${data.businessName} has activated your client portal.\n\nAccess it here: ${data.portalUrl}\n\nEnter your email address to receive a magic sign-in link — no password needed.\n\nIf you weren't expecting this, you can safely ignore this email.`,
+};
+
 // ============================================================================
 // SITE TEMPLATES
 // ============================================================================
@@ -1318,6 +1335,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   team_invitation,
   team_member_joined,
   portal_team_invitation,
+  portal_client_invitation,
   site_published,
   domain_connected,
   subscription_created,

@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useIsPortalView } from "@/lib/portal/portal-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,6 +100,8 @@ export function ConversationsPageWrapper({
   siteId,
 }: ConversationsPageWrapperProps) {
   const router = useRouter();
+  const isPortal = useIsPortalView();
+  const base = isPortal ? `/portal/sites/${siteId}` : `/dashboard/sites/${siteId}`;
   const [isPending, startTransition] = useTransition();
   const [conversations, setConversations] =
     useState<ConversationListItem[]>(initialConversations);
@@ -157,7 +160,7 @@ export function ConversationsPageWrapper({
           label: "View",
           onClick: () =>
             router.push(
-              `/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`,
+              `${base}/live-chat/conversations/${conv.id}`,
             ),
         },
       });
@@ -353,7 +356,7 @@ export function ConversationsPageWrapper({
                   className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left"
                   onClick={() =>
                     router.push(
-                      `/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`,
+                      `${base}/live-chat/conversations/${conv.id}`,
                     )
                   }
                 >

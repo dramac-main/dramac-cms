@@ -255,7 +255,15 @@ export function ChatOrderPanel({
       }
       setCancelReason("");
     });
-  }, [order, siteId, userId, userName, cancelReason, conversationId, fetchOrder]);
+  }, [
+    order,
+    siteId,
+    userId,
+    userName,
+    cancelReason,
+    conversationId,
+    fetchOrder,
+  ]);
 
   // Handle shipment form submission
   const handleSubmitShipment = useCallback(async () => {
@@ -816,7 +824,10 @@ export function ChatOrderPanel({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="py-2">
-              <Label htmlFor="order-cancel-reason" className="text-sm font-medium">
+              <Label
+                htmlFor="order-cancel-reason"
+                className="text-sm font-medium"
+              >
                 Cancellation Reason
               </Label>
               <Textarea

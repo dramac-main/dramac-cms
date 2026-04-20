@@ -359,9 +359,20 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       });
     },
     onMessageUpdate: (message: ChatMessage) => {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === message.id ? message : m)),
-      );
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === message.id);
+        if (exists) {
+          // Normal update: refresh existing message
+          return prev.map((m) => (m.id === message.id ? message : m));
+        }
+        // Message wasn't visible before (was pending_approval / internal note).
+        // Now that it's been approved (is_internal_note=false, status="sent"),
+        // add it to the customer's view.
+        if (!message.isInternalNote && message.status === "sent") {
+          return [...prev, message];
+        }
+        return prev;
+      });
     },
     onTypingStart: (_senderId: string, senderName: string) => {
       setIsAgentTyping(true);

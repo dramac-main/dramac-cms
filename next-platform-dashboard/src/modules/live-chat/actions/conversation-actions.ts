@@ -383,10 +383,9 @@ export async function assignConversation(
 
       // Insert agent-attributed activity message
       const actor = actorName || "An agent";
-      const systemContent =
-        actorName
-          ? `${actor} assigned this conversation to ${agent.display_name}`
-          : `Conversation assigned to ${agent.display_name}`;
+      const systemContent = actorName
+        ? `${actor} assigned this conversation to ${agent.display_name}`
+        : `Conversation assigned to ${agent.display_name}`;
       await supabase.from("mod_chat_messages").insert({
         conversation_id: conversationId,
         site_id: conv.site_id,

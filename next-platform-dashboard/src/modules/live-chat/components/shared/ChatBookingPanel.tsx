@@ -168,7 +168,11 @@ export function ChatBookingPanel({
     (newStatus: string) => {
       if (!booking) return;
 
-      const opts: { cancellationReason?: string; agentName?: string; conversationId?: string } = {};
+      const opts: {
+        cancellationReason?: string;
+        agentName?: string;
+        conversationId?: string;
+      } = {};
       if (newStatus === "cancelled" && cancelReason.trim()) {
         opts.cancellationReason = cancelReason.trim();
       }
@@ -588,8 +592,8 @@ export function ChatBookingPanel({
                 {booking.cancelledByAgentName
                   ? `Cancelled by ${booking.cancelledByAgentName}`
                   : booking.cancelledBy
-                  ? `Cancelled by ${booking.cancelledBy}`
-                  : "Cancelled"}
+                    ? `Cancelled by ${booking.cancelledBy}`
+                    : "Cancelled"}
                 {booking.cancelledAt &&
                   ` on ${formatDate(booking.cancelledAt)}`}
               </p>

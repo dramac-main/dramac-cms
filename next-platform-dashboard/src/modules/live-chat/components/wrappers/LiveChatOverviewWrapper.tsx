@@ -6,6 +6,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback } from 'react'
+import { useIsPortalView } from '@/lib/portal/portal-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -70,25 +71,27 @@ export function LiveChatOverviewWrapper({
   siteId,
 }: LiveChatOverviewWrapperProps) {
   const router = useRouter()
+  const isPortal = useIsPortalView()
+  const base = isPortal ? `/portal/sites/${siteId}` : `/dashboard/sites/${siteId}`
 
   const goToConversations = useCallback(
-    () => router.push(`/dashboard/sites/${siteId}/live-chat/conversations`),
-    [router, siteId]
+    () => router.push(`${base}/live-chat/conversations`),
+    [router, base]
   )
   const goToConversation = useCallback(
     (id: string) =>
       router.push(
-        `/dashboard/sites/${siteId}/live-chat/conversations/${id}`
+        `${base}/live-chat/conversations/${id}`
       ),
-    [router, siteId]
+    [router, base]
   )
   const goToAgents = useCallback(
-    () => router.push(`/dashboard/sites/${siteId}/live-chat/agents`),
-    [router, siteId]
+    () => router.push(`${base}/live-chat/agents`),
+    [router, base]
   )
   const goToSettings = useCallback(
-    () => router.push(`/dashboard/sites/${siteId}/live-chat/settings`),
-    [router, siteId]
+    () => router.push(`${base}/live-chat/settings`),
+    [router, base]
   )
 
   const onlineAgents = agents.filter((a) => a.status === 'online')

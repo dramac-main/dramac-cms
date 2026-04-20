@@ -9,6 +9,7 @@
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useIsPortalView } from "@/lib/portal/portal-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -52,6 +53,10 @@ import {
   Bot,
   BotOff,
   HandMetal,
+  Check,
+  Pencil,
+  Trash2,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MessageBubble } from "../shared/MessageBubble";
@@ -76,6 +81,8 @@ import {
 import {
   sendMessage,
   getMessages,
+  approveProactiveMessage,
+  discardProactiveMessage,
 } from "@/modules/live-chat/actions/message-actions";
 import type {
   ChatConversation,
@@ -135,6 +142,8 @@ export function ConversationViewWrapper({
   userName,
 }: ConversationViewWrapperProps) {
   const router = useRouter();
+  const isPortal = useIsPortalView();
+  const base = isPortal ? `/portal/sites/${siteId}` : `/dashboard/sites/${siteId}`;
   const [isPending, startTransition] = useTransition();
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -148,6 +157,54 @@ export function ConversationViewWrapper({
   const [showTransfer, setShowTransfer] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [aiGlowing, setAiGlowing] = useState(false);
+
+  // Approval editing state: messageId -> draft content (undefined means not editing)
+  const [approvalEdits, setApprovalEdits] = useState<Record<string, string>>({});
+  const [approvalPending, setApprovalPending] = useState<Record<string, boolean>>({});
+
+  const handleApproveMessage = useCallback(
+    async (messageId: string) => {
+      setApprovalPending((p) => ({ ...p, [messageId]: true }));
+      const editedContent = approvalEdits[messageId];
+      const result = await approveProactiveMessage(messageId, siteId, editedContent);
+      if (result.success) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId
+              ? {
+                  ...m,
+                  status: "sent",
+                  isInternalNote: false,
+                  content: editedContent !== undefined ? editedContent : m.content,
+                  metadata: { ...(m.metadata || {}), pending_agent_approval: false },
+                }
+              : m,
+          ),
+        );
+        setApprovalEdits((prev) => { const n = { ...prev }; delete n[messageId]; return n; });
+        toast.success("Message approved and sent to customer");
+      } else {
+        toast.error(result.error || "Failed to approve message");
+      }
+      setApprovalPending((p) => { const n = { ...p }; delete n[messageId]; return n; });
+    },
+    [approvalEdits, siteId],
+  );
+
+  const handleDiscardMessage = useCallback(
+    async (messageId: string) => {
+      setApprovalPending((p) => ({ ...p, [messageId]: true }));
+      const result = await discardProactiveMessage(messageId, siteId);
+      if (result.success) {
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        toast.info("Suggested message discarded");
+      } else {
+        toast.error(result.error || "Failed to discard message");
+      }
+      setApprovalPending((p) => { const n = { ...p }; delete n[messageId]; return n; });
+    },
+    [siteId],
+  );
 
   // AI pause state — derived from conversation metadata
   const [aiPaused, setAiPaused] = useState(
@@ -309,7 +366,11 @@ export function ConversationViewWrapper({
   const handleAssign = useCallback(
     (agentId: string) => {
       startTransition(async () => {
-        const result = await assignConversation(conversation.id, agentId, userName);
+        const result = await assignConversation(
+          conversation.id,
+          agentId,
+          userName,
+        );
         if (result.error) {
           toast.error(result.error);
         } else {
@@ -535,8 +596,7 @@ export function ConversationViewWrapper({
       }
       // Escape → Go back to conversations list
       if (e.key === "Escape") {
-        router.push(`/dashboard/sites/${siteId}/live-chat/conversations`);
-        return;
+        router.push(`${base}/live-chat/conversations`);
       }
     }
 
@@ -566,7 +626,7 @@ export function ConversationViewWrapper({
               className="h-8 w-8"
               onClick={() =>
                 router.push(
-                  `/dashboard/sites/${siteId}/live-chat/conversations`,
+                  `${base}/live-chat/conversations`,
                 )
               }
             >
@@ -778,9 +838,132 @@ export function ConversationViewWrapper({
             </div>
           )}
 
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+          {messages.map((msg) => {
+            const isPendingApproval =
+              msg.metadata?.pending_agent_approval === true ||
+              msg.status === "pending_approval";
+
+            if (isPendingApproval) {
+              const isEditing = approvalEdits[msg.id] !== undefined;
+              const isActing = approvalPending[msg.id] === true;
+              return (
+                <div
+                  key={msg.id}
+                  className="flex justify-end px-2 py-1"
+                >
+                  <div className="max-w-[80%] rounded-xl border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 shadow-sm">
+                    {/* Header */}
+                    <div className="flex items-center gap-1.5 mb-2 text-amber-700 dark:text-amber-400">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">
+                        Pending agent approval
+                      </span>
+                    </div>
+
+                    {/* Message preview / edit area */}
+                    {isEditing ? (
+                      <textarea
+                        className="w-full min-w-[260px] rounded border border-amber-300 bg-white dark:bg-zinc-900 px-2 py-1.5 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-amber-400"
+                        rows={4}
+                        value={approvalEdits[msg.id]}
+                        onChange={(e) =>
+                          setApprovalEdits((prev) => ({
+                            ...prev,
+                            [msg.id]: e.target.value,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2 mt-2.5">
+                      {isEditing ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                            disabled={isActing}
+                            onClick={() => handleApproveMessage(msg.id)}
+                          >
+                            {isActing ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            )}
+                            <span className="ml-1">Send edited</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            disabled={isActing}
+                            onClick={() =>
+                              setApprovalEdits((prev) => {
+                                const n = { ...prev };
+                                delete n[msg.id];
+                                return n;
+                              })
+                            }
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                            disabled={isActing}
+                            onClick={() => handleApproveMessage(msg.id)}
+                          >
+                            {isActing ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            )}
+                            <span className="ml-1">Approve</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            disabled={isActing}
+                            onClick={() =>
+                              setApprovalEdits((prev) => ({
+                                ...prev,
+                                [msg.id]: msg.content || "",
+                              }))
+                            }
+                          >
+                            <Pencil className="h-3 w-3" />
+                            <span className="ml-1">Edit</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-destructive hover:text-destructive"
+                            disabled={isActing}
+                            onClick={() => handleDiscardMessage(msg.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span className="ml-1">Discard</span>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return <MessageBubble key={msg.id} message={msg} />;
+          })}
 
           {/* Typing indicator */}
           {hasVisitorTyping && (
@@ -1125,7 +1308,7 @@ export function ConversationViewWrapper({
                   className="w-full"
                   onClick={() =>
                     router.push(
-                      `/dashboard/sites/${siteId}/crm-module?contact=${visitor.crmContactId}`,
+                      `${base}/crm-module?contact=${visitor.crmContactId}`,
                     )
                   }
                 >

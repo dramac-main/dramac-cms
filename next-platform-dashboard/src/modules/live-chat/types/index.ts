@@ -42,7 +42,8 @@ export type MessageStatus =
   | "sent"
   | "delivered"
   | "read"
-  | "failed";
+  | "failed"
+  | "pending_approval";
 
 export type WidgetPosition = "bottom-right" | "bottom-left";
 
@@ -301,6 +302,8 @@ export interface ChatMessage {
   // AI
   isAiGenerated: boolean;
   aiConfidence: number | null;
+  // Metadata / approval
+  metadata: Record<string, unknown> | null;
   //
   createdAt: string;
   updatedAt: string;

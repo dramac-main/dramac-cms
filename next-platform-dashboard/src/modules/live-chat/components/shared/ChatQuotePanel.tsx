@@ -206,7 +206,15 @@ export function ChatQuotePanel({
       }
       setCancelReason("");
     });
-  }, [quote, siteId, userId, userName, cancelReason, conversationId, fetchQuote]);
+  }, [
+    quote,
+    siteId,
+    userId,
+    userName,
+    cancelReason,
+    conversationId,
+    fetchQuote,
+  ]);
 
   const handleCopyLink = useCallback(() => {
     if (!quote?.accessToken) return;
@@ -656,9 +664,8 @@ export function ChatQuotePanel({
             <AlertDialogHeader>
               <AlertDialogTitle>Cancel Quote?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will mark the quote as cancelled. Please provide a reason
-                — this will be recorded and included in the customer
-                notification.
+                This will mark the quote as cancelled. Please provide a reason —
+                this will be recorded and included in the customer notification.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="py-2">

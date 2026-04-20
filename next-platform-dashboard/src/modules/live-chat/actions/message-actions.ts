@@ -312,3 +312,129 @@ export async function deleteMessage(
     return { success: false, error: (error as Error).message };
   }
 }
+
+// ─── Agent Approval ──────────────────────────────────────────────────────────
+
+/**
+ * Approve a proactive AI message that was staged for agent review.
+ * Sets `is_internal_note = false`, `status = 'sent'`, and removes
+ * the `pending_agent_approval` flag from metadata so the customer can see it.
+ *
+ * Optionally accepts edited content before sending.
+ */
+export async function approveProactiveMessage(
+  messageId: string,
+  siteId: string,
+  editedContent?: string,
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const supabase = await getModuleClient();
+
+    // Fetch current message to validate ownership and state
+    const { data: msg, error: fetchErr } = await supabase
+      .from("mod_chat_messages")
+      .select("id, site_id, content, conversation_id, metadata, status")
+      .eq("id", messageId)
+      .single();
+
+    if (fetchErr || !msg) {
+      return { success: false, error: "Message not found" };
+    }
+
+    if (msg.site_id !== siteId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (msg.status !== "pending_approval") {
+      return {
+        success: false,
+        error: "Message is not pending approval",
+      };
+    }
+
+    // Strip the pending flag from metadata
+    const updatedMetadata = { ...(msg.metadata || {}) };
+    delete updatedMetadata.pending_agent_approval;
+
+    const finalContent =
+      editedContent !== undefined ? editedContent.trim() : (msg.content as string);
+
+    const { error: updateErr } = await supabase
+      .from("mod_chat_messages")
+      .update({
+        is_internal_note: false,
+        status: "sent",
+        content: finalContent,
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", messageId);
+
+    if (updateErr) throw updateErr;
+
+    // Update conversation last_message now that it is visible
+    await supabase
+      .from("mod_chat_conversations")
+      .update({
+        last_message_text: finalContent.substring(0, 255),
+        last_message_at: new Date().toISOString(),
+        last_message_by: "ai",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", msg.conversation_id);
+
+    revalidatePath(`/dashboard/sites/${siteId}/live-chat`);
+    revalidatePath(`/portal/sites/${siteId}/live-chat`);
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error approving proactive message:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Discard a proactive AI message staged for agent review.
+ * Hard-deletes the row since the customer never saw it.
+ */
+export async function discardProactiveMessage(
+  messageId: string,
+  siteId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const supabase = await getModuleClient();
+
+    const { data: msg, error: fetchErr } = await supabase
+      .from("mod_chat_messages")
+      .select("id, site_id, status")
+      .eq("id", messageId)
+      .single();
+
+    if (fetchErr || !msg) {
+      return { success: false, error: "Message not found" };
+    }
+
+    if (msg.site_id !== siteId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (msg.status !== "pending_approval") {
+      return { success: false, error: "Message is not pending approval" };
+    }
+
+    const { error: deleteErr } = await supabase
+      .from("mod_chat_messages")
+      .delete()
+      .eq("id", messageId);
+
+    if (deleteErr) throw deleteErr;
+
+    revalidatePath(`/dashboard/sites/${siteId}/live-chat`);
+    revalidatePath(`/portal/sites/${siteId}/live-chat`);
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error discarding proactive message:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}

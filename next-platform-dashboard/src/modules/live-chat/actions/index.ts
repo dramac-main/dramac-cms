@@ -24,6 +24,8 @@ export {
   sendFileMessage,
   updateMessageStatus,
   deleteMessage,
+  approveProactiveMessage,
+  discardProactiveMessage,
 } from './message-actions'
 
 export {

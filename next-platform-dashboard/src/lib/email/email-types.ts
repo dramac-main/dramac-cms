@@ -17,6 +17,7 @@ export type EmailType =
   | "team_invitation"
   | "team_member_joined"
   | "portal_team_invitation"
+  | "portal_client_invitation"
   // Sites
   | "site_published"
   | "domain_connected"
