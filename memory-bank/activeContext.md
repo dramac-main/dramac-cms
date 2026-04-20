@@ -6,7 +6,46 @@
 
 The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Session 7 — INVFIX-04/05 Closed + INVFIX-06 Complete ✅
+## Latest: Session 8 — Domain System Comprehensive Fix ✅
+
+### Session 8 (July 2026)
+
+**Comprehensive domain system fix across all platform layers (super admin, agency, client portal).**
+
+#### Issues Fixed:
+
+1. **Custom domain save broken (site settings)**: The `SiteSettingsForm` domains section was a plain text input with no DNS instructions. Replaced with full `DomainsManager` component that handles the complete flow: save domain → show DNS instructions → poll for verification → health checks.
+
+2. **Domain add flow was backwards**: DomainsManager previously required DNS verification BEFORE saving domain to Vercel (impossible — can't set DNS records for something not yet registered). Fixed flow: save domain first (triggers cascade/Vercel binding) → show DNS instructions → auto-poll for propagation.
+
+3. **Currency bug (ZMW instead of USD)**: All domain prices from ResellerClub are in USD, but were being displayed with Kwacha symbol (K) because `DEFAULT_CURRENCY = 'ZMW'`. Added `DOMAIN_CURRENCY = 'USD'` and `DOMAIN_CURRENCY_SYMBOL = '$'` to `locale-config.ts`. Updated 11 domain-related files to use `DOMAIN_CURRENCY`.
+
+4. **DNS instructions for saved-but-unverified domains**: Added a dedicated card showing CNAME/A record instructions with copy buttons when a domain is saved but DNS hasn't propagated yet. Includes auto-polling status and manual "Verify DNS Now" button.
+
+5. **Transfer security fix**: `getTransferById()` had no agency_id scoping — any authenticated user could view any transfer by ID. Added agency_id filter for defense-in-depth alongside RLS.
+
+6. **Transfer wizard confirm button fix**: `confirmTerms` checkbox used `form.getValues()` (doesn't re-render) instead of `form.watch()`, so the submit button wouldn't enable reactively.
+
+7. **Domain management dashboard**: Added "Transfer Domain" link to quick actions for completeness.
+
+#### Files Modified (16):
+
+1. `src/components/settings/domains-manager.tsx` — Rewrote dialog flow (save first → verify after), added DNS instructions card for saved-but-unverified domains, fixed manual verify handler
+2. `src/components/sites/site-settings-form.tsx` — Removed custom_domain field (delegated to DomainsManager)
+3. `src/app/(dashboard)/dashboard/sites/[siteId]/settings/page.tsx` — Added DomainsManager import, replaced domains tab content
+4. `src/lib/locale-config.ts` — Added DOMAIN_CURRENCY='USD' and DOMAIN_CURRENCY_SYMBOL='$'
+5. `src/components/domains/domain-search.tsx` — DOMAIN_CURRENCY for price formatting
+6. `src/components/domains/domain-results.tsx` — DOMAIN_CURRENCY
+7. `src/components/domains/domain-pricing-card.tsx` — DOMAIN_CURRENCY
+8. `src/components/domains/domain-checkout.tsx` — DOMAIN_CURRENCY
+9. `src/components/domains/domain-cart.tsx` — DOMAIN_CURRENCY (3 occurrences)
+10. `src/components/domains/settings/domain-pricing-config.tsx` — DOMAIN_CURRENCY_SYMBOL
+11. `src/app/(dashboard)/dashboard/domains/search/domain-search-client.tsx` — DOMAIN_CURRENCY
+12. `src/lib/resellerclub/domains.ts` — DOMAIN_CURRENCY
+13. `src/lib/actions/domain-billing.ts` — DOMAIN_CURRENCY
+14. `src/app/(dashboard)/dashboard/domains/settings/page.tsx` — DOMAIN_CURRENCY + transfer link
+15. `src/lib/actions/transfers.ts` — Agency_id scoping on getTransferById
+16. `src/components/domains/transfer/transfer-wizard.tsx` — form.watch() fix
 
 ### Session 7 (July 2026)
 
@@ -68,19 +107,13 @@ All INVFIX-06 features implemented and verified:
 
 ### Next Steps
 
-- **INVFIX-07**: Expenses — Approval Workflow, Receipt Viewer, Budgets (next session)
-- Do NOT start INVFIX-07 in this session
+- **Domain system remaining work**: Transfer-out UI (backend exists, no UI), transfer status polling/webhooks, super admin domain pricing controls
+- **INVFIX-07**: Expenses — Approval Workflow, Receipt Viewer, Budgets
 - Do NOT reintroduce Stripe into the invoicing module
 
-**Audit Verdict:** Session 6 is **not fully closed**. A short production-closure pass is required before INVFIX-06 should begin.
+## Previous: Session 7 — INVFIX-04/05 Closed + INVFIX-06 Complete ✅
 
-### Next Steps
-
-1. **Resolve the production blockers first**: schema mismatch, Stripe column cleanup, payment/receipt numbering safety, and receipt identifier persistence.
-2. **Only start INVFIX-06 after the above is verified clean**.
-3. Consider addressing the 219 pre-existing TSC errors in the marketing module separately.
-
-## Previous: Invoicing Hotfix — Save, Display, and Money Bugs Fixed ⚠️
+### Session 7 (July 2026)
 
 ### April 2026 Hotfix Findings
 
