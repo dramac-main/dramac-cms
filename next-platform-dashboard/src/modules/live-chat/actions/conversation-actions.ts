@@ -7,9 +7,12 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { mapRecord, mapRecords } from "../lib/map-db-record";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { createNotification } from "@/lib/services/notifications";
+import { sendPushToUser } from "@/lib/actions/web-push";
 import type {
   ChatConversation,
   ConversationListItem,
@@ -224,7 +227,9 @@ export async function createConversation(data: {
 
     const conversation = mapRecord<ChatConversation>(convData);
 
-    // Try auto-assign if department has auto_assign enabled
+    // Try auto-assign — track whether an agent was found
+    let assigned = false;
+
     if (data.departmentId) {
       const { data: dept } = await supabase
         .from("mod_chat_departments")
@@ -233,9 +238,6 @@ export async function createConversation(data: {
         .single();
 
       if (dept?.auto_assign) {
-        // Find available agent in department
-        // Note: Supabase .lt() compares against literal values, not column refs.
-        // Fetch agents and filter capacity in code.
         const { data: agents } = await supabase
           .from("mod_chat_agents")
           .select("id, current_chat_count, max_concurrent_chats")
@@ -252,10 +254,10 @@ export async function createConversation(data: {
 
         if (agent) {
           await assignConversation(conversation.id, agent.id);
+          assigned = true;
         }
       }
     } else {
-      // No department — try to find any available agent
       const { data: agent } = await supabase
         .from("mod_chat_agents")
         .select("id")
@@ -268,8 +270,16 @@ export async function createConversation(data: {
 
       if (agent) {
         await assignConversation(conversation.id, agent.id);
+        assigned = true;
       }
     }
+
+    // ── Always notify site owner of new conversation ──
+    // Even if auto-assigned, the owner should know about new chats.
+    // If NOT assigned, this is critical — the chat would otherwise go unnoticed.
+    const chatUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/live-chat`;
+    notifyOwnerOfNewChat(data.siteId, conversation.id, data.subject, data.channel || "widget", chatUrl, assigned)
+      .catch((err) => console.error("[LiveChat] Owner notification error:", err));
 
     // Emit automation event for new conversation
     logAutomationEvent(
@@ -1083,5 +1093,97 @@ export async function getConversationStats(
       },
       error: (error as Error).message,
     };
+  }
+}
+
+// ─── Internal Helpers ────────────────────────────────────────────────────────
+
+/**
+ * Notify the site/agency owner about a new chat conversation.
+ * Sends both an in-app notification (bell) and a web push notification.
+ */
+async function notifyOwnerOfNewChat(
+  siteId: string,
+  conversationId: string,
+  subject: string | undefined,
+  channel: string,
+  chatUrl: string,
+  wasAssigned: boolean,
+): Promise<void> {
+  const admin = createAdminClient();
+
+  // Resolve site → agency → owner
+  const { data: site } = await admin
+    .from("sites")
+    .select("agency_id, name")
+    .eq("id", siteId)
+    .single();
+  if (!site?.agency_id) return;
+
+  const { data: agency } = await admin
+    .from("agencies")
+    .select("owner_id")
+    .eq("id", site.agency_id)
+    .single();
+  if (!agency?.owner_id) return;
+
+  const title = wasAssigned
+    ? "New Chat Conversation"
+    : "⚠ New Chat — No Agent Available";
+  const message = wasAssigned
+    ? `New ${channel} conversation${subject ? `: ${subject}` : ""} on ${site.name || "your site"}`
+    : `A visitor started a ${channel} conversation${subject ? ` about "${subject}"` : ""} on ${site.name || "your site"}, but no agents are online to handle it.`;
+
+  // 1. In-app notification
+  await createNotification({
+    userId: agency.owner_id,
+    type: "chat_message",
+    title,
+    message,
+    link: chatUrl,
+    metadata: {
+      conversationId,
+      siteId,
+      channel,
+      autoAssigned: wasAssigned,
+    },
+  });
+
+  // 2. Web push (non-blocking)
+  sendPushToUser(agency.owner_id, {
+    title,
+    body: message,
+    url: chatUrl,
+    tag: `chat-${conversationId}`,
+    type: "chat",
+    requireInteraction: !wasAssigned, // Persist push if no agent available
+  }).catch(() => {}); // Non-critical — push keys may not be configured
+
+  // 3. If not assigned, also notify ALL active agents (they may come online)
+  if (!wasAssigned) {
+    const { data: members } = await admin
+      .from("agency_members")
+      .select("user_id")
+      .eq("agency_id", site.agency_id)
+      .eq("status", "active");
+
+    if (members?.length) {
+      const agentIds = members
+        .map((m: { user_id: string }) => m.user_id)
+        .filter((id: string) => id !== agency.owner_id); // Owner already notified
+
+      if (agentIds.length > 0) {
+        const notifications = agentIds.map((uid: string) => ({
+          user_id: uid,
+          type: "chat_message" as const,
+          title: "New Chat — Needs Attention",
+          message: `A visitor is waiting for help${subject ? ` regarding "${subject}"` : ""} on ${site.name || "your site"}.`,
+          link: chatUrl,
+          read: false,
+        }));
+
+        await admin.from("notifications").insert(notifications);
+      }
+    }
   }
 }

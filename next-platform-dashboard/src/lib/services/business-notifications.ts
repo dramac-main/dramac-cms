@@ -15,6 +15,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createNotification } from "@/lib/services/notifications";
+import { sendPushToUser } from "@/lib/actions/web-push";
 import { DOMAINS } from "@/lib/constants/domains";
 import { formatCurrency, formatDate, formatTime } from "@/lib/locale-config";
 import {
@@ -22,6 +23,7 @@ import {
   shouldSendInApp,
 } from "@/lib/services/notification-channel-resolver";
 import type { NotificationTemplateType } from "@/modules/ecommerce/types/ecommerce-types";
+import type { Json } from "@/types/database";
 
 // =============================================================================
 // TYPES
@@ -116,6 +118,8 @@ interface BusinessOwnerInfo {
   siteName: string;
   agencyId: string;
   agencyOwnerId: string;
+  /** Client ID from sites.client_id — used for portal notifications */
+  clientId: string | null;
   /** Email for notifications — prefers client email, falls back to agency owner */
   ownerEmail: string | null;
   /** Name for notifications — prefers client name, falls back to agency owner */
@@ -179,12 +183,68 @@ async function resolveBusinessOwner(
     siteName: site.name || "Business",
     agencyId: site.agency_id,
     agencyOwnerId: agency.owner_id,
+    clientId: site.client_id || null,
     // Prefer client email (actual business owner), fall back to agency owner
     ownerEmail: clientEmail || ownerProfile?.email || null,
     ownerName: clientName || ownerProfile?.full_name || null,
     siteSubdomain: site.subdomain || null,
     siteCustomDomain: site.custom_domain || null,
   };
+}
+
+// =============================================================================
+// CLIENT PORTAL NOTIFICATION HELPER
+// =============================================================================
+
+/**
+ * Create a notification in the client_notifications table (for client portal).
+ * Uses admin client since this runs from server actions, not from an authenticated
+ * portal session.
+ */
+async function createClientPortalNotification(
+  clientId: string | null,
+  notification: {
+    type: string;
+    title: string;
+    message: string;
+    link?: string;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  if (!clientId) return;
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("client_notifications" as never).insert({
+      client_id: clientId,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      link: notification.link || null,
+      metadata: (notification.metadata || {}) as unknown as Json,
+    } as never);
+  } catch (error) {
+    console.error("[BusinessNotify] Error creating portal notification:", error);
+  }
+}
+
+/**
+ * Send web push notification to a user. Wraps sendPushToUser with error handling
+ * so push failures never break the notification flow.
+ */
+async function pushToOwner(
+  userId: string,
+  payload: { title: string; body: string; url?: string; tag?: string },
+): Promise<void> {
+  try {
+    await sendPushToUser(userId, {
+      ...payload,
+      type: "notification",
+      requireInteraction: true,
+    });
+  } catch (error) {
+    // Push failures are non-critical — log and continue
+    console.error("[BusinessNotify] Web push failed:", error);
+  }
 }
 
 // =============================================================================
@@ -237,7 +297,24 @@ export async function notifyNewBooking(
           customerEmail: data.customerEmail,
         },
       });
+
+      // Web push to owner
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `New Booking: ${data.serviceName}`,
+        body: `${data.customerName} booked for ${dateStr} at ${timeStr}`,
+        url: dashboardUrl,
+        tag: `booking-${data.appointmentId}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "new_booking",
+      title: `New Booking: ${data.serviceName}`,
+      message: `${data.customerName} booked ${data.serviceName} for ${dateStr} at ${timeStr} (${priceStr})`,
+      link: `/portal/bookings`,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
 
     // 2 & 3. Email to business owner + customer — sent in PARALLEL for faster delivery.
     // Previously sequential (one after another), which doubled email latency.
@@ -376,7 +453,23 @@ export async function notifyBookingCancelled(
           cancelledBy: data.cancelledBy,
         },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Booking Cancelled: ${data.serviceName}`,
+        body: `${data.customerName}'s booking on ${dateStr} cancelled`,
+        url: dashboardUrl,
+        tag: `booking-cancel-${data.appointmentId}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "booking_cancelled",
+      title: `Booking Cancelled: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} has been cancelled.`,
+      link: `/portal/bookings`,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
 
     // 2. Email to business owner
     if (
@@ -482,6 +575,32 @@ export async function notifyBookingConfirmed(
         : `${data.serviceDuration}m`;
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
+    // In-app notification to business owner
+    await createNotification({
+      userId: owner.agencyOwnerId,
+      type: "booking_confirmed",
+      title: `Booking Confirmed: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been confirmed`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
+
+    await pushToOwner(owner.agencyOwnerId, {
+      title: `Booking Confirmed: ${data.serviceName}`,
+      body: `${data.customerName}'s booking on ${dateStr} confirmed`,
+      url: dashboardUrl,
+      tag: `booking-confirm-${data.appointmentId}`,
+    });
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "booking_confirmed",
+      title: `Booking Confirmed: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been confirmed.`,
+      link: `/portal/bookings`,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
+
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to customer
@@ -582,6 +701,32 @@ export async function notifyBookingCompleted(
     const dateStr = formatDate(data.startTime);
     const priceStr = formatCurrency(data.servicePrice, currency);
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
+
+    // In-app + push notification to business owner
+    await createNotification({
+      userId: owner.agencyOwnerId,
+      type: "new_booking",
+      title: `Booking Completed: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} has been completed`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
+
+    await pushToOwner(owner.agencyOwnerId, {
+      title: `Booking Completed: ${data.serviceName}`,
+      body: `${data.customerName}'s booking completed`,
+      url: dashboardUrl,
+      tag: `booking-complete-${data.appointmentId}`,
+    });
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "new_booking",
+      title: `Booking Completed: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} has been completed.`,
+      link: `/portal/bookings`,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+    });
 
     const emailPromises: Promise<unknown>[] = [];
 
@@ -885,7 +1030,23 @@ export async function notifyNewOrder(
           total: data.total,
         },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `New Order #${data.orderNumber}`,
+        body: `${data.customerName} placed an order for ${totalStr}`,
+        url: dashboardUrl,
+        tag: `order-${data.orderId}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "new_order",
+      title: `New Order #${data.orderNumber}`,
+      message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
+      link: `/portal/orders`,
+      metadata: { orderId: data.orderId, orderNumber: data.orderNumber, siteId: data.siteId },
+    });
 
     // 2. Email to business owner
     if (
@@ -984,7 +1145,23 @@ export async function notifyOrderShipped(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Shipped`,
+        body: `Order for ${customerName} shipped`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-ship-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "order_shipped",
+      title: `Order #${orderNumber} Shipped`,
+      message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ""}`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     // Email to customer (uses SITE branding)
     if (
@@ -1059,7 +1236,23 @@ export async function notifyOrderDelivered(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Delivered`,
+        body: `Order for ${customerName} delivered`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-deliver-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "order_delivered",
+      title: `Order #${orderNumber} Delivered`,
+      message: `Order for ${customerName} has been marked as delivered`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     // Email to customer (uses SITE branding)
     if (
@@ -1138,7 +1331,23 @@ export async function notifyOrderCancelled(
         link: dashboardUrl,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Order #${orderNumber} Cancelled`,
+        body: `Order from ${customerName} (${total}) cancelled`,
+        url: dashboardUrl,
+        tag: `order-cancel-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "order_cancelled",
+      title: `Order #${orderNumber} Cancelled`,
+      message: `Order from ${customerName} (${total}) has been cancelled${reason ? `: ${reason}` : ""}`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     // Email to business owner
     if (
@@ -1242,7 +1451,23 @@ export async function notifyPaymentReceived(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Payment Received: Order #${orderNumber}`,
+        body: `${customerName} paid ${total}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `payment-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "payment_received",
+      title: `Payment Received: Order #${orderNumber}`,
+      message: `${customerName} paid ${total} for order #${orderNumber}`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     if (
       customerEmail &&
@@ -1314,7 +1539,23 @@ export async function notifyPaymentProofUploaded(
         link: dashboardUrl,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Payment Proof: Order #${orderNumber}`,
+        body: `${customerName} uploaded payment proof (${total})`,
+        url: dashboardUrl,
+        tag: `proof-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "payment_received",
+      title: `Payment Proof Uploaded: Order #${orderNumber}`,
+      message: `${customerName} has uploaded payment proof for order #${orderNumber} (${total}). Review pending.`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     // Email to business owner
     if (
@@ -1397,7 +1638,23 @@ export async function notifyRefundIssued(
         link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Refund Issued: Order #${orderNumber}`,
+        body: `Refund of ${refundAmount} issued to ${customerName}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `refund-${orderNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "refund_issued",
+      title: `Refund Issued: Order #${orderNumber}`,
+      message: `Refund of ${refundAmount} issued to ${customerName}`,
+      link: `/portal/orders`,
+      metadata: { orderNumber, siteId },
+    });
 
     // Email to customer (uses SITE branding)
     if (
@@ -1466,7 +1723,23 @@ export async function notifyLowStock(
         link: dashboardUrl,
         metadata: { productName, currentStock, threshold, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Low Stock: ${productName}`,
+        body: `${currentStock} remaining (threshold: ${threshold})`,
+        url: dashboardUrl,
+        tag: `lowstock-${productName}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "low_stock",
+      title: `Low Stock: ${productName}`,
+      message: `${productName} is low on stock (${currentStock} remaining)`,
+      link: `/portal/products`,
+      metadata: { productName, currentStock, threshold, siteId },
+    });
 
     // Email to business owner
     if (
@@ -1565,7 +1838,23 @@ export async function notifyNewQuote(
           customerEmail: data.customerEmail,
         },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `New Quote Request #${data.quoteNumber}`,
+        body: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}`,
+        url: dashboardUrl,
+        tag: `quote-${data.quoteId}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "new_quote_request",
+      title: `New Quote Request #${data.quoteNumber}`,
+      message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
+      link: `/portal/quotes`,
+      metadata: { quoteId: data.quoteId, quoteNumber: data.quoteNumber, siteId: data.siteId },
+    });
 
     // 2 & 3. Emails in parallel
     const emailPromises: Promise<unknown>[] = [];
@@ -1679,7 +1968,23 @@ export async function notifyQuoteAccepted(
         link: dashboardUrl,
         metadata: { quoteNumber, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Quote #${quoteNumber} Accepted`,
+        body: `${customerName} accepted quote #${quoteNumber}${total ? ` (${total})` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-accept-${quoteNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "quote_accepted",
+      title: `Quote #${quoteNumber} Accepted`,
+      message: `${customerName} accepted quote #${quoteNumber}${total ? ` (${total})` : ""}`,
+      link: `/portal/quotes`,
+      metadata: { quoteNumber, siteId },
+    });
 
     const emailPromises: Promise<unknown>[] = [];
 
@@ -1797,7 +2102,23 @@ export async function notifyQuoteRejected(
         link: dashboardUrl,
         metadata: { quoteNumber, siteId, reason },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Quote #${quoteNumber} Rejected`,
+        body: `${customerName} rejected quote #${quoteNumber}`,
+        url: dashboardUrl,
+        tag: `quote-reject-${quoteNumber}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "quote_rejected",
+      title: `Quote #${quoteNumber} Rejected`,
+      message: `${customerName} rejected quote #${quoteNumber}${reason ? `: ${reason}` : ""}`,
+      link: `/portal/quotes`,
+      metadata: { quoteNumber, siteId },
+    });
 
     // 2. Email to business owner
     if (
@@ -1875,7 +2196,23 @@ export async function notifyBookingPaymentProofUploaded(
         link: dashboardUrl,
         metadata: { serviceName, siteId },
       });
+
+      await pushToOwner(owner.agencyOwnerId, {
+        title: `Booking Payment Proof: ${serviceName}`,
+        body: `${customerName} uploaded proof (${amountFormatted})`,
+        url: dashboardUrl,
+        tag: `booking-proof-${serviceName}`,
+      });
     }
+
+    // Client portal notification
+    await createClientPortalNotification(owner.clientId, {
+      type: "payment_received",
+      title: `Booking Payment Proof: ${serviceName}`,
+      message: `${customerName} uploaded payment proof for ${serviceName} booking (${amountFormatted}). Review pending.`,
+      link: `/portal/bookings`,
+      metadata: { serviceName, siteId },
+    });
 
     // Email to business owner
     if (

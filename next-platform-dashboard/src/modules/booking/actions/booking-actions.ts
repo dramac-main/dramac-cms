@@ -736,6 +736,38 @@ export async function updateAppointment(
 ): Promise<Appointment> {
   const supabase = await getModuleClient();
 
+  // ── Payment enforcement: block confirmation of unpaid bookings ──
+  if (updates.status === "confirmed") {
+    // Get current appointment to check payment_status
+    const { data: current } = await supabase
+      .from(`${TABLE_PREFIX}_appointments`)
+      .select("payment_status")
+      .eq("site_id", siteId)
+      .eq("id", appointmentId)
+      .single();
+
+    // Get booking settings to check require_payment
+    const { data: settings } = await supabase
+      .from(`${TABLE_PREFIX}_settings` as any)
+      .select("require_payment")
+      .eq("site_id", siteId)
+      .single();
+
+    const requirePayment = (settings as any)?.require_payment === true;
+    const currentPaymentStatus = (current as any)?.payment_status;
+
+    if (
+      requirePayment &&
+      currentPaymentStatus !== "paid" &&
+      currentPaymentStatus !== "not_required"
+    ) {
+      throw new Error(
+        "Cannot confirm booking: payment is required but has not been received. " +
+          "Please collect payment before confirming this appointment.",
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_appointments`)
     .update(updates)

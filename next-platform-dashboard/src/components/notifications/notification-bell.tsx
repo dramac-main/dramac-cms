@@ -31,9 +31,11 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Notification } from "@/types/notifications";
 import { NotificationIcon } from "./notification-icon";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export function NotificationBell() {
   const router = useRouter();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -69,16 +71,18 @@ export function NotificationBell() {
 
   // Supabase Realtime subscription for instant notification updates
   useEffect(() => {
+    if (!user?.id) return;
     const supabase = createClient();
 
     const channel = supabase
-      .channel("notification-bell")
+      .channel(`notification-bell-${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const newNotification = payload.new as Notification;
@@ -119,6 +123,7 @@ export function NotificationBell() {
           event: "UPDATE",
           schema: "public",
           table: "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const updated = payload.new as Notification;
@@ -139,6 +144,7 @@ export function NotificationBell() {
           event: "DELETE",
           schema: "public",
           table: "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const deletedId = (payload.old as { id: string }).id;
@@ -158,7 +164,7 @@ export function NotificationBell() {
       channel.unsubscribe();
       clearInterval(interval);
     };
-  }, [fetchNotifications, router]);
+  }, [user?.id, fetchNotifications, router]);
 
   const handleMarkRead = async (id: string) => {
     await markNotificationRead(id);
