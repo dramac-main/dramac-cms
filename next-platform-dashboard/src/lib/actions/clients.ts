@@ -290,8 +290,7 @@ export async function inviteClientToPortal(clientId: string) {
     );
     const { getAgencyBranding } = await import("@/lib/queries/branding");
     const branding = await getAgencyBranding(profile.agency_id);
-    const businessName =
-      branding?.agency_display_name || branding?.agency_name || "our team";
+    const businessName = branding?.agency_display_name || "our team";
     const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/portal/login`;
 
     await sendBrandedEmail(profile.agency_id, {
