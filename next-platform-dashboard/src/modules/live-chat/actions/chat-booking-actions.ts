@@ -202,11 +202,46 @@ export async function updateBookingStatusFromChat(
     return { error: `Invalid status: ${newStatus}` };
   }
 
+  // ── Payment enforcement: block confirmation of unpaid bookings ──
+  // Same rule as booking-actions.ts:updateAppointment. If require_payment=true
+  // and payment_status is pending, confirmation must be refused — otherwise
+  // the customer would get a "slot confirmed" email while still owing payment.
+  if (newStatus === "confirmed") {
+    const { data: current } = await db
+      .from(`${BOOKING_PREFIX}_appointments`)
+      .select("payment_status")
+      .eq("site_id", siteId)
+      .eq("id", bookingId)
+      .single();
+
+    const { data: settings } = await db
+      .from(`${BOOKING_PREFIX}_settings`)
+      .select("require_payment")
+      .eq("site_id", siteId)
+      .single();
+
+    const requirePayment = settings?.require_payment === true;
+    const currentPaymentStatus = current?.payment_status;
+
+    if (
+      requirePayment &&
+      currentPaymentStatus !== "paid" &&
+      currentPaymentStatus !== "not_required"
+    ) {
+      return {
+        error:
+          "Cannot confirm booking: payment is required but has not been received. Please collect payment before confirming this appointment.",
+      };
+    }
+  }
+
+  // Cancellation enforcement — cancelled_by must be one of: customer|staff|system
+  // (DB CHECK constraint). "admin" (legacy default) violates the constraint.
   const updates: Record<string, unknown> = { status: newStatus };
 
   if (newStatus === "cancelled") {
     updates.cancelled_at = new Date().toISOString();
-    updates.cancelled_by = options?.agentName || "admin";
+    updates.cancelled_by = "staff";
     updates.cancellation_reason =
       options?.cancellationReason?.trim() || "Cancelled via live chat";
   }

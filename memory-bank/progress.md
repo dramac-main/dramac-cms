@@ -1,25 +1,7 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: July 2026  
+**Last Updated**: April 2026  
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
-
----
-
-## Notification System Overhaul ✅
-
-**Commit**: `f5ef7bac` — July 2026
-
-| Fix | Description | File(s) |
-| --- | --- | --- |
-| 1 | Payment enforcement on booking confirmation | booking-actions.ts |
-| 2 | Revived dispatchNotification() from no-op | automation-aware-dispatcher.ts |
-| 3 | Notification bell user_id filter | notification-bell.tsx |
-| 4 | Chat-to-owner notifications | conversation-actions.ts |
-| 5 | DB CHECK constraint (34→47 types) | Supabase migration |
-| 6 | Client portal notifications (16 events) | business-notifications.ts |
-| 7 | Web push integration (all events) | business-notifications.ts |
-
-**DB migration applied**: `add_missing_notification_types` — 13 new types added to CHECK constraint on `notifications` table (project `nfirsqmyxmmtbignofgb`)
 
 ---
 
@@ -299,8 +281,6 @@
 
 **Current execution recommendation:** Session 12 should be a **combined INVFIX-08 final closure + INVFIX-09 implementation session**. Do the report-spec closure first, verify it cleanly, then continue into the email-system phase in the same pass.
 
-**INVFIX Session 13 (April 20 2026) — INVFIX-09 CLOSED:** All 7 gaps implemented. Files changed: `email-template-service.ts` (normalizeVariables + async renderTemplate), `email-autosend-service.ts` (5 new hooks, fixed imports), `invoice-actions.ts` + `payment-actions.ts` (inline HTML → template system), `recurring-actions.ts` (duplicate email removed), `overdue-service.ts` (5-stage dunning 14/21/30/45/60), `dunning-timeline.tsx` (manual controls), `invoicing-settings-form.tsx` (Email Templates + Notifications tabs), `invoice-detail.tsx` (DunningTimeline mounted), `statement-actions.ts` (sendAccountStatementEmail). Post-session TSC fixes: INV_TABLES.clients→invoices contact_id query, createClient() as any cast, String() casts on unknown. TSC: **0 invoicing errors.** Next: **Session 14 = INVFIX-10 + INVFIX-11.**
-
 ---
 
 ## Additional Systems ✅ Complete
@@ -358,7 +338,6 @@
 | Jul 2026 | Billing Cleanup Session 7: Dead page removal, env trimming, NaN guards, branding leak fixes — 9 files, 266 lines deleted, commit 5d9fd1d0                                                                           |
 | Jul 2026 | Billing Flow Deep Audit Session 8: Fix billing page wrong table (subscriptions→paddle_subscriptions), domain search debounce (useState→useRef), checkout successUrl, revalidatePath fixes — commit 94ce88d0         |
 | Jul 2026 | Invoicing INVFIX-08: Reports Overhaul — cross-module revenue/client reports, report hub categorization, print CSS, export/print on all reports                                                                      |
-| Apr 2026 | Invoicing INVFIX-09 CLOSED (Session 13): Email Templates, Auto-Send, Dunning Escalation — 10 files changed, 7 gaps closed, 0 TSC errors. Next: INVFIX-10 + INVFIX-11                                              |
 
 ---
 

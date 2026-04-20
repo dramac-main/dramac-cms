@@ -589,6 +589,28 @@ export async function createAppointment(
     throw new Error("Start time must be before end time");
   }
 
+  // ── Payment enforcement on creation ──
+  // If the agent is trying to create an already-"confirmed" appointment with a
+  // payment still pending, refuse it — matches the rule in updateAppointment.
+  if (input.status === "confirmed") {
+    const { data: settings } = await supabase
+      .from(`${TABLE_PREFIX}_settings` as any)
+      .select("require_payment")
+      .eq("site_id", siteId)
+      .single();
+    const requirePayment = (settings as any)?.require_payment === true;
+    const incomingPaymentStatus = input.payment_status || "not_required";
+    if (
+      requirePayment &&
+      incomingPaymentStatus !== "paid" &&
+      incomingPaymentStatus !== "not_required"
+    ) {
+      throw new Error(
+        "Cannot create a confirmed booking: payment is required but has not been received. Create it as pending and confirm after payment is collected.",
+      );
+    }
+  }
+
   // Check availability
   const isAvailable = await checkSlotAvailability(
     siteId,
@@ -737,38 +759,6 @@ export async function updateAppointment(
   updates: AppointmentUpdate,
 ): Promise<Appointment> {
   const supabase = await getModuleClient();
-
-  // ── Payment enforcement: block confirmation of unpaid bookings ──
-  if (updates.status === "confirmed") {
-    // Get current appointment to check payment_status
-    const { data: current } = await supabase
-      .from(`${TABLE_PREFIX}_appointments`)
-      .select("payment_status")
-      .eq("site_id", siteId)
-      .eq("id", appointmentId)
-      .single();
-
-    // Get booking settings to check require_payment
-    const { data: settings } = await supabase
-      .from(`${TABLE_PREFIX}_settings` as any)
-      .select("require_payment")
-      .eq("site_id", siteId)
-      .single();
-
-    const requirePayment = (settings as any)?.require_payment === true;
-    const currentPaymentStatus = (current as any)?.payment_status;
-
-    if (
-      requirePayment &&
-      currentPaymentStatus !== "paid" &&
-      currentPaymentStatus !== "not_required"
-    ) {
-      throw new Error(
-        "Cannot confirm booking: payment is required but has not been received. " +
-          "Please collect payment before confirming this appointment.",
-      );
-    }
-  }
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_appointments`)
@@ -938,6 +928,122 @@ export async function updateAppointment(
         notificationFunction: () => notifyBookingNoShow(notificationData),
       }).catch((err) =>
         console.error("[Booking] No-show email notification error:", err),
+      );
+    } else if (updates.status === "cancelled") {
+      // Cancelled via updateAppointment — route through same flow as cancelAppointment()
+      // so notifications (in-app bell, email, web push) fire. Previously this was SILENT.
+      await logAutomationEvent(
+        siteId,
+        EVENT_REGISTRY.booking.appointment.cancelled,
+        {
+          appointmentId,
+          serviceName,
+          customerName: updated.customer_name,
+          customerEmail: updated.customer_email,
+          startTime: start.toISOString(),
+          start_date_formatted: formatDate(start),
+          start_time_formatted: formatTime(start),
+          cancelledBy: "staff",
+        },
+        {
+          sourceModule: "booking",
+          sourceEntityType: "appointment",
+          sourceEntityId: appointmentId,
+        },
+      ).catch((err) => console.error("[Booking] Automation event error:", err));
+      await dispatchNotification({
+        siteId,
+        eventType: "booking.appointment.cancelled",
+        notificationFunction: () =>
+          notifyBookingCancelled({
+            ...notificationData,
+            cancelledBy: "staff",
+          }),
+      }).catch((err) =>
+        console.error("[Booking] Cancel email notification error:", err),
+      );
+      dispatchChatNotification({
+        siteId,
+        eventType: "booking.appointment.cancelled",
+        chatFunction: () =>
+          notifyChatBookingCancelled(
+            siteId,
+            updated.customer_email!,
+            serviceName,
+            dateFmt,
+          ),
+      }).catch((err) =>
+        console.error("[Booking] Chat notification error (cancel):", err),
+      );
+    }
+  }
+
+  // Payment status transitions can happen independently of status changes
+  // (e.g. staff marking a manual payment as "paid" without touching status).
+  // Previously these fired NO notifications.
+  if (updates.payment_status && updated.customer_email) {
+    const start = new Date(updated.start_time);
+    const serviceName = (updated as any).service?.name || "Service";
+    const servicePrice = (updated as any).service?.price || 0;
+    const serviceDuration = (updated as any).service?.duration_minutes || 30;
+    const staffName = (updated as any).staff?.name;
+    const currency = (updated as any).service?.currency;
+    const endTime = updated.end_time ? new Date(updated.end_time) : undefined;
+    const paymentNotifData = {
+      siteId,
+      appointmentId,
+      serviceName,
+      servicePrice,
+      serviceDuration,
+      staffName,
+      customerName: updated.customer_name || "Customer",
+      customerEmail: updated.customer_email,
+      startTime: start,
+      endTime,
+      currency,
+      paymentStatus: updated.payment_status,
+      changedBy: "Admin",
+    };
+
+    if (updates.payment_status === "paid") {
+      await logAutomationEvent(
+        siteId,
+        EVENT_REGISTRY.booking.appointment.payment_received,
+        {
+          appointmentId,
+          serviceName,
+          customerName: updated.customer_name,
+          customerEmail: updated.customer_email,
+          startTime: start.toISOString(),
+          amount: servicePrice,
+          currency,
+        },
+        {
+          sourceModule: "booking",
+          sourceEntityType: "appointment",
+          sourceEntityId: appointmentId,
+        },
+      ).catch((err) =>
+        console.error("[Booking] Automation event error (payment):", err),
+      );
+      await dispatchNotification({
+        siteId,
+        eventType: "booking.appointment.payment_received",
+        notificationFunction: () =>
+          notifyBookingPaymentReceived(paymentNotifData),
+      }).catch((err) =>
+        console.error("[Booking] Payment email notification error:", err),
+      );
+    } else if (updates.payment_status === "refunded") {
+      await notifyRefundIssued(
+        siteId,
+        appointmentId.slice(0, 8),
+        updated.customer_email,
+        updated.customer_name || "Customer",
+        `${currency || "USD"} ${servicePrice}`,
+        "Booking refund",
+      ).catch((err) =>
+        console.error("[Booking] Refund notification error:", err),
       );
     }
   }

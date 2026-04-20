@@ -335,7 +335,9 @@ export async function createConversationForEntity(
     // 6. Auto-assign to available agent
     const { data: agents } = await supabase
       .from("mod_chat_agents")
-      .select("id, display_name, current_chat_count, max_concurrent_chats")
+      .select(
+        "id, user_id, display_name, current_chat_count, max_concurrent_chats",
+      )
       .eq("site_id", siteId)
       .eq("is_active", true)
       .eq("status", "online")
@@ -421,6 +423,57 @@ export async function createConversationForEntity(
         last_message_by: "ai",
       })
       .eq("id", conversation.id);
+
+    // 8. Notify agent(s) / owner — previously this was SILENT.
+    // A chat conversation was auto-created but no one was told. Now we fire:
+    //   a) in-app notification (bell) to the assigned agent OR site owner
+    //   b) web push (OS/browser popup) so agents are alerted even when the tab is closed
+    // Fire-and-forget so we never block the booking/order flow.
+    (async () => {
+      try {
+        const { notifyNewChatMessage } = await import("./chat-notifications");
+        await notifyNewChatMessage({
+          siteId,
+          conversationId: conversation.id,
+          visitorName: ctx.customerName,
+          messageText: greeting,
+          agentUserId: availableAgent?.user_id || undefined,
+        });
+      } catch (err) {
+        console.error(
+          "[ChatEventBridge] notifyNewChatMessage (create) failed:",
+          err,
+        );
+      }
+
+      try {
+        const { sendPushToUser, sendPushToSiteAgents } = await import(
+          "@/lib/actions/web-push"
+        );
+        const pushPayload = {
+          title: `New chat from ${ctx.customerName}`,
+          body:
+            ctx.entityType === "order"
+              ? `Order ${ctx.orderNumber} — ${ctx.orderTotal || ""}`
+              : `Booking: ${ctx.serviceName || "Appointment"}`,
+          tag: `chat-${conversation.id}`,
+          type: "chat" as const,
+          conversationId: conversation.id,
+          url: `/dashboard/sites/${siteId}/live-chat/conversations/${conversation.id}`,
+          renotify: true,
+        };
+        if (availableAgent?.user_id) {
+          await sendPushToUser(availableAgent.user_id, pushPayload);
+        } else {
+          await sendPushToSiteAgents(siteId, pushPayload);
+        }
+      } catch (err) {
+        console.error(
+          "[ChatEventBridge] web push (create conv) failed:",
+          err,
+        );
+      }
+    })();
 
     console.log(
       `[ChatEventBridge] Auto-created conversation ${conversation.id} for ${ctx.entityType} (${ctx.entityType === "order" ? ctx.orderNumber : ctx.bookingId})`,

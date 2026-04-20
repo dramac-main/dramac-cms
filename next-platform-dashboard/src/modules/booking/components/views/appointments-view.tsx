@@ -192,6 +192,7 @@ export function AppointmentsView({
     settings,
     isLoading,
     editAppointment,
+    cancelAppointment,
     removeAppointment,
     refreshAll,
   } = useBooking();
@@ -283,7 +284,13 @@ export function AppointmentsView({
     newStatus: AppointmentStatus,
   ) => {
     try {
-      await editAppointment(apt.id, { status: newStatus });
+      // Cancellation has its own server action that sets cancelled_by,
+      // cancelled_at and fires the full cancel-notification pipeline.
+      if (newStatus === "cancelled") {
+        await cancelAppointment(apt.id, "staff");
+      } else {
+        await editAppointment(apt.id, { status: newStatus });
+      }
       toast.success(`Appointment ${newStatus}`);
     } catch {
       toast.error("Failed to update status");

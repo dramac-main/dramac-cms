@@ -120,8 +120,14 @@ export function AppointmentDetailSheet({
   onOpenChange,
   onEdit,
 }: AppointmentDetailSheetProps) {
-  const { staff, services, settings, editAppointment, removeAppointment } =
-    useBooking();
+  const {
+    staff,
+    services,
+    settings,
+    editAppointment,
+    cancelAppointment,
+    removeAppointment,
+  } = useBooking();
   const [isEditing, setIsEditing] = useState(false);
   const [editedStatus, setEditedStatus] = useState<AppointmentStatus | null>(
     null,
@@ -156,18 +162,31 @@ export function AppointmentDetailSheet({
 
     setIsSaving(true);
     try {
-      const updates: Partial<Appointment> = {};
+      const statusChanged = editedStatus && editedStatus !== appointment.status;
+      const notesChanged = editedNotes !== (appointment.customer_notes || "");
 
-      if (editedStatus && editedStatus !== appointment.status) {
-        updates.status = editedStatus;
-      }
-      if (editedNotes !== (appointment.customer_notes || "")) {
-        updates.customer_notes = editedNotes;
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await editAppointment(appointment.id, updates);
+      // Cancellation takes a dedicated server action to set cancelled_by/cancelled_at
+      // and fire the cancel notification pipeline.
+      if (statusChanged && editedStatus === "cancelled") {
+        await cancelAppointment(appointment.id, "staff");
+        if (notesChanged) {
+          await editAppointment(appointment.id, {
+            customer_notes: editedNotes,
+          });
+        }
         toast.success("Appointment updated");
+      } else {
+        const updates: Partial<Appointment> = {};
+        if (statusChanged) {
+          updates.status = editedStatus!;
+        }
+        if (notesChanged) {
+          updates.customer_notes = editedNotes;
+        }
+        if (Object.keys(updates).length > 0) {
+          await editAppointment(appointment.id, updates);
+          toast.success("Appointment updated");
+        }
       }
 
       setIsEditing(false);
@@ -193,7 +212,11 @@ export function AppointmentDetailSheet({
 
   const handleStatusChange = async (newStatus: AppointmentStatus) => {
     try {
-      await editAppointment(appointment.id, { status: newStatus });
+      if (newStatus === "cancelled") {
+        await cancelAppointment(appointment.id, "staff");
+      } else {
+        await editAppointment(appointment.id, { status: newStatus });
+      }
       toast.success(`Appointment ${newStatus}`);
     } catch {
       toast.error("Failed to update status");

@@ -31,17 +31,24 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Notification } from "@/types/notifications";
 import { NotificationIcon } from "./notification-icon";
-import { useAuth } from "@/components/providers/auth-provider";
 
 export function NotificationBell() {
   const router = useRouter();
-  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Resolve current user id (required to scope realtime subscription)
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
 
   // Initialize notification sound
   useEffect(() => {
@@ -70,19 +77,21 @@ export function NotificationBell() {
   }, [fetchNotifications]);
 
   // Supabase Realtime subscription for instant notification updates
+  // SCOPED to the current user to avoid leaking other users' notifications
+  // and to stop the bell from animating on unrelated rows.
   useEffect(() => {
-    if (!user?.id) return;
+    if (!userId) return;
     const supabase = createClient();
 
     const channel = supabase
-      .channel(`notification-bell-${user.id}`)
+      .channel(`notification-bell-${userId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           const newNotification = payload.new as Notification;
@@ -123,7 +132,7 @@ export function NotificationBell() {
           event: "UPDATE",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           const updated = payload.new as Notification;
@@ -144,7 +153,7 @@ export function NotificationBell() {
           event: "DELETE",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           const deletedId = (payload.old as { id: string }).id;
@@ -164,7 +173,7 @@ export function NotificationBell() {
       channel.unsubscribe();
       clearInterval(interval);
     };
-  }, [user?.id, fetchNotifications, router]);
+  }, [fetchNotifications, router, userId]);
 
   const handleMarkRead = async (id: string) => {
     await markNotificationRead(id);

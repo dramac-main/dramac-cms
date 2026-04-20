@@ -211,7 +211,8 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
             bankTransferInstructions: s.bankTransferInstructions ?? "",
             mobileMoneyInstructions: s.mobileMoneyInstructions ?? "",
             expenseApprovalThreshold: s.expenseApprovalThreshold ?? 50000,
-            expenseAutoApproveBelowThreshold: s.expenseAutoApproveBelowThreshold ?? false,
+            expenseAutoApproveBelowThreshold:
+              s.expenseAutoApproveBelowThreshold ?? false,
             mileageRatePerKm: s.mileageRatePerKm ?? 350,
           });
         }
@@ -303,8 +304,7 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         bankTransferInstructions: form.bankTransferInstructions || null,
         mobileMoneyInstructions: form.mobileMoneyInstructions || null,
         expenseApprovalThreshold: form.expenseApprovalThreshold,
-        expenseAutoApproveBelowThreshold:
-          form.expenseAutoApproveBelowThreshold,
+        expenseAutoApproveBelowThreshold: form.expenseAutoApproveBelowThreshold,
         mileageRatePerKm: form.mileageRatePerKm,
       });
       if (result.success) {
@@ -1130,7 +1130,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
                 <div>
                   <Label>Auto-approve below threshold</Label>
                   <p className="text-xs text-muted-foreground">
-                    Expenses below K{(form.expenseApprovalThreshold / 100).toFixed(2)} will be automatically approved on submission.
+                    Expenses below K
+                    {(form.expenseApprovalThreshold / 100).toFixed(2)} will be
+                    automatically approved on submission.
                   </p>
                 </div>
               </div>
@@ -1139,7 +1141,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Mileage &amp; Per-Diem</CardTitle>
+              <CardTitle className="text-base">
+                Mileage &amp; Per-Diem
+              </CardTitle>
               <CardDescription>
                 Configure rates for mileage reimbursement.
               </CardDescription>
@@ -1173,8 +1177,9 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Mileage and per-diem expense types can be created as expense categories.
-                  The mileage rate here is used for reference and future automated calculations.
+                  Mileage and per-diem expense types can be created as expense
+                  categories. The mileage rate here is used for reference and
+                  future automated calculations.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -1190,29 +1195,48 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
         <TabsContent value="notifications" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Email Notification Events</CardTitle>
+              <CardTitle className="text-base">
+                Email Notification Events
+              </CardTitle>
               <CardDescription>
-                Choose which events trigger automatic email notifications to clients.
+                Choose which events trigger automatic email notifications to
+                clients.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {NOTIFICATION_EVENTS.map((evt) => (
-                <div key={evt.key} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div
+                  key={evt.key}
+                  className="flex items-center justify-between py-2 border-b last:border-0"
+                >
                   <div>
                     <p className="text-sm font-medium">{evt.label}</p>
-                    <p className="text-xs text-muted-foreground">{evt.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {evt.description}
+                    </p>
                   </div>
                   <Switch
                     checked={notificationToggles[evt.key] ?? evt.defaultEnabled}
                     onCheckedChange={(checked) =>
-                      setNotificationToggles((prev) => ({ ...prev, [evt.key]: checked }))
+                      setNotificationToggles((prev) => ({
+                        ...prev,
+                        [evt.key]: checked,
+                      }))
                     }
                   />
                 </div>
               ))}
               <div className="flex justify-end pt-2">
-                <Button size="sm" onClick={handleSaveNotificationToggles} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                <Button
+                  size="sm"
+                  onClick={handleSaveNotificationToggles}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-1" />
+                  )}
                   Save Notifications
                 </Button>
               </div>

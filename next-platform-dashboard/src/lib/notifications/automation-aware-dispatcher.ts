@@ -1,53 +1,36 @@
 /**
  * Automation-Aware Notification Dispatcher
  *
- * The automation engine handles email workflows (branded templates, conditions,
- * delays, etc.), but in-app notifications and direct emails must fire
- * immediately and reliably — they cannot depend on workflow configuration.
+ * Phase 5 → RETIRED: The automation engine is now the SOLE notification path.
+ * logAutomationEvent() triggers workflows which send emails/notifications.
  *
- * This dispatcher runs the hardcoded notification function (which creates
- * in-app notifications + sends direct emails via business-notifications.ts).
- * The automation engine runs in PARALLEL for workflow-driven actions (drip
- * sequences, conditional branches, delays, etc.).
+ * These functions are kept as no-ops so existing call sites don't need
+ * immediate refactoring. They will be removed in a future cleanup pass.
  *
- * Both paths are safe to run concurrently — the branded email system
- * deduplicates by recipient+type within a short window.
+ * If a workflow fails, the failure is logged in workflow_executions.
+ * There is no hardcoded fallback — this is intentional so failures surface
+ * in the automation execution history rather than being silently masked.
  */
 
 /**
- * Dispatch a business notification (in-app + email) immediately.
- * Automation workflows run separately via logAutomationEvent().
+ * @deprecated Automation is the sole notification path. This is a no-op.
  */
-export async function dispatchNotification(params: {
+export async function dispatchNotification(_params: {
   siteId: string;
   eventType: string;
   notificationFunction: () => Promise<unknown>;
 }): Promise<void> {
-  try {
-    await params.notificationFunction();
-  } catch (error) {
-    console.error(
-      `[NotifyDispatch] Error dispatching ${params.eventType} for site ${params.siteId}:`,
-      error,
-    );
-  }
+  // No-op: automation workflows handle all notifications.
+  // The notificationFunction is intentionally NOT called.
 }
 
 /**
- * Dispatch a chat notification immediately.
- * Automation workflows run separately via logAutomationEvent().
+ * @deprecated Automation is the sole notification path. This is a no-op.
  */
-export async function dispatchChatNotification(params: {
+export async function dispatchChatNotification(_params: {
   siteId: string;
   eventType: string;
   chatFunction: () => Promise<unknown>;
 }): Promise<void> {
-  try {
-    await params.chatFunction();
-  } catch (error) {
-    console.error(
-      `[NotifyDispatch] Error dispatching chat ${params.eventType} for site ${params.siteId}:`,
-      error,
-    );
-  }
+  // No-op: automation workflows handle all chat notifications.
 }

@@ -730,38 +730,48 @@ export async function sendInvoice(
 
   // Send email via template system
   try {
-    const { autoSendInvoiceSentEmail } = await import(
-      "../services/email-autosend-service"
-    );
+    const { autoSendInvoiceSentEmail } =
+      await import("../services/email-autosend-service");
 
-    if (emailOptions?.cc?.length || emailOptions?.bcc?.length || emailOptions?.subject) {
+    if (
+      emailOptions?.cc?.length ||
+      emailOptions?.bcc?.length ||
+      emailOptions?.subject
+    ) {
       // Custom send with cc/bcc — use template system for rendering but send directly
       const { getResend, isEmailEnabled, getEmailFrom } =
         await import("@/lib/email/resend-client");
       if (isEmailEnabled()) {
         const resend = getResend();
         if (resend) {
-          const { renderTemplate } = await import(
-            "../services/email-template-service"
-          );
-          const { formatInvoiceAmount } = await import("../lib/invoicing-utils");
+          const { renderTemplate } =
+            await import("../services/email-template-service");
+          const { formatInvoiceAmount } =
+            await import("../lib/invoicing-utils");
           const formattedAmount = formatInvoiceAmount(
             invoice.amount_due || invoice.total,
             invoice.currency,
           );
-          const dueDate = new Date(invoice.due_date).toLocaleDateString("en-ZM", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          });
+          const dueDate = new Date(invoice.due_date).toLocaleDateString(
+            "en-ZM",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            },
+          );
 
-          const rendered = await renderTemplate(invoice.site_id, "invoice_sent", {
-            clientName: invoice.client_name || "Client",
-            invoiceNumber: invoice.invoice_number || "",
-            amount: formattedAmount,
-            dueDate,
-            currency: invoice.currency || "ZMW",
-          });
+          const rendered = await renderTemplate(
+            invoice.site_id,
+            "invoice_sent",
+            {
+              clientName: invoice.client_name || "Client",
+              invoiceNumber: invoice.invoice_number || "",
+              amount: formattedAmount,
+              dueDate,
+              currency: invoice.currency || "ZMW",
+            },
+          );
 
           const body = emailOptions?.message
             ? `<p>${emailOptions.message}</p>\n${rendered.body}`

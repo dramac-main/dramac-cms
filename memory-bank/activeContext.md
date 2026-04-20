@@ -1,35 +1,34 @@
 # Active Context
 
-**Last Updated**: July 2026
+**Last Updated**: April 2026
 
 ## Current State
 
-The DRAMAC CMS platform is production-ready and deployed. The notification system has been fully overhauled. **INVFIX-09 is now closed.** Ready to proceed to INVFIX-10.
+The DRAMAC CMS platform is production-ready and deployed, but the active invoicing overhaul still requires one more corrective pass before the remaining INVFIX roadmap can be compressed further.
 
-## Latest: Notification System Overhaul ✅
+## Latest: Notification System Overhaul II (April 2026)
 
-### Commit: `f5ef7bac` — pushed to main (July 2026)
+Comprehensive follow-up to commit `f5ef7bac` that addresses the remaining
+notification gaps surfaced during user testing.
 
-**Complete notification architecture overhaul across 5 files (+515/-21 lines).**
+### Problems fixed
 
-#### 7 Fixes Applied:
+1. **Payment enforcement bypass via live chat booking panel** — `updateBookingStatusFromChat()` in `chat-booking-actions.ts` was updating the DB directly without checking `require_payment`, allowing agents to confirm unpaid bookings. Now blocks the confirm when `require_payment=true` and `payment_status` is not `paid`/`not_required`.
+2. **`cancelled_by_check` constraint error** — code was passing `"admin"` but the CHECK constraint only permits `customer|staff|system`. Now hardcoded to `"staff"`.
+3. **In-app bell silent on booking confirm** — `notifyBookingConfirmed` was email-only. Added `createNotification` + web push to the agency owner.
+4. **Completed/no-show/payment-received events silent in bell** — all three were email-only. Added in-app + push.
+5. **`updateAppointment` silent on cancellation + payment_status changes** — only handled `confirmed`/`completed`/`no_show`. Now handles `cancelled` (routes through the same pipeline as `cancelAppointment`) and `payment_status` transitions to `paid` (emits `booking.appointment.payment_received`) and `refunded` (emits refund notification).
+6. **Booking UI routing** — `appointments-view.tsx` and `appointment-detail-sheet.tsx` now call `cancelAppointment(id, "staff")` instead of `editAppointment({status:"cancelled"})`.
+7. **Live chat silent on auto-created conversation** — `createConversationForEntity()` in `chat-event-bridge.ts` was creating conversations for new bookings/orders but never notified anyone. Now fires `notifyNewChatMessage` + web push (to the assigned agent or all site agents).
+8. **Notification bell realtime leak** — all 3 Supabase realtime subscriptions in `notification-bell.tsx` were missing a `user_id` filter, meaning the bell would animate/toast on OTHER users' notifications. Now scoped to the current user.
+9. **Web push added** to new bookings, confirmations, cancellations, completions, no-shows, payment received, new orders, new quotes, refunds — via new `pushToOwner()` helper in `business-notifications.ts` using the existing VAPID infrastructure at `src/lib/actions/web-push.ts`.
+10. **Notifications CHECK constraint out of date** — DB constraint only covered ~35 types while code defines ~47. Migration at `migrations/notifications-expand-type-check.sql` expands it to match `src/types/notifications.ts`. **Run this migration.**
 
-1. **Payment enforcement on booking confirmation** (`booking-actions.ts`): Now checks `require_payment` setting and `payment_status` before allowing status="confirmed"
-2. **Revived dispatchNotification()** (`automation-aware-dispatcher.ts`): Was a no-op stub, now actually calls notification and chat functions
-3. **Notification bell user_id filter** (`notification-bell.tsx`): Added useAuth() + user_id filter to all 3 realtime subscriptions so users only see their own notifications
-4. **Chat-to-owner notifications** (`conversation-actions.ts`): New `notifyOwnerOfNewChat()` with in-app notification + web push
-5. **DB CHECK constraint migration** (Supabase): Added 13 missing notification types to CHECK constraint (47 total, was 34)
-6. **Client portal notifications** (`business-notifications.ts`): New `createClientPortalNotification()` helper inserts into `client_notifications` table for all 16 business events (bookings, orders, quotes, payments, stock, etc.)
-7. **Web push notifications** (`business-notifications.ts`): New `pushToOwner()` helper wraps `sendPushToUser()` with error handling, called from all in-app notification blocks
+### Architectural decision documented
 
-#### Key Architecture:
-- Two notification tables: `notifications` (dashboard, user_id→auth.users) + `client_notifications` (portal, client_id→clients)
-- Web push via VAPID in `src/lib/actions/web-push.ts`
-- `business-notifications.ts` is the central orchestrator — every function now fires: in-app (dashboard) + email + portal notification + web push
-- Portal notifications include deep links (`/portal/bookings`, `/portal/orders`, `/portal/quotes`, `/portal/products`)
-- Also fixed missing in-app notifications for `notifyBookingConfirmed()` and `notifyBookingCompleted()` (previously email-only)
+In-app notifications go to the **agency owner** (the only auth.users account in the current tenancy model). The client table holds contact data only — no auth. Client-side in-portal notifications remain future work. Emails continue to prefer the client email address when available.
 
-## Previous: INVFIX Session 12 Verification — INVFIX-08 Closed, INVFIX-09 Partial
+## Previously: INVFIX Session 12 Verification — INVFIX-08 Closed, INVFIX-09 Partial
 
 ### Session 12 verification (April 20, 2026)
 
@@ -51,21 +50,30 @@ Session 12 materially improved the invoicing overhaul and appears to have closed
 - New dunning timeline component in `dunning-timeline.tsx`
 - Credit-note and recurring-invoice hooks into the new auto-send service
 
-#### INVFIX-09 — CLOSED (Session 13, April 20 2026)
+#### Why INVFIX-09 is still open
 
-All 7 gaps implemented and TSC validated at 0 invoicing errors:
-1. `renderTemplate` normalized to async `(siteId, templateType, variables)` + `normalizeVariables()` camelCase→snake_case helper
-2. `email-autosend-service.ts` — replaced `getModuleClient` with `createClient`, added 5 new send hooks
-3. Inline HTML emails in `invoice-actions.ts` + `payment-actions.ts` replaced with template system
-4. `recurring-actions.ts` — removed duplicate email send bug
-5. `overdue-service.ts` — replaced legacy `sendInvoiceEmail` calls; dunning stages updated to 5 (14/21/30/45/60)
-6. `invoicing-settings-form.tsx` — added Email Templates tab + Notifications tab (8 event toggles)
-7. `invoice-detail.tsx` — DunningTimeline mounted in sidebar with Send Reminder + Pause/Resume controls
-8. `statement-actions.ts` — added `sendAccountStatementEmail` action
+1. The new template system is not fully wired into the real invoicing lifecycle. Payment emails, overdue reminders, and late-fee emails still use legacy hardcoded send paths.
+2. The recurring generation flow currently risks duplicate customer emails because it still calls `sendInvoice()` and then separately calls `autoSendRecurringInvoiceEmail()`.
+3. The template editor exists but is not mounted in the invoicing settings route, so it is not reachable from the product UI.
+4. The dunning timeline exists but is not mounted in invoice detail, and the required manual controls (`Send Reminder Now`, `Pause Dunning`) were not implemented.
+5. The new auto-send/template layer uses a different variable contract than the default template placeholders, so the rendering path must be normalized before the feature can be trusted.
+6. Required per-event settings toggles were not added to the invoicing settings types/UI.
+7. `account_statement` exists only as a template definition; no real send flow was implemented for it.
 
-Post-session TSC fix (same session): `INV_TABLES.clients` (non-existent) replaced with invoice `contact_id` query; `createClient() as any` cast in dunning-timeline; `String()` casts on `unknown` parsedNew fields; removed invalid `siteId` prop from `<EmailTemplateEditor />`.
+#### Repo-state note
 
-**Next: Session 14 = INVFIX-10 + INVFIX-11. Session 15 = INVFIX-12.**
+- `HEAD` and `origin/main` are both at `5dce1298`, but the Session 12 invoicing/email work is still present as local working-tree changes and untracked files rather than a clean completion commit.
+- The verification verdict is based on the current working tree, not on a finalized INVFIX-09 landing commit.
+
+#### Planning impact
+
+- Treat **INVFIX-08 as closed**.
+- Treat **INVFIX-09 as partial carryover**.
+- Do **not** combine INVFIX-10 or INVFIX-11 into the next session.
+- The current safest remaining roadmap is now:
+  Session 13 = INVFIX-09 closure only
+  Session 14 = INVFIX-10 + INVFIX-11
+  Session 15 = INVFIX-12
 
 ## Previous: White-Label Supplier Branding Audit ✅
 

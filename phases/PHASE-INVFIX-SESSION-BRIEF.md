@@ -29,18 +29,18 @@ As of April 20, 2026:
 
 ## Session-to-Phase Mapping
 
-| Session        | Phases                | Focus                                                                                       | Priority    |
-| -------------- | --------------------- | ------------------------------------------------------------------------------------------- | ----------- |
-| **Session 1**  | INVFIX-01             | Settings auto-populate from site branding + invoice form UX                                 | 🔴 Critical |
-| **Session 2**  | INVFIX-02             | Calculation engine fix, line item validation, live preview                                  | 🔴 Critical |
-| **Session 3**  | INVFIX-03             | CRM deep integration, e-commerce item import, catalog picker                                | 🔴 Critical |
-| **Session 4**  | INVFIX-04             | Payments foundation work landed, but closure still pending                                  | 🟠 High     |
-| **Session 5**  | INVFIX-05             | Recurring lifecycle work landed, but closure still pending                                  | 🟠 High     |
-| **Session 6**  | INVFIX-04 + INVFIX-05 | Carryover closure only: manual payment flow, receipts, reconciliation, recurring robustness | 🔴 Critical |
-| **Session 7**  | INVFIX-06             | Vendors, bills, purchase orders, receive tracking, 3-way match                              | 🟠 High     |
-| **Session 8**  | INVFIX-07             | Expenses closure: approval workflow, receipt viewer, budgets, mileage/per-diem audit        | 🟠 High     |
-| **Session 9**  | INVFIX-08             | Reports overhaul — central hub, cross-module data, export polish                            | 🟡 Medium   |
-| **Session 10** | INVFIX-08             | Verification audit only; reports carryover remained open                                    | 🔴 Critical |
+| Session        | Phases                | Focus                                                                                          | Priority    |
+| -------------- | --------------------- | ---------------------------------------------------------------------------------------------- | ----------- |
+| **Session 1**  | INVFIX-01             | Settings auto-populate from site branding + invoice form UX                                    | 🔴 Critical |
+| **Session 2**  | INVFIX-02             | Calculation engine fix, line item validation, live preview                                     | 🔴 Critical |
+| **Session 3**  | INVFIX-03             | CRM deep integration, e-commerce item import, catalog picker                                   | 🔴 Critical |
+| **Session 4**  | INVFIX-04             | Payments foundation work landed, but closure still pending                                     | 🟠 High     |
+| **Session 5**  | INVFIX-05             | Recurring lifecycle work landed, but closure still pending                                     | 🟠 High     |
+| **Session 6**  | INVFIX-04 + INVFIX-05 | Carryover closure only: manual payment flow, receipts, reconciliation, recurring robustness    | 🔴 Critical |
+| **Session 7**  | INVFIX-06             | Vendors, bills, purchase orders, receive tracking, 3-way match                                 | 🟠 High     |
+| **Session 8**  | INVFIX-07             | Expenses closure: approval workflow, receipt viewer, budgets, mileage/per-diem audit           | 🟠 High     |
+| **Session 9**  | INVFIX-08             | Reports overhaul — central hub, cross-module data, export polish                               | 🟡 Medium   |
+| **Session 10** | INVFIX-08             | Verification audit only; reports carryover remained open                                       | 🔴 Critical |
 | **Session 11** | INVFIX-08             | Major carryover closure landed, but verification still found a few remaining spec gaps         | 🔴 Critical |
 | **Session 12** | INVFIX-08 + INVFIX-09 | Reports appear closed; email-system work landed partially and must be re-verified as carryover | 🔴 Critical |
 | **Session 13** | INVFIX-09             | Finish email templates, lifecycle auto-send, dunning controls, and settings wiring             | 🔴 Critical |
@@ -53,11 +53,11 @@ As of April 20, 2026:
 
 From the current audited state, the active remaining roadmap is now **3 focused sessions**.
 
-| Remaining Session | Phases                | Focus                                                                                                     | Why This Merge Is Safe                                                                 |
-| ----------------- | --------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **Session 13**    | INVFIX-09             | Finish email templates, lifecycle auto-send coverage, dunning controls, UI mounting, and settings wiring | Session 12 proved the new subsystem is real, but not yet product-complete              |
-| **Session 14**    | INVFIX-10 + INVFIX-11 | Client portal invoicing experience + Ask Chiko portal expansion and scoped assistant UX                   | Both are portal-facing and share site-scoped data, permissions, and user-flow testing  |
-| **Session 15**    | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, quote-to-invoice, final polish                            | Final cleanup and delivery-note work still deserve a concentrated validation pass       |
+| Remaining Session | Phases                | Focus                                                                                                    | Why This Merge Is Safe                                                                |
+| ----------------- | --------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Session 13**    | INVFIX-09             | Finish email templates, lifecycle auto-send coverage, dunning controls, UI mounting, and settings wiring | Session 12 proved the new subsystem is real, but not yet product-complete             |
+| **Session 14**    | INVFIX-10 + INVFIX-11 | Client portal invoicing experience + Ask Chiko portal expansion and scoped assistant UX                  | Both are portal-facing and share site-scoped data, permissions, and user-flow testing |
+| **Session 15**    | INVFIX-12             | Delivery notes, route cleanup, admin dashboard, quote-to-invoice, final polish                           | Final cleanup and delivery-note work still deserve a concentrated validation pass     |
 
 ### Why This Is The Active Compression
 
