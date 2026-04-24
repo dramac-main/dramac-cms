@@ -1,136 +1,146 @@
-"use client";
-
-import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, CircleCheck, CircleX } from "lucide-react";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { CircleX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import { getPortalUser } from "@/lib/portal/portal-auth";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-function VerifyContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Portal magic-link verify — SERVER component.
+ *
+ * The link in the email points here with `?token_hash=...&type=magiclink&next=/portal`
+ * (see `generatePortalMagicLink` in `@/lib/portal/portal-activation`). We call
+ * `verifyOtp({ token_hash, type })` server-side via the SSR client so the
+ * session cookies are set HTTP-only on this same origin and we skip the PKCE
+ * `code_verifier` requirement entirely (which is what was breaking the prior
+ * implementation — admin-generated links never have a matching verifier on
+ * the client's browser).
+ *
+ * On success: redirect to `next` (defaults to `/portal`).
+ * On failure: render the error card with a "Back to Login" action.
+ */
 
-  useEffect(() => {
-    const verifySession = async () => {
-      try {
-        // The Supabase client automatically handles the hash fragment
-        // from the magic link when the page loads
-        const supabase = createClient();
-        
-        // Check for error in URL params
-        const errorParam = searchParams.get("error");
-        const errorDescription = searchParams.get("error_description");
-        
-        if (errorParam) {
-          setStatus("error");
-          setError(errorDescription || "Authentication failed");
-          return;
-        }
+export const dynamic = "force-dynamic";
 
-        // Get the session - Supabase handles the token exchange automatically
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          // Try to exchange the token if present in hash
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-            window.location.href
-          );
-          
-          if (exchangeError) {
-            setStatus("error");
-            setError("Invalid or expired link. Please request a new one.");
-            return;
-          }
-        }
+type SearchParams = {
+  token_hash?: string;
+  type?: string;
+  next?: string;
+  error?: string;
+  error_description?: string;
+  // Legacy hash-based callbacks might arrive with these; we surface a generic
+  // error since we can't parse hash fragments server-side.
+  code?: string;
+};
 
-        // Verify the user is a portal client
-        const portalUser = await getPortalUser();
-        
-        if (!portalUser) {
-          setStatus("error");
-          setError("Portal access not enabled for this account");
-          await supabase.auth.signOut();
-          return;
-        }
+function sanitizeNext(value: string | undefined): string {
+  if (!value) return "/portal";
+  // Only allow same-origin relative paths that point into the portal.
+  if (!value.startsWith("/")) return "/portal";
+  if (value.startsWith("//")) return "/portal";
+  if (!value.startsWith("/portal")) return "/portal";
+  return value;
+}
 
-        setStatus("success");
-        
-        // Redirect after a brief delay to show success message
-        setTimeout(() => {
-          router.push("/portal");
-          router.refresh();
-        }, 1500);
-        
-      } catch (err) {
-        console.error("Verification error:", err);
-        setStatus("error");
-        setError("An error occurred during verification");
-      }
-    };
-
-    verifySession();
-  }, [router, searchParams]);
-
+async function VerifyError({ message }: { message: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="pt-8 pb-8">
-          {status === "verifying" && (
-            <>
-              <Loader2 className="h-16 w-16 mx-auto text-muted-foreground animate-spin mb-4" />
-              <h2 className="text-xl font-bold">Verifying...</h2>
-              <p className="text-muted-foreground mt-2">
-                Please wait while we log you in
-              </p>
-            </>
-          )}
-
-          {status === "success" && (
-            <>
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CircleCheck className="h-10 w-10 text-green-600" />
-              </div>
-              <h2 className="text-xl font-bold">Welcome back!</h2>
-              <p className="text-muted-foreground mt-2">
-                Redirecting to your portal...
-              </p>
-            </>
-          )}
-
-          {status === "error" && (
-            <>
-              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CircleX className="h-10 w-10 text-destructive" />
-              </div>
-              <h2 className="text-xl font-bold">Verification Failed</h2>
-              <p className="text-muted-foreground mt-2">{error}</p>
-              <Button 
-                className="mt-6" 
-                onClick={() => router.push("/portal/login")}
-              >
-                Back to Login
-              </Button>
-            </>
-          )}
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CircleX className="h-10 w-10 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold">Verification Failed</h2>
+          <p className="text-muted-foreground mt-2">{message}</p>
+          <Button asChild className="mt-6">
+            <Link href="/portal/login">Back to Login</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-export default function VerifyPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    }>
-      <VerifyContent />
-    </Suspense>
-  );
+export default async function VerifyPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+
+  if (params.error) {
+    return (
+      <VerifyError
+        message={params.error_description || "Authentication failed"}
+      />
+    );
+  }
+
+  const tokenHash = params.token_hash;
+  const type = params.type;
+  const next = sanitizeNext(params.next);
+
+  if (!tokenHash || !type) {
+    // If the user landed here from a legacy action_link (hash-fragment flow),
+    // a client-side bootstrap can still try to complete the session. But for
+    // our PKCE-safe flow this should never be missing — show a clear error.
+    return (
+      <VerifyError message="Invalid or expired link. Please request a new one." />
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    type: type as "magiclink" | "signup" | "recovery" | "invite" | "email",
+    token_hash: tokenHash,
+  });
+
+  if (error) {
+    console.error("[portal/verify] verifyOtp error:", error);
+    return (
+      <VerifyError message="Invalid or expired link. Please request a new one." />
+    );
+  }
+
+  // Verify portal linkage exists and self-heal agency_id metadata if needed.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const admin = createAdminClient();
+    const { data: client } = await admin
+      .from("clients")
+      .select("id, portal_user_id, has_portal_access")
+      .eq("portal_user_id", user.id)
+      .eq("has_portal_access", true)
+      .maybeSingle();
+
+    if (!client) {
+      // Try to link by email in case portal_user_id wasn't set yet.
+      if (user.email) {
+        const { data: byEmail } = await admin
+          .from("clients")
+          .select("id")
+          .eq("email", user.email.toLowerCase())
+          .eq("has_portal_access", true)
+          .maybeSingle();
+        if (byEmail) {
+          await admin
+            .from("clients")
+            .update({ portal_user_id: user.id })
+            .eq("id", byEmail.id);
+        } else {
+          await supabase.auth.signOut();
+          return (
+            <VerifyError message="Portal access not enabled for this account." />
+          );
+        }
+      }
+    }
+  }
+
+  redirect(next);
 }
+

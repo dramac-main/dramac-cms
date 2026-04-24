@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar-modern";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SwipeHandler } from "@/components/layout/swipe-handler";
 import { MobileFAB } from "@/components/layout/mobile-fab";
+import { PortalChikoFab } from "@/components/portal/portal-chiko-fab";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
@@ -213,6 +214,9 @@ function PortalLayoutInner({
 
       {/* Mobile FAB for quick actions */}
       {isMobile && <MobileFAB />}
+
+      {/* Floating Ask Chiko button — visible on every portal page */}
+      <PortalChikoFab />
 
       {/* Mobile bottom navigation */}
       {showBottomNav && isMobile && <MobileBottomNav variant="portal" />}

@@ -84,16 +84,30 @@ export function getPortalBaseUrl(): string {
 }
 
 /**
- * Generate a Supabase magic sign-in link that redirects to /portal/verify.
- * Returns a fallback URL to /portal/login if generation fails so the user
- * can still request a fresh link manually.
+ * Generate a portal magic sign-in link.
+ *
+ * IMPORTANT: `@supabase/ssr` browser clients default to the PKCE flow. A raw
+ * `action_link` from `admin.generateLink({type:'magiclink'})` redirects to
+ * `?code=...` which requires a `code_verifier` that only exists on the
+ * browser that INITIATED the flow — not the client who receives the email.
+ * That mismatch produces "Invalid or expired link" every time.
+ *
+ * Canonical SSR fix: use the `hashed_token` returned by admin.generateLink and
+ * point users at OUR `/portal/verify` route which calls
+ * `supabase.auth.verifyOtp({ token_hash, type: 'magiclink' })` server-side.
+ * This bypasses PKCE and works for any browser the client opens the link in.
+ *
+ * Returns a fallback URL to `/portal/login` if generation fails so users can
+ * still request a fresh link manually.
  */
 export async function generatePortalMagicLink(params: {
   email: string;
+  next?: string;
 }): Promise<{ link: string; generated: boolean; error?: string }> {
   const admin = createAdminClient();
   const base = getPortalBaseUrl();
   const fallback = `${base}/portal/login`;
+  const next = params.next && params.next.startsWith("/") ? params.next : "/portal";
 
   try {
     const { data, error } = await admin.auth.admin.generateLink({
@@ -107,16 +121,29 @@ export async function generatePortalMagicLink(params: {
       return { link: fallback, generated: false, error: error.message };
     }
 
-    const actionLink = data?.properties?.action_link;
-    if (!actionLink) {
-      return {
-        link: fallback,
-        generated: false,
-        error: "No action_link returned from Supabase",
-      };
+    // Prefer hashed_token (PKCE-safe verifyOtp flow). Fall back to action_link
+    // only if hashed_token is missing for some reason.
+    const hashedToken = data?.properties?.hashed_token;
+    if (hashedToken) {
+      const url = new URL(`${base}/portal/verify`);
+      url.searchParams.set("token_hash", hashedToken);
+      url.searchParams.set("type", "magiclink");
+      url.searchParams.set("next", next);
+      return { link: url.toString(), generated: true };
     }
 
-    return { link: actionLink, generated: true };
+    const actionLink = data?.properties?.action_link;
+    if (actionLink) {
+      // Last-resort fallback — may still fail on PKCE clients but at least the
+      // link reaches Supabase's hosted verify page.
+      return { link: actionLink, generated: true };
+    }
+
+    return {
+      link: fallback,
+      generated: false,
+      error: "No hashed_token or action_link returned from Supabase",
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[portal-activation] generateLink threw:", message);
