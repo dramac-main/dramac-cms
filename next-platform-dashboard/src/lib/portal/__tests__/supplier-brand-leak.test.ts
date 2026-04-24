@@ -109,7 +109,7 @@ describe("stripSupplierBrandText", () => {
     ["Resend message not found", "resend"],
     ["logicboxes ticket closed", "logicboxes"],
     ["rcpl order canceled", "rcpl"],
-  ])("scrubs \"%s\"", (source, token) => {
+  ])('scrubs "%s"', (source, token) => {
     const out = stripSupplierBrandText(source).toLowerCase();
     expect(out).not.toContain(token);
   });

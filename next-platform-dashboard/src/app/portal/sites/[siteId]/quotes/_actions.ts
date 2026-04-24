@@ -76,7 +76,9 @@ export async function convertQuoteToOrderAction(input: {
     return {
       ok: false,
       error:
-        err instanceof Error ? err.message : "Failed to convert quote to order.",
+        err instanceof Error
+          ? err.message
+          : "Failed to convert quote to order.",
     };
   }
 }

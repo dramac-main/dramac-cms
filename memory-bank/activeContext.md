@@ -7,10 +7,11 @@
 Session 6 hardens the entire portal surface for production: commerce
 namespaces got a full portal-first rewrite (orders/products/customers/
 quotes/bookings — server pages + Suspense + skeletons + error boundaries
-+ URL-driven filters + mobile card layout), the four remaining
-`"use client"` pages (submissions/blog/media/seo) were wrapped in server
-auth-guard shells, a supplier-brand leak audit test was added (35 new
-tests), and an i18n extraction skeleton was landed.
+
+- URL-driven filters + mobile card layout), the four remaining
+  `"use client"` pages (submissions/blog/media/seo) were wrapped in server
+  auth-guard shells, a supplier-brand leak audit test was added (35 new
+  tests), and an i18n extraction skeleton was landed.
 
 **Files shipped in Session 6**:
 

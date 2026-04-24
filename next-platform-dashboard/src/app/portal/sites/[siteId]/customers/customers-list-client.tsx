@@ -94,12 +94,20 @@ export function CustomersListClient({
             aria-label="Search customers"
             className="h-9"
           />
-          <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={isPending}
+          >
             Search
           </Button>
         </form>
         <div className="flex items-center gap-2">
-          <label htmlFor="cust-status" className="text-xs text-muted-foreground">
+          <label
+            htmlFor="cust-status"
+            className="text-xs text-muted-foreground"
+          >
             Status
           </label>
           <Select
@@ -194,7 +202,9 @@ export function CustomersListClient({
                       {formatPortalCurrency(c.totalSpentCents, "USD")}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {c.lastOrderAt ? formatPortalRelative(c.lastOrderAt) : "—"}
+                      {c.lastOrderAt
+                        ? formatPortalRelative(c.lastOrderAt)
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button asChild variant="ghost" size="sm">
@@ -223,7 +233,9 @@ export function CustomersListClient({
               size="sm"
               disabled={currentPage <= 1 || isPending}
               onClick={() =>
-                push({ page: currentPage <= 2 ? null : String(currentPage - 1) })
+                push({
+                  page: currentPage <= 2 ? null : String(currentPage - 1),
+                })
               }
             >
               Previous

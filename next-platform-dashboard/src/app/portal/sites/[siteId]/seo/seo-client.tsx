@@ -143,7 +143,9 @@ export function SeoClient({ siteId }: { siteId: string }) {
                 <p className="text-sm font-medium text-muted-foreground">
                   SEO Score
                 </p>
-                <p className={`text-3xl font-bold mt-1 ${getScoreColor(avgScore)}`}>
+                <p
+                  className={`text-3xl font-bold mt-1 ${getScoreColor(avgScore)}`}
+                >
                   {avgScore}/100
                 </p>
               </div>

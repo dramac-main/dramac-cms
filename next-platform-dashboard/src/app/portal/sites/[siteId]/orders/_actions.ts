@@ -22,9 +22,7 @@ async function dal() {
   });
 }
 
-export type OrderActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+export type OrderActionResult = { ok: true } | { ok: false; error: string };
 
 export async function updateOrderStatusAction(
   siteId: string,
@@ -86,7 +84,10 @@ export async function issueOrderRefundAction(
     }
     const reason = input.reason.trim();
     if (reason.length < 3) {
-      return { ok: false, error: "Refund reason must be at least 3 characters." };
+      return {
+        ok: false,
+        error: "Refund reason must be at least 3 characters.",
+      };
     }
     const d = await dal();
     await d.orders.issueRefund(siteId, orderId, {

@@ -29,7 +29,10 @@ export async function adjustInventoryAction(
 ): Promise<ProductActionResult> {
   try {
     if (!Number.isInteger(input.delta) || input.delta === 0) {
-      return { ok: false, error: "Adjustment must be a non-zero whole number." };
+      return {
+        ok: false,
+        error: "Adjustment must be a non-zero whole number.",
+      };
     }
     const reason = input.reason.trim();
     if (reason.length < 2) {

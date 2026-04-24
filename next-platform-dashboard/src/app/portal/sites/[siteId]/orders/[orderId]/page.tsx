@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
-import { createPortalDAL, PortalAccessDeniedError } from "@/lib/portal/data-access";
+import {
+  createPortalDAL,
+  PortalAccessDeniedError,
+} from "@/lib/portal/data-access";
 import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
 import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
 import { OrderDetailClient } from "./order-detail-client";
@@ -46,7 +49,10 @@ async function OrderLoader({
     const order = await dal.orders.detail(siteId, orderId);
     return <OrderDetailClient siteId={siteId} order={order} />;
   } catch (err) {
-    if (err instanceof PortalAccessDeniedError && err.code === "site_not_found") {
+    if (
+      err instanceof PortalAccessDeniedError &&
+      err.code === "site_not_found"
+    ) {
       notFound();
     }
     return (

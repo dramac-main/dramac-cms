@@ -34,20 +34,18 @@ import type {
   PortalAppointmentStatus,
   PortalBookingDetail,
 } from "@/lib/portal/commerce-data-access";
-import {
-  formatPortalCurrency,
-  formatPortalDate,
-} from "@/lib/portal/format";
+import { formatPortalCurrency, formatPortalDate } from "@/lib/portal/format";
 import { updateBookingStatusAction } from "../_actions";
 
-const BOOKING_TRANSITIONS: Record<string, readonly PortalAppointmentStatus[]> = {
-  pending: ["confirmed", "cancelled", "rescheduled"],
-  confirmed: ["completed", "cancelled", "no_show", "rescheduled"],
-  rescheduled: ["confirmed", "cancelled"],
-  completed: [],
-  cancelled: [],
-  no_show: [],
-};
+const BOOKING_TRANSITIONS: Record<string, readonly PortalAppointmentStatus[]> =
+  {
+    pending: ["confirmed", "cancelled", "rescheduled"],
+    confirmed: ["completed", "cancelled", "no_show", "rescheduled"],
+    rescheduled: ["confirmed", "cancelled"],
+    completed: [],
+    cancelled: [],
+    no_show: [],
+  };
 
 function toLocalInput(iso: string): string {
   // datetime-local expects "YYYY-MM-DDTHH:mm" in local tz
@@ -66,8 +64,7 @@ export function BookingDetailClient({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [newStatus, setNewStatus] =
-    useState<PortalAppointmentStatus | "">("");
+  const [newStatus, setNewStatus] = useState<PortalAppointmentStatus | "">("");
   const [reasonOpen, setReasonOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -146,9 +143,7 @@ export function BookingDetailClient({
           <div className="flex items-center gap-2">
             <Select
               value={newStatus}
-              onValueChange={(v) =>
-                setNewStatus(v as PortalAppointmentStatus)
-              }
+              onValueChange={(v) => setNewStatus(v as PortalAppointmentStatus)}
             >
               <SelectTrigger className="h-9 w-44">
                 <SelectValue placeholder="Change status" />
@@ -261,10 +256,7 @@ export function BookingDetailClient({
               <CardTitle className="text-base">Payment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <Row
-                label="Status"
-                value={booking.paymentStatus || "—"}
-              />
+              <Row label="Status" value={booking.paymentStatus || "—"} />
               <Row
                 label="Price"
                 value={formatPortalCurrency(
@@ -313,9 +305,7 @@ export function BookingDetailClient({
             </Button>
             <Button
               disabled={isPending || reason.trim().length < 3 || !newStatus}
-              onClick={() =>
-                newStatus && runUpdate(newStatus, { reason })
-              }
+              onClick={() => newStatus && runUpdate(newStatus, { reason })}
             >
               Apply
             </Button>

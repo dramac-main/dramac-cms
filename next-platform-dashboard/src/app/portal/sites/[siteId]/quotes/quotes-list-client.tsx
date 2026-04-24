@@ -106,12 +106,20 @@ export function QuotesListClient({
             aria-label="Search quotes"
             className="h-9"
           />
-          <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={isPending}
+          >
             Search
           </Button>
         </form>
         <div className="flex items-center gap-2">
-          <label htmlFor="quote-status" className="text-xs text-muted-foreground">
+          <label
+            htmlFor="quote-status"
+            className="text-xs text-muted-foreground"
+          >
             Status
           </label>
           <Select
@@ -244,7 +252,9 @@ export function QuotesListClient({
               size="sm"
               disabled={currentPage <= 1 || isPending}
               onClick={() =>
-                push({ page: currentPage <= 2 ? null : String(currentPage - 1) })
+                push({
+                  page: currentPage <= 2 ? null : String(currentPage - 1),
+                })
               }
             >
               Previous

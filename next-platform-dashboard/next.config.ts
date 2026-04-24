@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 
+// Align tracing + turbopack roots to the app directory (not the monorepo root).
+// A mismatch between outputFileTracingRoot (auto-inferred from the pnpm lockfile
+// at the repo root) and turbopack.root causes Vercel to emit a warning and can
+// inflate the synthesized route count pushed toward the 2048 deployment cap.
+const APP_ROOT = __dirname;
+
 const nextConfig: NextConfig = {
   // Enable strict mode for catching potential issues
   reactStrictMode: true,
@@ -13,9 +19,12 @@ const nextConfig: NextConfig = {
       ? process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"
       : undefined,
 
+  // Keep output tracing + turbopack rooted at the app dir so they match.
+  outputFileTracingRoot: APP_ROOT,
+
   // Turbopack configuration
   turbopack: {
-    root: process.cwd(), // Use current working directory as root
+    root: APP_ROOT,
   },
 
   // Image optimization domains

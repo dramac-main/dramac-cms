@@ -13,7 +13,9 @@ export function formatPortalCurrency(
   currency: string | null | undefined,
   locale?: string,
 ): string {
-  const iso = (currency && currency.length === 3 ? currency : "USD").toUpperCase();
+  const iso = (
+    currency && currency.length === 3 ? currency : "USD"
+  ).toUpperCase();
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",

@@ -38,10 +38,7 @@ import type {
   PortalOrderDetail,
   PortalOrderStatus,
 } from "@/lib/portal/commerce-data-access";
-import {
-  formatPortalCurrency,
-  formatPortalDate,
-} from "@/lib/portal/format";
+import { formatPortalCurrency, formatPortalDate } from "@/lib/portal/format";
 import {
   updateOrderStatusAction,
   recordShipmentAction,
@@ -262,7 +259,9 @@ export function OrderDetailClient({
                     className="flex items-start justify-between gap-4 border-b pb-3 last:border-b-0 last:pb-0"
                   >
                     <div className="min-w-0">
-                      <div className="truncate font-medium">{it.productName}</div>
+                      <div className="truncate font-medium">
+                        {it.productName}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         {it.productSku ? `SKU ${it.productSku} · ` : ""}
                         Qty {it.quantity}
@@ -273,10 +272,16 @@ export function OrderDetailClient({
                     </div>
                     <div className="text-right tabular-nums">
                       <div className="text-sm">
-                        {formatPortalCurrency(it.unitPriceCents, order.currency)}
+                        {formatPortalCurrency(
+                          it.unitPriceCents,
+                          order.currency,
+                        )}
                       </div>
                       <div className="text-sm font-semibold">
-                        {formatPortalCurrency(it.totalPriceCents, order.currency)}
+                        {formatPortalCurrency(
+                          it.totalPriceCents,
+                          order.currency,
+                        )}
                       </div>
                     </div>
                   </div>
@@ -359,15 +364,22 @@ export function OrderDetailClient({
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
               <div className="font-medium">{order.customerName ?? "—"}</div>
-              <div className="text-muted-foreground">{order.customerEmail ?? ""}</div>
+              <div className="text-muted-foreground">
+                {order.customerEmail ?? ""}
+              </div>
               {order.customerPhone ? (
-                <div className="text-muted-foreground">{order.customerPhone}</div>
+                <div className="text-muted-foreground">
+                  {order.customerPhone}
+                </div>
               ) : null}
             </CardContent>
           </Card>
 
           {order.shippingAddress ? (
-            <AddressCard title="Shipping address" value={order.shippingAddress} />
+            <AddressCard
+              title="Shipping address"
+              value={order.shippingAddress}
+            />
           ) : null}
           {order.billingAddress ? (
             <AddressCard title="Billing address" value={order.billingAddress} />
@@ -395,16 +407,20 @@ export function OrderDetailClient({
                   <div className="font-mono">{order.trackingNumber}</div>
                 ) : null}
                 {order.shippingMethod ? (
-                  <div className="text-muted-foreground">{order.shippingMethod}</div>
+                  <div className="text-muted-foreground">
+                    {order.shippingMethod}
+                  </div>
                 ) : null}
                 {order.shippedAt ? (
                   <div className="text-muted-foreground">
-                    Shipped {formatPortalDate(order.shippedAt, { withTime: true })}
+                    Shipped{" "}
+                    {formatPortalDate(order.shippedAt, { withTime: true })}
                   </div>
                 ) : null}
                 {order.deliveredAt ? (
                   <div className="text-muted-foreground">
-                    Delivered {formatPortalDate(order.deliveredAt, { withTime: true })}
+                    Delivered{" "}
+                    {formatPortalDate(order.deliveredAt, { withTime: true })}
                   </div>
                 ) : null}
               </CardContent>
@@ -525,8 +541,8 @@ export function OrderDetailClient({
           <DialogHeader>
             <DialogTitle>Add internal note</DialogTitle>
             <DialogDescription>
-              Notes are visible to agency staff and portal users with order access.
-              The customer will not see them.
+              Notes are visible to agency staff and portal users with order
+              access. The customer will not see them.
             </DialogDescription>
           </DialogHeader>
           <Textarea

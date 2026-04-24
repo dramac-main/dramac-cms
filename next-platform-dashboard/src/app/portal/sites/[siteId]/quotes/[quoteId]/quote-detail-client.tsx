@@ -41,10 +41,7 @@ import type {
   PortalQuoteDetail,
   PortalQuoteStatus,
 } from "@/lib/portal/commerce-data-access";
-import {
-  formatPortalCurrency,
-  formatPortalDate,
-} from "@/lib/portal/format";
+import { formatPortalCurrency, formatPortalDate } from "@/lib/portal/format";
 import {
   convertQuoteToOrderAction,
   updateQuoteStatusAction,
@@ -73,8 +70,9 @@ export function QuoteDetailClient({
   const [isPending, startTransition] = useTransition();
   const [newStatus, setNewStatus] = useState<PortalQuoteStatus | "">("");
   const [reasonOpen, setReasonOpen] = useState(false);
-  const [pendingStatus, setPendingStatus] =
-    useState<PortalQuoteStatus | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<PortalQuoteStatus | null>(
+    null,
+  );
   const [reason, setReason] = useState("");
 
   const allowed = QUOTE_TRANSITIONS[quote.status] ?? [];
@@ -252,7 +250,9 @@ export function QuoteDetailClient({
             </CardContent>
           </Card>
 
-          {quote.introduction || quote.notesToCustomer || quote.termsAndConditions ? (
+          {quote.introduction ||
+          quote.notesToCustomer ||
+          quote.termsAndConditions ? (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Content</CardTitle>
@@ -303,7 +303,10 @@ export function QuoteDetailClient({
             <CardContent className="space-y-2 text-sm">
               <TotalRow
                 label="Subtotal"
-                value={formatPortalCurrency(quote.subtotalCents, quote.currency)}
+                value={formatPortalCurrency(
+                  quote.subtotalCents,
+                  quote.currency,
+                )}
               />
               {quote.discountCents > 0 ? (
                 <TotalRow
@@ -342,11 +345,15 @@ export function QuoteDetailClient({
             <CardContent className="space-y-2 text-sm">
               <TimelineRow
                 label="Created"
-                value={quote.createdAt ? formatPortalDate(quote.createdAt) : "—"}
+                value={
+                  quote.createdAt ? formatPortalDate(quote.createdAt) : "—"
+                }
               />
               <TimelineRow
                 label="Valid from"
-                value={quote.validFrom ? formatPortalDate(quote.validFrom) : "—"}
+                value={
+                  quote.validFrom ? formatPortalDate(quote.validFrom) : "—"
+                }
               />
               <TimelineRow
                 label="Valid until"

@@ -120,14 +120,22 @@ export function OrdersListClient({
             aria-label="Search orders"
             className="h-9"
           />
-          <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={isPending}
+          >
             Search
           </Button>
         </form>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <div className="flex items-center gap-2">
-            <label htmlFor="status-filter" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="status-filter"
+              className="text-xs text-muted-foreground"
+            >
               Status
             </label>
             <Select
@@ -147,7 +155,10 @@ export function OrdersListClient({
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="payment-filter" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="payment-filter"
+              className="text-xs text-muted-foreground"
+            >
               Payment
             </label>
             <Select
@@ -174,7 +185,9 @@ export function OrdersListClient({
           icon={ShoppingCart}
           title="No orders"
           description={
-            activeSearch || activeStatus !== "all" || activePaymentStatus !== "all"
+            activeSearch ||
+            activeStatus !== "all" ||
+            activePaymentStatus !== "all"
               ? "Nothing matches your filters. Adjust or clear them to see more."
               : "Once customers place orders on this site they'll appear here."
           }
@@ -200,7 +213,9 @@ export function OrdersListClient({
                   <TableHead className="text-right">Items</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Placed</TableHead>
-                  <TableHead className="w-16 text-right sr-only">Open</TableHead>
+                  <TableHead className="w-16 text-right sr-only">
+                    Open
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -258,7 +273,9 @@ export function OrdersListClient({
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">
             Page {currentPage}
-            {orders.length > 0 ? ` · showing ${orders.length} of up to ${pageSize}` : ""}
+            {orders.length > 0
+              ? ` · showing ${orders.length} of up to ${pageSize}`
+              : ""}
           </div>
           <div className="flex gap-2">
             <Button
@@ -266,7 +283,9 @@ export function OrdersListClient({
               size="sm"
               disabled={currentPage <= 1 || isPending}
               onClick={() =>
-                push({ page: currentPage <= 2 ? null : String(currentPage - 1) })
+                push({
+                  page: currentPage <= 2 ? null : String(currentPage - 1),
+                })
               }
             >
               Previous
@@ -286,7 +305,13 @@ export function OrdersListClient({
   );
 }
 
-function OrderCard({ siteId, order }: { siteId: string; order: PortalOrderListItem }) {
+function OrderCard({
+  siteId,
+  order,
+}: {
+  siteId: string;
+  order: PortalOrderListItem;
+}) {
   return (
     <Card>
       <CardContent className="p-4">

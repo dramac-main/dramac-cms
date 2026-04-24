@@ -11,9 +11,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
 import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
 import { ProductsListClient } from "./products-list-client";
-import type {
-  PortalProductListFilter,
-} from "@/lib/portal/commerce-data-access";
+import type { PortalProductListFilter } from "@/lib/portal/commerce-data-access";
 
 export const metadata: Metadata = {
   title: "Products | Client Portal",
@@ -30,7 +28,12 @@ interface PageProps {
 }
 
 const PAGE_SIZE = 25;
-const PRODUCT_STATUS_VALUES = new Set<string>(["all", "active", "draft", "archived"]);
+const PRODUCT_STATUS_VALUES = new Set<string>([
+  "all",
+  "active",
+  "draft",
+  "archived",
+]);
 
 export default async function PortalProductsPage({
   params,
@@ -130,5 +133,3 @@ async function ProductsLoader({
     );
   }
 }
-
-

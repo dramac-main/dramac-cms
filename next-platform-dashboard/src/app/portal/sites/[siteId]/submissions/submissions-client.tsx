@@ -32,14 +32,22 @@ import { toast } from "sonner";
 
 export function SubmissionsClient({ siteId }: { siteId: string }) {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
-  const [stats, setStats] = useState({ total: 0, new: 0, today: 0, thisWeek: 0 });
-  const [forms, setForms] = useState<Array<{ formId: string; formName: string; count: number }>>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    new: 0,
+    today: 0,
+    thisWeek: 0,
+  });
+  const [forms, setForms] = useState<
+    Array<{ formId: string; formName: string; count: number }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
 
-  const [detailSubmission, setDetailSubmission] = useState<FormSubmission | null>(null);
+  const [detailSubmission, setDetailSubmission] =
+    useState<FormSubmission | null>(null);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -62,11 +70,13 @@ export function SubmissionsClient({ siteId }: { siteId: string }) {
           formId: formFilter === "all" ? undefined : formFilter,
         };
 
-        const [submissionsResult, statsResult, formsResult] = await Promise.all([
-          getSubmissions(siteId, filters, page),
-          getSubmissionStats(siteId),
-          getFormsWithSubmissions(siteId),
-        ]);
+        const [submissionsResult, statsResult, formsResult] = await Promise.all(
+          [
+            getSubmissions(siteId, filters, page),
+            getSubmissionStats(siteId),
+            getFormsWithSubmissions(siteId),
+          ],
+        );
 
         setSubmissions(submissionsResult.submissions);
         setTotal(submissionsResult.total);

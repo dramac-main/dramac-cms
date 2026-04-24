@@ -9,9 +9,7 @@ import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { createPortalDAL } from "@/lib/portal/data-access";
 import type { PortalAppointmentStatus } from "@/lib/portal/commerce-data-access";
 
-export type BookingActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+export type BookingActionResult = { ok: true } | { ok: false; error: string };
 
 async function dal() {
   const user = await requirePortalAuth();

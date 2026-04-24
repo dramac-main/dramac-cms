@@ -98,14 +98,22 @@ export function ProductsListClient({
             aria-label="Search products"
             className="h-9"
           />
-          <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={isPending}
+          >
             Search
           </Button>
         </form>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <div className="flex items-center gap-2">
-            <label htmlFor="product-status" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="product-status"
+              className="text-xs text-muted-foreground"
+            >
               Status
             </label>
             <Select
@@ -231,7 +239,9 @@ export function ProductsListClient({
                         {p.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{p.sku ?? "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {p.sku ?? "—"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <PortalStatusPill status={p.status ?? "draft"} />
@@ -240,7 +250,8 @@ export function ProductsListClient({
                             className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300"
                             aria-label="Low stock"
                           >
-                            <AlertTriangle className="h-3 w-3" aria-hidden /> Low
+                            <AlertTriangle className="h-3 w-3" aria-hidden />{" "}
+                            Low
                           </span>
                         ) : null}
                       </div>
@@ -276,7 +287,9 @@ export function ProductsListClient({
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">
             Page {currentPage}
-            {products.length > 0 ? ` · showing ${products.length} of up to ${pageSize}` : ""}
+            {products.length > 0
+              ? ` · showing ${products.length} of up to ${pageSize}`
+              : ""}
           </div>
           <div className="flex gap-2">
             <Button
@@ -284,7 +297,9 @@ export function ProductsListClient({
               size="sm"
               disabled={currentPage <= 1 || isPending}
               onClick={() =>
-                push({ page: currentPage <= 2 ? null : String(currentPage - 1) })
+                push({
+                  page: currentPage <= 2 ? null : String(currentPage - 1),
+                })
               }
             >
               Previous

@@ -107,7 +107,9 @@ export function ProductDetailClient({
             ) : null}
           </div>
           <div>
-            <h1 className="text-xl font-semibold md:text-2xl">{product.name}</h1>
+            <h1 className="text-xl font-semibold md:text-2xl">
+              {product.name}
+            </h1>
             <div className="mt-1 text-sm text-muted-foreground">
               {product.sku ? `SKU ${product.sku} · ` : ""}
               {product.slug ? `/${product.slug}` : ""}
@@ -174,7 +176,10 @@ export function ProductDetailClient({
                             {v.sku ?? "—"}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
-                            {formatPortalCurrency(v.priceCents, product.currency)}
+                            {formatPortalCurrency(
+                              v.priceCents,
+                              product.currency,
+                            )}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {v.stockQuantity ?? 0}
@@ -237,7 +242,10 @@ export function ProductDetailClient({
               <CardTitle className="text-base">Inventory</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <Row label="Quantity" value={String(product.stockQuantity ?? 0)} />
+              <Row
+                label="Quantity"
+                value={String(product.stockQuantity ?? 0)}
+              />
               <Row
                 label="Low-stock threshold"
                 value={String(product.lowStockThreshold ?? "—")}

@@ -96,10 +96,7 @@ export function BookingsListClient({
           aria-label="Filter bookings by date range"
         >
           <div className="flex flex-col gap-1">
-            <label
-              htmlFor="bk-from"
-              className="text-xs text-muted-foreground"
-            >
+            <label htmlFor="bk-from" className="text-xs text-muted-foreground">
               From
             </label>
             <Input
@@ -122,7 +119,12 @@ export function BookingsListClient({
               className="h-9 w-40"
             />
           </div>
-          <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={isPending}
+          >
             Apply
           </Button>
         </form>
@@ -217,7 +219,9 @@ export function BookingsListClient({
                         {b.customerEmail || b.customerPhone || ""}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{b.staffName || "—"}</TableCell>
+                    <TableCell className="text-sm">
+                      {b.staffName || "—"}
+                    </TableCell>
                     <TableCell className="text-xs">
                       {formatPortalDate(b.startsAt, { withTime: true })}
                     </TableCell>
@@ -254,7 +258,9 @@ export function BookingsListClient({
               size="sm"
               disabled={currentPage <= 1 || isPending}
               onClick={() =>
-                push({ page: currentPage <= 2 ? null : String(currentPage - 1) })
+                push({
+                  page: currentPage <= 2 ? null : String(currentPage - 1),
+                })
               }
             >
               Previous

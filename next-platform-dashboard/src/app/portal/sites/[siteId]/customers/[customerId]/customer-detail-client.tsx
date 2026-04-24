@@ -65,9 +65,7 @@ export function CustomerDetailClient({
             </CardHeader>
             <CardContent>
               {customer.recentOrders.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No orders yet.
-                </p>
+                <p className="text-sm text-muted-foreground">No orders yet.</p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -96,7 +94,9 @@ export function CustomerDetailClient({
                           {formatPortalCurrency(o.totalCents, o.currency)}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {o.createdAt ? formatPortalRelative(o.createdAt) : "—"}
+                          {o.createdAt
+                            ? formatPortalRelative(o.createdAt)
+                            : "—"}
                         </TableCell>
                       </TableRow>
                     ))}
