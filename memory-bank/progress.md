@@ -1,6 +1,6 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Portal Overhaul — Session 4 (Operations) complete
+**Last Updated**: Portal Overhaul — Session 5 (Content & Infrastructure) complete
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
 
 ---
@@ -18,9 +18,11 @@
 | 4B      | CRM DAL + portal pages                              | ✅ Complete |
 | 4C      | Marketing DAL + portal pages                        | ✅ Complete |
 | 4D      | Support + Communications DAL + send-log viewer page | ✅ Complete |
-| 5       | Automation (portal)                                 | ⬜ Pending  |
-| 6       | Playwright E2E + observability polish               | ⬜ Pending  |
+| 5       | Content & Infrastructure DALs (7 namespaces)        | ✅ Complete |
+| 6       | Portal page-shell UI refactors                      | ⬜ Pending  |
 | 7       | Launch hardening + docs                             | ⬜ Pending  |
+
+**Session 5 deliverables** (this commit): seven new DAL namespaces wired on `createPortalDAL(ctx)` — `blog`, `media`, `seo`, `forms`, `domains`, `businessEmail`, `apps` — all gated behind `canEditContent`. New utility `supplier-brand.ts` (`stripSupplierBrandDeep` / `stripSupplierBrandText`) enforces no-supplier-leak on `domains` and `businessEmail` responses (tokens: `provider*`, `resellerclub`, `rc_*`, `titan`, `tm_*`). `PortalAccessDeniedError.siteId` widened to `string | null` for client-scope denials. New Apps nav entry (`Blocks` icon) in Content group. Tests consolidated into `content-infrastructure-dal.test.ts` — 15 tests, 7 describe blocks — deliberate deviation from per-namespace pattern since all seven share the same permission gate + brand-strip invariants. New invariants: SEO merge rule (field-level, preserves `site_noindex`), media guarded-delete (rejects if referenced by posts/products/pages), apps catalog filtered by `MODULE_CATALOG[id].siteInstallable`, forms portal is read+archive only. Portal DAL test total: **100 tests** (85 + 15). `tsc --noEmit` clean.
 
 **Session 4 deliverables** (commits `debe0e00` 4A, `2a00fea0` 4B, `eaa0e4a4` 4C, this commit 4D): five new DAL namespaces wired on `createPortalDAL(ctx)` — `invoicing`, `crm`, `marketing`, `support`, `communications`. 85/85 portal vitest tests pass across 10 files. New invariants documented in `PORTAL-FOUNDATION.md` Session 4 appendix: double-scope rule (support+comms filter on both `site_id` and `client_id`), no-supplier-leak (`stripSupplierBrand` strips `provider*` / `resend` / `sendgrid` / `mailgun` / `postmark` / `twilio` columns from `portal_send_log`), authoritative-owner rule (invoicing), consent-gate (marketing), forward-contract for future `internal_note` column (support). First **universal permission** (`canManageSupport`, defaults `true`, no DB column) wired through `portal-auth.ts`, `portal-layout-client.tsx`, `portal-sidebar.tsx`, and `recipient-resolver.ts` (`canManageSupport: null` in `PERMISSION_TO_CLIENT_COLUMN` map). New portal page: `/portal/sites/[siteId]/communications` (read-only send-log viewer, payment-proofs-style RSC pattern).
 

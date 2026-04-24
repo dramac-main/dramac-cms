@@ -480,3 +480,93 @@ filters were applied. Every DAL ships deny-tests that verify
 `auditPortalDenied` was written **and** the admin Supabase client was
 never invoked on denial — the same contract as Sessions 1–3.
 Session 4 adds 85 portal DAL tests across 10 files.
+
+---
+
+## Session 5 — Content & Infrastructure
+
+Session 5 delivers the portal's content authoring, SEO, domains, business
+email, and module-apps surface as seven new DAL namespaces. Every namespace
+follows the Session 1–4 contract (`requireScope` or `requireClientScope` →
+`withPortalEvent` → double-scope admin queries → `finalizeAudit` +
+`logAutomationEvent`) and is gated behind the conservative `canEditContent`
+permission so that view-only portal users cannot reach any write path.
+
+### New namespaces (exposed on `createPortalDAL`)
+
+- **`blog`** (`blog-data-access.ts`): CRUD for `mod_blog_posts`,
+  `mod_blog_categories`, `mod_blog_tags`, and moderation actions on
+  `mod_blog_comments` (approve / reject / mark spam). Events: `blog.post.*`,
+  `blog.category.*`, `blog.tag.*`, `blog.comment.*`.
+- **`media`** (`media-data-access.ts`): Library listing, upload metadata
+  registration, rename, replace-metadata, and **guarded delete** — the DAL
+  refuses to delete any asset still referenced by `mod_blog_posts.featured_media_id`,
+  `mod_ecom_products.*_image`, or `mod_site_pages.*`, returning a
+  `media_in_use` error with the referencing rows. Events: `media.asset.*`.
+- **`seo`** (`seo-data-access.ts`): Reads/writes `mod_site_seo_settings`
+  (site-wide defaults) and page-level overrides on `mod_site_pages.seo_*`.
+  **Merge rule**: `update` performs a field-level merge that preserves
+  existing non-null values unless the caller explicitly passes `null` to
+  clear them — `site_noindex: true` is never silently flipped by a partial
+  update that omits it. Events: `seo.settings.*`, `seo.page.*`.
+- **`forms`** (`forms-data-access.ts`): Read-only surface over
+  `mod_forms_definitions` and `mod_forms_submissions`, plus archive /
+  restore and a CSV export hook. No submission-mutation path from portal
+  (agency-only). Events: `forms.submission.*`.
+- **`domains`** (`domains-data-access.ts`): Client-scoped registry of
+  client domains with DNS record CRUD. Wraps
+  `lib/actions/domains.searchDomains` for domain availability and returns
+  brand-stripped results (`stripSupplierBrandDeep`). Events: `domain.dns.*`,
+  `domain.search.query`. **No `provider_*`, `resellerclub`, `titan`,
+  `rc_order_id`, or `tm_*` fields ever cross the portal boundary** —
+  enforced at every response via `stripSupplierBrandDeep`.
+- **`businessEmail`** (`business-email-data-access.ts`): Client-scoped
+  mailbox and alias management against `mod_bem_orders` + `mod_bem_accounts`.
+  Plan identifiers and prices are surfaced as generic `plan_slug` /
+  `monthly_price` (no Titan branding). Events: `business_email.account.*`,
+  `business_email.alias.*`.
+- **`apps`** (`apps-data-access.ts`): Read-only catalog view (filtered to
+  site-installable modules via `MODULE_CATALOG`), installation list for
+  the current site, and install / uninstall / settings-update actions that
+  delegate to `lib/modules/services/installation-service`. Events:
+  `apps.module.installed|uninstalled|settings_updated`.
+
+### Shared utilities
+
+- **`supplier-brand.ts`**: `stripSupplierBrandDeep(value)` and
+  `stripSupplierBrandText(value)` remove forbidden tokens and fields. Token
+  list: `provider`, `provider_*`, `resellerclub`, `rc_*`, `titan`, `tm_*`,
+  plus the literal strings `"ResellerClub"` and `"Titan"` in text blobs.
+  Used by `domains` and `businessEmail` on every response.
+
+### `PortalAccessDeniedError.siteId` widening
+
+Client-level namespaces (`domains`, `businessEmail`) use
+`requireClientScope` which resolves permissions against the first site under
+the client+agency pair but may raise a denial before any site is selected.
+The error's `siteId` field was widened from `string` to `string | null` so
+that client-scope denials can be emitted without a synthetic site id; the
+error message falls back to `site (client)` when the id is absent.
+
+### Nav
+
+A new **Apps** entry is added to the portal Content group inside the
+`canEditContent` guard (`Blocks` icon from lucide-react), pointing to
+`/portal/sites/:siteId/apps`.
+
+### Tests
+
+Session 5 consolidates coverage into a single file —
+`src/lib/portal/__tests__/content-infrastructure-dal.test.ts` — with 15
+tests across 7 describe blocks (blog, media, seo, forms, domains,
+business-email, apps). This is a deliberate departure from the
+one-file-per-namespace pattern used in Sessions 1–4: because the seven
+namespaces share permission gate and supplier-brand invariants, a single
+fixture and mock surface exercises every cross-cutting concern with
+substantially less duplication. Each block asserts the deny-path contract
+(permission denied → admin client never invoked), and the domains block
+additionally asserts that `stripSupplierBrandDeep` leaves no
+`provider_*`, `rc_*`, `titan`, or `resellerclub` tokens in any response.
+
+Total portal DAL test count at the end of Session 5: **100 tests** (85
+prior + 15 new).

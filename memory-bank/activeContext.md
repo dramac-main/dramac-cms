@@ -1,8 +1,68 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 4 (Operations) COMPLETE ✅
+**Last Updated**: Portal Overhaul — Session 5 (Content & Infrastructure) COMPLETE ✅
 
-## Current State: Portal Overhaul — Session 4 — COMPLETE ✅
+## Current State: Portal Overhaul — Session 5 — COMPLETE ✅
+
+Session 5 delivers seven new DAL namespaces covering content authoring,
+SEO, forms, domains, business email, and module-apps — all gated behind
+`canEditContent`. No migrations; no new primitives.
+
+**Namespaces shipped** (all in `next-platform-dashboard/src/lib/portal/`):
+`blog`, `media`, `seo`, `forms`, `domains`, `businessEmail`, `apps`.
+
+**Files created**:
+- `supplier-brand.ts` — `stripSupplierBrandDeep` / `stripSupplierBrandText`
+  (tokens: `provider`, `provider_*`, `resellerclub`, `rc_*`, `titan`,
+  `tm_*`, plus literal "ResellerClub"/"Titan" in text).
+- `blog-data-access.ts`, `media-data-access.ts`, `seo-data-access.ts`,
+  `forms-data-access.ts`, `domains-data-access.ts`,
+  `business-email-data-access.ts`, `apps-data-access.ts`.
+- `__tests__/content-infrastructure-dal.test.ts` — single consolidated
+  test file (15 tests, 7 describe blocks). Deliberate deviation from the
+  one-file-per-namespace pattern because the seven namespaces share the
+  same permission gate and brand-strip invariants.
+
+**Files modified**:
+- `data-access.ts` — imports, 7 interface fields, 7 factory lines.
+  **Widened `PortalAccessDeniedError.siteId` from `string` to
+  `string | null`** to support client-scope denials (domains,
+  business-email) that raise before a site is selected.
+- `portal-navigation.ts` — new **Apps** nav entry (`Blocks` icon) in
+  Content group under `canEditContent`.
+
+**New invariants in Session 5**:
+
+1. **Supplier brand strip**: `domains` and `businessEmail` pass every
+   response through `stripSupplierBrandDeep`. No `provider_*`, `rc_*`,
+   `titan`, `resellerclub`, `tm_*`, or `rc_order_id` ever crosses the
+   portal boundary. Verified by test assertion on full JSON stringify.
+2. **SEO merge rule**: `seo.settings.update` / `seo.page.update` do
+   field-level merge — existing non-null values preserved unless
+   caller explicitly passes `null`. `site_noindex: true` is never
+   silently flipped by partial updates.
+3. **Media guarded-delete**: Delete rejected with `media_in_use` if
+   asset is referenced by `mod_blog_posts.featured_media_id`,
+   `mod_ecom_products.*_image`, or `mod_site_pages.*`. Returns the
+   referencing rows to the caller.
+4. **Apps catalog filter**: Only modules with
+   `MODULE_CATALOG[id].siteInstallable === true` are surfaced.
+   Install/uninstall delegates to `installation-service`.
+5. **Forms portal is read+archive only**: No submission-mutation path
+   from portal; that remains agency-only.
+
+**`createPortalDAL(ctx)` namespaces after Session 5**: `sites`,
+`orders`, `conversations`, `products`, `customers`, `quotes`,
+`bookings`, `payments`, `invoicing`, `crm`, `marketing`, `support`,
+`communications`, **`blog`**, **`media`**, **`seo`**, **`forms`**,
+**`domains`**, **`businessEmail`**, **`apps`**.
+
+**Test count after Session 5**: **100 portal DAL tests** (85 prior + 15
+new). All passing. `tsc --noEmit` clean.
+
+---
+
+## Previous State: Portal Overhaul — Session 4 — COMPLETE ✅
 
 Session 4 delivered the operations surface of the portal DAL in four
 sub-sessions. Every DAL reuses the Session 1–3 primitives
