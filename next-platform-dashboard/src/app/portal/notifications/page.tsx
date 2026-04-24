@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Bell, Clock, ExternalLink, MessageSquare, Globe, AlertCircle } from "lucide-react";
+import { Bell, Clock, ExternalLink, MessageSquare, Globe, AlertCircle, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 // Button import removed - using NotificationMarkAllReadButton
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { getClientNotifications } from "@/lib/portal/notification-service";
@@ -44,8 +45,13 @@ export default async function PortalNotificationsPage() {
         {unreadCount > 0 && (
           <NotificationMarkAllReadButton clientId={user.clientId} />
         )}
+        <Button asChild variant="outline" size="sm">
+          <Link href="/portal/settings/notifications">
+            <Settings className="h-4 w-4 mr-2" />
+            Preferences
+          </Link>
+        </Button>
       </div>
-
       {/* Notifications List */}
       <Card>
         <CardHeader>

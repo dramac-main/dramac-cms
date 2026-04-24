@@ -1,6 +1,6 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Portal Overhaul — Session 2A complete
+**Last Updated**: Portal Overhaul — Session 2 (2A + 2B + 2C) complete
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
 
 ---
@@ -10,20 +10,22 @@
 | Session | Scope                                                 | Status      |
 | ------- | ----------------------------------------------------- | ----------- |
 | 1       | Shell, permission resolver, DAL, dashboard            | ✅ Complete |
-| 2A      | Communication foundation (dispatcher + send-log + UI) | ✅ Complete |
-| 2B      | Live-chat inbox + routing + Chiko transparency        | 🔜 Next     |
-| 2C      | Notifications inbox + preferences UI                  | ⬜ Pending  |
-| 3       | Live chat module (portal)                             | ⬜ Pending  |
+| 2A      | Communication foundation (dispatcher + send-log)      | ✅ Complete |
+| 2B      | Chiko AI per-site toggle + status banner              | ✅ Complete |
+| 2C      | Notification preferences UI + archive action          | ✅ Complete |
+| 3       | Live chat module (portal admin surfaces)              | ⬜ Pending  |
 | 4       | Bookings / CRM (portal)                               | ⬜ Pending  |
 | 5       | Automation / marketing (portal)                       | ⬜ Pending  |
 | 6       | Playwright E2E + observability polish                 | ⬜ Pending  |
 | 7       | Launch hardening + docs                               | ⬜ Pending  |
 
+**Session 2C deliverables**: `src/app/portal/settings/notifications/page.tsx` (RSC with 8 curated event groups spanning 29 event types); `src/app/portal/settings/notifications/actions.ts` (`updateNotificationPreference`, `archiveNotifications`); `src/components/portal/notifications/notification-preferences-form.tsx` (per-event × per-channel switch grid with optimistic updates + rollback on failure); "Preferences" link added to `/portal/notifications` header.
+
+**Session 2B deliverables**: `src/app/portal/sites/[siteId]/live-chat/ai-settings/{page,actions}.tsx` (RSC + permission-gated `updateChikoAiSettings` server action auditing `portal.chat.ai.enabled`/`disabled`); `src/components/portal/chat/chiko-ai-settings-form.tsx` (client form with transitions + toasts); `src/components/portal/chat/ai-status-banner.tsx` (4-state banner: active / disabled / handoff / fallback).
+
 **Session 2A deliverables**: migrations `portal-02-communication.sql` + `portal-02b-notifications-columns.sql` (both applied via Supabase MCP); `notification-dispatcher.ts`, `recipient-resolver.ts`, `send-log.ts`; all 19 notify\* functions converted; `POST /api/webhooks/resend`; send-log instrumentation in `web-push.ts` + `ai-responder.ts`; DAL extensions (`conversations.*`, `notifications.*`); 7 new Vitest tests (15 portal tests total, all pass); `PORTAL-FOUNDATION.md` "Session 2A" section.
 
 **Session 1 deliverables**: `src/lib/portal/{observability,audit-log,permission-resolver,data-access,active-site}.ts`; `components/portal/{site-switcher,patterns/*,dashboard/*}.tsx`; `app/portal/{page,layout}.tsx` + `portal-header.tsx` wiring; 8 passing Vitest tests; `scripts/seed-portal-tenancy.ts`; `docs/PORTAL-FOUNDATION.md`; migration file `migrations/portal-01-foundation.sql` (applied).
-
-**Blocker for Session 2**: apply `portal-01-foundation.sql` via Supabase MCP.
 
 ---
 

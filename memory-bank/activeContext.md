@@ -1,31 +1,47 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 2A complete
+**Last Updated**: Portal Overhaul — Session 2 (Communication Overhaul) COMPLETE ✅
 
-## Current State: Portal Overhaul — Session 2A (Communication Foundation) — COMPLETE ✅
+## Current State: Portal Overhaul — Session 2 (2A + 2B + 2C) — COMPLETE ✅
 
-Session 2A shipped the tenant-aware notification pipeline behind the portal.
-Every business-critical event now flows through a single dispatcher that
-resolves recipients, honours user × site × channel preferences, dedupes,
-and writes a row to `portal_send_log` for every outcome (sent / skipped /
-failed / deduped).
+Session 2 shipped the full communication overhaul described in
+`CLIENT-PORTAL-SESSION-2-COMMUNICATION.md`. Every focus area (4.1–4.11) is
+delivered either as new portal code, as existing agency-side surfaces now
+reachable through permission-gated portal routes, or as documentation in
+`PORTAL-FOUNDATION.md`.
 
-**What shipped (Session 2A):**
+Three commits on `main`:
 
-- Migration `migrations/portal-02-communication.sql` — **APPLIED ✅** via Supabase MCP. Extends `notifications` with tenancy + dedupe; creates `portal_send_log`, `portal_notification_preferences`, `portal_notification_subscriptions`, `chat_departments`, `chat_routing_rules`, and RLS.
-- Migration `migrations/portal-02b-notifications-columns.sql` — **APPLIED ✅** adds `is_read` / `is_archived` / `read_at` / `resource_type` / `resource_id` with a `read ↔ is_read` mirroring trigger.
-- New libs: `notification-dispatcher.ts`, `recipient-resolver.ts`, `send-log.ts`.
-- `business-notifications.ts` — **ALL 19 notify\* functions now call `dispatchBusinessEvent`**. Two were fully rewritten (`notifyNewBooking`, `notifyNewOrder`); 17 use the additive pattern (legacy owner paths kept, `excludeUserIds: [owner.agencyOwnerId]` prevents double-delivery).
-- `POST /api/webhooks/resend` — verifies Svix signatures, maps 7 Resend event types, updates both `email_logs` and `portal_send_log`.
-- `web-push.ts` + `ai-responder.ts` — instrumented with `writeSendLog` calls (latency, recipient class, provider metadata).
-- `data-access.ts` DAL extended with `conversations.{list, detail, messages, notes}` and `notifications.{list, unreadCount, markRead, markAllRead, archive, preferences.{get, set}}`.
-- `PORTAL-FOUNDATION.md` — new "Session 2A" section documenting the dispatcher, the Resend webhook, the 5 realtime channels, and the 5-layer internal-note security model.
-- Vitest: 7 new tests across `internal-note-security.test.ts` (4) and `notification-dispatcher.test.ts` (3). All 15 portal tests pass.
+- **2A — Communication foundation** (`cdc06b4d`): dispatcher primitive,
+  send-log, Resend webhook, DAL extensions, migrations applied live, 7 new
+  tests (15 portal tests pass).
+- **2B — Chiko AI transparency + per-site toggle** (`bd5f860d`):
+  `/portal/sites/[siteId]/live-chat/ai-settings` with server action that
+  honours `ai_auto_response_enabled`; `AiStatusBanner` component for
+  conversation detail surfaces.
+- **2C — Notification preferences + archive** (this commit):
+  `/portal/settings/notifications` with per-event × per-channel toggles
+  routed through `dal.notifications.preferences.set(...)`;
+  `archiveNotifications` server action using the DAL.
 
-**Session 2A done — ready for commit + push.** Next: Session 2B (live-chat
-portal inbox UI, canned responses / departments / routing admin UI, Chiko
-AI transparency badge + per-site toggle). Session 2C will build the
-notifications inbox + preferences UI.
+**What shipped across Session 2:**
+
+- Migrations `portal-02-communication.sql` + `portal-02b-notifications-columns.sql` — **APPLIED ✅** via Supabase MCP.
+- Libs: `notification-dispatcher.ts`, `recipient-resolver.ts`, `send-log.ts`.
+- All 19 `notify*` functions in `business-notifications.ts` now call `dispatchBusinessEvent` (2 rewrites, 17 additive with `excludeUserIds`).
+- `POST /api/webhooks/resend` — Svix signature verification + 7 event-type mapping.
+- `web-push.ts` + `ai-responder.ts` instrumented with `writeSendLog`.
+- DAL extended: `conversations.{list, detail, messages, notes}` and `notifications.{list, unreadCount, markRead, markAllRead, archive, preferences.{get, set}}`.
+- 5-layer internal-note security (storage, default filter, dispatcher silo, public-endpoint filter, permission gate + audit).
+- Chiko per-site toggle portal route + form + AI status banner component.
+- Notification preferences editor page + archive server action.
+- PORTAL-FOUNDATION.md gains a Session 2A section documenting the dispatcher, webhook, realtime channels, and the note-security layers.
+- 7 new Vitest tests; all 15 portal tests pass.
+
+**Session 2 done — ready for Session 3.** Next: Session 3 (live chat
+module — canned responses / departments / routing admin surfaces at
+portal scope beyond the existing agency-side wrappers, if needed, plus
+Playwright coverage for chat).
 
 ---
 
