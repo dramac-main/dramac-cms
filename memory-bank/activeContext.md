@@ -1,8 +1,39 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 6 (Polish • Mobile • Acceptance) COMPLETE ✅
+**Last Updated**: Vercel Route-Cap Hotfix — RESOLVED ✅ (after Session 6)
 
-## Current State: Portal Overhaul — Session 6 — COMPLETE ✅
+## Current State: Route Cap Hotfix — RESOLVED ✅
+
+Vercel deploy had been ERROR-looping on commits a4d929d / c8fc461 /
+92a06df / 687605e7 with `Maximum number of routes (rewrites, redirects,
+etc) exceeded. Max is 2048, received 2070.` Two-pass reduction restored
+green on commit `c413340d` (dpl_5gyzKrUBSEh1jQ2NoYv6euhh9Ken READY).
+
+**Pass 1** (commit 687605e7): fixed `outputFileTracingRoot` +
+`turbopack.root` to the dashboard dir in `next.config.ts`; removed 5
+orphan portal wrappers. Insufficient — still over cap.
+
+**Pass 2** (commit c413340d): consolidated the 7 invoicing report
+wrapper routes
+(`dashboard/sites/[siteId]/invoicing/reports/{aging,cross-module,expenses,pnl,revenue,tax,top-clients}/page.tsx`)
+into a single dynamic segment
+`dashboard/sites/[siteId]/invoicing/reports/[report]/page.tsx` that
+switches on the slug and renders the matching `*Report` component from
+`@/modules/invoicing/components`. Deleted `admin/modules/studio/integration-test/`
+dev tool, removed `src/components/sites/site-tabs.tsx` dead component,
+dropped broken "Pipeline Test" + "Test Module" button links in studio
+pages, cleaned unused `TestTube2` / `FlaskConical` imports.
+
+**Route count**: local `.next/routes-manifest.json` went from ~485 to
+477 (208 static + 269 dynamic). Vercel stayed under the 2048 cap and
+finalized deploy.
+
+**Key insight**: Vercel multiplies local routes ~4.22× when counting
+generated edge function rewrites; wrapper routes that only re-export a
+single component cost the same slot count as a real route. Consolidate
+sibling wrappers into one `[param]` segment.
+
+## Previous State: Portal Overhaul — Session 6 — COMPLETE ✅
 
 Session 6 hardens the entire portal surface for production: commerce
 namespaces got a full portal-first rewrite (orders/products/customers/

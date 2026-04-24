@@ -1,7 +1,19 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Portal Overhaul — Session 5 (Content & Infrastructure) complete
+**Last Updated**: Vercel route-cap hotfix RESOLVED on commit c413340d (after Session 6)
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+## Route-Cap Hotfix (after Session 6)
+- Vercel was rejecting deploys with `Max routes 2048, received 2070`.
+- Fix: consolidated 7 invoicing report wrapper routes into one
+  `dashboard/sites/[siteId]/invoicing/reports/[report]/page.tsx` that
+  switches on the slug; dropped dead studio integration-test and
+  `site-tabs.tsx`; cleaned broken "Pipeline Test" / "Test Module" links.
+- Also fixed `next.config.ts`: set `outputFileTracingRoot` and
+  `turbopack.root` to `__dirname` (dashboard dir) to prevent monorepo
+  root from being used as trace root.
+- Commit `c413340d` (dpl_5gyzKrUBSEh1jQ2NoYv6euhh9Ken) READY on Vercel.
+- Local routes: 208 static + 269 dynamic = 477.
 
 ---
 
