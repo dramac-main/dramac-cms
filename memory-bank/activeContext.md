@@ -1,63 +1,79 @@
 # Active Context
 
-**Last Updated**: Session 8 — PKCE-safe Magic Link + Floating Ask Chiko FAB — SHIPPED ✅
+**Last Updated**: Session 9 Part B — Portal RLS Fix — SHIPPED ✅
 
-## Current State: Session 8 — SHIPPED ✅
+## Current State: Session 9 Parts A + B — SHIPPED ✅
 
-Commit `6fb87cd7` on `main`, pushed. Build green locally.
+Part A (magic link cookies): commit `466e75d2`. Part B (RLS): migration
+`portal-user-can-access-site` applied directly via Supabase MCP on production
+(`nfirsqmyxmmtbignofgb`), tracked in `migrations/portal-user-can-access-site.sql`.
 
-### 1. Magic link "Invalid or expired" — real root cause fixed
-Session 7 fixed the portal activation but clients still hit
-"Verification Failed — Invalid or expired link" on every click. Real
-root cause: `@supabase/ssr` `createBrowserClient` uses **PKCE flow by
-default**, which stores a `code_verifier` on the browser that
-initiated the flow (the agency admin). When the client opens the link
-on their own device, no verifier exists, so `exchangeCodeForSession`
-ALWAYS fails.
+### Portal empty-module bug (Part B) — root cause + fix
 
-**Canonical Supabase SSR fix** (cross-device auth must use OTP flow,
-not PKCE):
-- `src/lib/portal/portal-activation.ts::generatePortalMagicLink` now
-  builds its own URL from `data.properties.hashed_token`:
-  `${base}/portal/verify?token_hash={hashed_token}&type=magiclink&next={next}`.
-  Signature changed to `({email, next?}) => {link, generated, error?}`;
-  `next` defaults to `/portal` and must start with `/`. Falls back to
-  `action_link` only if `hashed_token` is missing.
-- `src/app/portal/verify/page.tsx` rewritten from `"use client"` +
-  `exchangeCodeForSession` (always failing under PKCE) to a **server
-  component** with `export const dynamic = "force-dynamic"`. Reads
-  `searchParams` (Promise form per Next 15+), validates
-  `token_hash` + `type`, calls `supabase.auth.verifyOtp({type, token_hash})`
-  on the SSR client — sets HTTP-only session cookies same-origin and
-  bypasses PKCE entirely. `sanitizeNext()` only allows `/portal*`
-  paths. Admin lookup of `clients` by `portal_user_id` first; if not
-  found, self-heals by looking up by email and writing
-  `portal_user_id = user.id`. Branded error card for invalid/expired
-  tokens with "Back to Login" link.
-- `inviteClientToPortal` and `sendMagicLink` callers unchanged — they
-  pass only `email`, and the new `next?` param is optional.
+**Symptom:** After the magic link fix landed, user logged in successfully but
+CRM, Live Chat, Marketing, Automation and other module pages showed zero
+data — even though the database contained plenty of it (example client
+Lumina Wellness, site `b019cce4-...`: 11 CRM contacts, 5 deals, 3 conversations,
+27 automation workflows, 9 customers, 7 orders, 12 products).
 
-### 2. Floating Ask Chiko FAB
-- New `src/components/portal/portal-chiko-fab.tsx` — `"use client"`,
-  uses `usePathname()`, returns `null` on `/portal/ask-chiko`,
-  `/portal/login`, `/portal/verify`, and non-portal paths. Always-on
-  floating pill (bg-primary / text-primary-foreground CSS vars from
-  `ServerBrandingStyle`, Sparkles icon + "Ask Chiko" label,
-  `bottom-24 md:bottom-6` so it sits above `MobileBottomNav`).
-- Mounted in `portal-layout-client.tsx` immediately after
-  `<MobileFAB />`, branded automatically via agency CSS vars.
+**Root cause:** Most portal module pages (CRM, Live Chat, Marketing, the top
+half of Invoicing, etc.) mount agency components and call agency server
+actions that use the SSR Supabase client (`createClient` from cookies),
+which is subject to RLS. Every `mod_*` table's SELECT policy gates reads
+through `can_access_site(site_id)`, and that function only admitted agency
+members (via `get_current_agency_id` = `profiles.agency_id WHERE id = auth.uid()`)
+or super admins. Portal auth users have no `profiles` row, so every
+SELECT policy returned zero rows — hence empty pages. The portal DAL-driven
+pages (orders, customers, products, bookings, quotes, analytics, chiko)
+already use the admin client with explicit `site_id` scoping, so they were
+fine.
 
-### 3. Notification/email/automation wiring — AUDITED HEALTHY
-Subagent audit confirmed (no changes made):
-- `dispatchNotification` in
-  `src/lib/notifications/automation-aware-dispatcher.ts` actively
-  invokes the callback (Session 7 fix holds).
-- `src/lib/services/business-notifications.ts` —
+**Fix:** Added a third branch to `public.can_access_site(uuid)` that admits
+a portal user whose client owns the site, via a new
+`public.is_portal_user_for_site(uuid)` helper. Write policies (UPDATE,
+DELETE) remain gated by `agency_members` membership, so portal users still
+cannot update or delete agency rows through RLS; the portal UI enforces
+writes through the portal DAL / module actions per its existing permission
+model. See `migrations/portal-user-can-access-site.sql` for the full
+migration with rationale.
+
+Verified against the production DB: with the fix in place,
+`can_access_site('b019cce4-...')` returns true for the portal auth user
+`4be3ebeb-...`, which unblocks CRM/Live Chat/Marketing and every other
+RLS-gated SELECT inside the portal.
+
+## Current State: Session 9 — SHIPPED ✅
+
+Commit `466e75d2` on `main`, pushed. Vercel build triggered.
+
+### Portal Magic Link — definitive fix (session cookies now persist)
+
+**Root cause (Session 8 missed this):** Next.js App Router Server Components CANNOT set cookies. The `try/catch` in `src/lib/supabase/server.ts::createClient` silently swallowed every `cookieStore.set()` call from within a Server Component. So `verifyOtp` consumed the OTP token on Supabase's side, but zero session cookies ever reached the browser. The subsequent `redirect("/portal")` hit `updateSession` with no session → bounced to main `/login` ("first click = platform main login"). Second click: same `token_hash` → `otp_expired`.
+
+**Two-part fix:**
+
+1. **`src/app/portal/verify/route.ts`** (replaces `page.tsx`)
+   - Route Handlers DO have full cookie write access. We create a `createServerClient` with a `setAll` that collects cookies into a `Map<name, {value, options}>`, then attach all of them to the final `NextResponse.redirect(next)`. Session is established AND the browser receives it.
+   - Same portal linkage / self-heal logic from the old page.
+   - Errors redirect to `/portal/login?error=invalid_link` or `?error=no_access`.
+
+2. **`src/lib/supabase/middleware.ts`** — added `/portal` to `publicRoutes`
+   - Previously, any `/portal/**` route (except login/verify handled early in proxy) went through `updateSession` which would redirect to `/login` if no platform session existed. Portal users have their own Supabase session separate from platform admins.
+   - Now `/portal` is in the public list; portal pages call `requirePortalAuth()` which redirects to `/portal/login` if needed.
+
+3. **`src/app/portal/login/page.tsx`** — added error banners for `?error=invalid_link` and `?error=no_access` query params. Inline banner inside the Card with a clear message + the magic link tab ready to request a new link.
+
+**Session 8 history** (PKCE fix, commit `6fb87cd7`):
+
+- Switched from action_link/PKCE to hashed_token + verifyOtp ✅
+- Fixed the right OTP flow, but cookie-persistence bug remained ✅ now fixed
+
   `notifyNewBooking/Cancelled/Confirmed/Completed/PaymentReceived/NoShow`
-  + `notifyNewOrder/OrderShipped/OrderDelivered/OrderCancelled` +
-  `notifyRefundIssued` all fire branded email + in-app notification +
-  web push. New booking/order use `dispatchBusinessEvent` for portal-wide
-  dispatch.
+  - `notifyNewOrder/OrderShipped/OrderDelivered/OrderCancelled` +
+    `notifyRefundIssued` all fire branded email + in-app notification +
+    web push. New booking/order use `dispatchBusinessEvent` for portal-wide
+    dispatch.
+
 - `src/modules/booking/actions/booking-actions.ts::createAppointment`
   dispatches new-booking + chat notification; status AND payment_status
   transitions each fire `logAutomationEvent` + `dispatchNotification` +
@@ -71,6 +87,7 @@ Subagent audit confirmed (no changes made):
   chat.send_system_message).
 
 ### Key insights this session
+
 - **Cross-device auth is incompatible with PKCE**. Admin-generated
   action_links from `@supabase/ssr` browser clients ALWAYS fail when
   clicked on a different device because no `code_verifier` exists
@@ -91,6 +108,7 @@ Three independent problem areas fixed and shipped green on
 commit `d74bc98d`).
 
 ### 1. Portal activation (fix commit `d74bc98d`)
+
 Client portal invitation emails were delivering, but clients could never
 actually log in. Root cause: `inviteClientToPortal()` never provisioned a
 Supabase auth user, so `clients.portal_user_id` stayed null, and
@@ -111,6 +129,7 @@ null even though `has_portal_access = true`.
   `BrandedTemplate` in `branded-templates.ts`.
 
 ### 2. Notification dispatcher (fix commit `d74bc98d`)
+
 `automation-aware-dispatcher.ts` was a `@deprecated` no-op. Every single
 booking, order, and invoice notification callback was being swallowed.
 `dispatchNotification()` now actively invokes
@@ -118,10 +137,12 @@ booking, order, and invoice notification callback was being swallowed.
 notifications system-wide.
 
 ### 3. Ask Chiko — portal AI business assistant (feat commit `0b0dc6bd`)
+
 Added a client-facing Chiko tab at `/portal/ask-chiko` with full
 per-client tenancy enforcement.
 
 **Data layer** (Supabase migration `chiko_portal_client_scope`):
+
 ```
 ALTER TABLE chiko_conversations
   ADD COLUMN client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
@@ -133,6 +154,7 @@ ALTER TABLE chiko_conversations
 ```
 
 **Query builder** (`src/components/chiko/portal-chiko-query-builder.ts`):
+
 - Re-exports `classifyQuestion` + `QueryCategory` from agency builder.
 - `PortalChikoScope { clientId, agencyId, siteIds, clientName, companyName }`.
 - 7 tenant-scoped query functions — all filter via
@@ -144,6 +166,7 @@ ALTER TABLE chiko_conversations
 
 **API route** (`src/app/api/portal/chiko/route.ts`,
 `maxDuration = 60`):
+
 - `getPortalUser()` → validate question (1-1000 chars) →
   `usageTracker.checkUsageLimit(agencyId, "ai_actions")` →
   `resolveClientSites(clientId)` → `buildPortalContext` → Claude Haiku
@@ -154,6 +177,7 @@ ALTER TABLE chiko_conversations
   or "agency".
 
 **UI**:
+
 - `ChikoChat` made reusable via new `ChikoChatProps`: `endpoint`
   (default `/api/chiko`), `title`, `subtitle`, `placeholder`,
   `emptyHeadline`, `emptyBody`. Existing agency page unaffected by
@@ -164,14 +188,15 @@ ALTER TABLE chiko_conversations
   `mainItems`, placed directly below Dashboard.
 
 ### Key insights this session
+
 - Never assume a `@deprecated` no-op file is inert. It was swallowing
   every booking + order + invoice notification system-wide. Always grep
   for the actual call graph before trusting the deprecation marker.
 - Supabase's `portal_user_id` column joins `clients ⟷ auth.users` and
   is the ONLY tenancy anchor for the portal. Whenever a portal row is
   touched via service-role admin, the `portal_user_id` + `scope='portal'`
-  + `client_id` triple must all be present, otherwise RLS views from the
-  user session can't see it.
+  - `client_id` triple must all be present, otherwise RLS views from the
+    user session can't see it.
 - `in("site_id", scope.siteIds)` is the correct cross-table tenancy
   filter for Chiko portal queries (beats `.eq` because clients can own
   multiple sites in the portal). All 7 query functions use it.
