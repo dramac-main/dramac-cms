@@ -29,6 +29,7 @@ import {
   Bot,
   Send,
   Blocks,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -81,6 +82,7 @@ export function getPortalNavigationGroups(
   // === Main Group ===
   const mainItems: NavItem[] = [
     { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
+    { title: "Ask Chiko", href: "/portal/ask-chiko", icon: Sparkles },
     { title: "My Sites", href: "/portal/sites", icon: Globe },
     { title: "Team", href: "/portal/team", icon: Users },
     { title: "Domains", href: "/portal/domains", icon: Server },

@@ -84,7 +84,29 @@ const QUICK_ACTIONS: QuickAction[] = [
 // Component
 // ============================================================================
 
-export function ChikoChat() {
+export interface ChikoChatProps {
+  /** API endpoint to POST questions to. Defaults to /api/chiko (agency). */
+  endpoint?: string;
+  /** Header title. Defaults to "Chiko". */
+  title?: string;
+  /** Header subtitle. Defaults to "AI Business Assistant". */
+  subtitle?: string;
+  /** Placeholder for the message input. */
+  placeholder?: string;
+  /** Intro headline in the empty state. */
+  emptyHeadline?: string;
+  /** Intro body copy in the empty state. */
+  emptyBody?: string;
+}
+
+export function ChikoChat({
+  endpoint = "/api/chiko",
+  title = "Chiko",
+  subtitle = "AI Business Assistant",
+  placeholder = "Ask Chiko about your business...",
+  emptyHeadline = "Hi! I'm Chiko",
+  emptyBody = "Your AI business assistant. Ask me anything about your revenue, bookings, clients, orders, or marketing.",
+}: ChikoChatProps = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -116,7 +138,7 @@ export function ChikoChat() {
       setError(null);
 
       try {
-        const res = await fetch("/api/chiko", {
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -153,7 +175,7 @@ export function ChikoChat() {
         inputRef.current?.focus();
       }
     },
-    [conversationId, loading],
+    [conversationId, loading, endpoint],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -169,9 +191,9 @@ export function ChikoChat() {
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <div>
-            <CardTitle className="text-lg">Chiko</CardTitle>
+            <CardTitle className="text-lg">{title}</CardTitle>
             <p className="text-xs text-muted-foreground">
-              AI Business Assistant
+              {subtitle}
             </p>
           </div>
         </div>
@@ -181,7 +203,11 @@ export function ChikoChat() {
         {/* Messages Area */}
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           {messages.length === 0 ? (
-            <EmptyState onQuickAction={sendMessage} />
+            <EmptyState
+              onQuickAction={sendMessage}
+              headline={emptyHeadline}
+              body={emptyBody}
+            />
           ) : (
             <div className="space-y-4">
               {messages.map((msg, i) => (
@@ -229,7 +255,7 @@ export function ChikoChat() {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Chiko about your business..."
+              placeholder={placeholder}
               disabled={loading}
               maxLength={1000}
               className="flex-1"
@@ -258,18 +284,21 @@ export function ChikoChat() {
 
 function EmptyState({
   onQuickAction,
+  headline,
+  body,
 }: {
   onQuickAction: (question: string) => void;
+  headline: string;
+  body: string;
 }) {
   return (
     <div className="flex flex-col items-center justify-center h-full py-12 text-center">
       <div className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mb-4">
         <Sparkles className="h-8 w-8 text-white" />
       </div>
-      <h3 className="text-lg font-semibold mb-1">Hi! I&apos;m Chiko</h3>
+      <h3 className="text-lg font-semibold mb-1">{headline}</h3>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-        Your AI business assistant. Ask me anything about your revenue,
-        bookings, clients, orders, or marketing.
+        {body}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
         {QUICK_ACTIONS.map((action) => (
