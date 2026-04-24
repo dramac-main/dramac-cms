@@ -18,7 +18,12 @@ export async function updateChikoAiSettings(
   update: ChikoAiSettingsUpdate,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await requirePortalAuth();
-  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "live-chat",
+    "canManageLiveChat",
+  );
 
   const admin = createAdminClient();
 
@@ -29,18 +34,16 @@ export async function updateChikoAiSettings(
     .eq("site_id", siteId)
     .maybeSingle();
 
-  const { error } = await admin
-    .from("mod_chat_widget_settings")
-    .upsert(
-      {
-        site_id: siteId,
-        ai_auto_response_enabled: update.aiAutoResponseEnabled,
-        ai_assistant_name: update.assistantName || "Chiko",
-        ai_response_tone: update.responseTone || "friendly",
-        ai_handoff_message: update.handoffMessage || null,
-      },
-      { onConflict: "site_id" },
-    );
+  const { error } = await admin.from("mod_chat_widget_settings").upsert(
+    {
+      site_id: siteId,
+      ai_auto_response_enabled: update.aiAutoResponseEnabled,
+      ai_assistant_name: update.assistantName || "Chiko",
+      ai_response_tone: update.responseTone || "friendly",
+      ai_handoff_message: update.handoffMessage || null,
+    },
+    { onConflict: "site_id" },
+  );
 
   if (error) {
     return { ok: false, error: error.message };

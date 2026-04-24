@@ -31,9 +31,9 @@ export async function updateNotificationPreference(
   }
 }
 
-export async function archiveNotifications(ids: string[]): Promise<
-  { ok: true; count: number } | { ok: false; error: string }
-> {
+export async function archiveNotifications(
+  ids: string[],
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
   try {
     const user = await requirePortalAuth();
     const dal = createPortalDAL({

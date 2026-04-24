@@ -1,8 +1,58 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 2 (Communication Overhaul) COMPLETE ✅
+**Last Updated**: Portal Overhaul — Session 3 (Commerce) COMPLETE ✅
 
-## Current State: Portal Overhaul — Session 2 (2A + 2B + 2C) — COMPLETE ✅
+## Current State: Portal Overhaul — Session 3 — COMPLETE ✅
+
+Session 3 shipped the commerce portion of the portal DAL described in
+`CLIENT-PORTAL-SESSION-3-COMMERCE.md`. The DAL now exposes six commerce
+namespaces end-to-end, and a first portal-first commerce surface
+(payment-proofs review queue) is live at
+`/portal/sites/[siteId]/payment-proofs`.
+
+**What shipped (Session 3):**
+
+- `src/lib/portal/commerce-data-access.ts` (~2700 lines) — six namespaces:
+  `orders` extensions (list, detail, updateStatus, recordShipment,
+  issueRefund, addInternalNote), `products` (list, detail,
+  adjustInventory, lowStockAlerts), `customers` (list, detail —
+  read-only), `quotes` (list, detail, send, accept, reject,
+  convertToOrder), `bookings` (list, detail, updateStatus, cancel),
+  `payments` (listProofs, approveProof, rejectProof, bulkReview).
+- Wired on `createPortalDAL(ctx)` next to Session 1/2 surfaces.
+- **Payment-proof storage model discovery**: proofs live in
+  `mod_ecommod01_orders.metadata.payment_proof` JSON (set by the
+  storefront `uploadPaymentProof` action) — NOT in a dedicated table.
+  The DAL was refactored to query orders with
+  `.not("metadata->payment_proof", "is", null)` and mutate metadata
+  in-place. **No migration needed.**
+- Portal-first UI surface:
+  `src/app/portal/sites/[siteId]/payment-proofs/{page,proofs-queue,_actions}.tsx`
+  — RSC list, client queue with bulk-select + per-row approve/reject +
+  signed-URL preview, server actions wrapping the DAL.
+- Every write emits `logAutomationEvent` with the canonical
+  `ecommerce.*` / `booking.*` keys and money in cents.
+- 13 new Vitest deny-path tests in
+  `src/lib/portal/__tests__/commerce-dal.test.ts`. All 28 portal tests
+  pass.
+- `docs/PORTAL-FOUNDATION.md` gains a Session 3 appendix documenting
+  namespaces, the payment-proof JSON schema, emitted events, money
+  invariants, and the portal-first payment-proofs route.
+- `pnpm tsc --noEmit` clean (only pre-existing unrelated error in
+  `src/app/api/webhooks/resend/route.ts(193,9)` remains).
+
+**Commerce write-path note**: the existing `orders`, `products`,
+`customers`, `quotes`, `bookings` routes continue to mount the shared
+agency `EcommerceDashboard` inside a `PortalProvider`. The DAL is now
+available to them for follow-on portal-first refactors without touching
+agency surfaces. Payment-proofs is the reference portal-first
+implementation.
+
+**Session 3 done — ready for Session 4.**
+
+---
+
+## Previous: Portal Overhaul — Session 2 (2A + 2B + 2C) — COMPLETE ✅
 
 Session 2 shipped the full communication overhaul described in
 `CLIENT-PORTAL-SESSION-2-COMMUNICATION.md`. Every focus area (4.1–4.11) is
@@ -38,7 +88,7 @@ Three commits on `main`:
 - PORTAL-FOUNDATION.md gains a Session 2A section documenting the dispatcher, webhook, realtime channels, and the note-security layers.
 - 7 new Vitest tests; all 15 portal tests pass.
 
-**Session 2 done — ready for Session 3.** Next: Session 3 (live chat
+**Session 2 done — continued in Session 3.** Next: Session 3 (live chat
 module — canned responses / departments / routing admin surfaces at
 portal scope beyond the existing agency-side wrappers, if needed, plus
 Playwright coverage for chat).

@@ -17,6 +17,7 @@ import {
   UserCog,
   Bot,
   Mail,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import type { EffectivePortalPermissions } from "./portal-permissions";
@@ -139,6 +140,12 @@ registerPortalModule({
       href: (siteId) => `/portal/sites/${siteId}/customers`,
       icon: UserCog,
       permissionKey: "canManageCustomers",
+    },
+    {
+      label: "Payment Proofs",
+      href: (siteId) => `/portal/sites/${siteId}/payment-proofs`,
+      icon: CreditCard,
+      permissionKey: "canManageOrders",
     },
   ],
 });

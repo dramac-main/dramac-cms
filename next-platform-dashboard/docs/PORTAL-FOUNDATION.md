@@ -209,13 +209,13 @@ Portal pages subscribe to five Supabase Realtime channels. All channels are
 tenant-scoped; a `(user_id | site_id)` filter is the only cross-tenant barrier,
 so **the filter is mandatory** on every `.channel()` call.
 
-| Channel | Event / Filter | Source table | Reachable via DAL? |
-| --- | --- | --- | --- |
-| `notification-bell-${userId}` | `INSERT` where `user_id = :userId` | `notifications` | `notifications.list`, `notifications.unreadCount` |
-| `chat:${conversationId}` | `INSERT` where `conversation_id = :id` | `mod_chat_messages` | `conversations.messages(...)` — hides `is_internal_note = true` unless caller has `canManageLiveChat` |
-| `conversations:${siteId}` | `UPDATE` where `site_id = :siteId` | `mod_chat_conversations` | `conversations.list(siteId)` |
-| `presence:chat:${siteId}` | presence state (no DB) | — | n/a (UI-only) |
-| `portal-events:${siteId}` | broadcast (server `sendBroadcast`) | — | n/a |
+| Channel                       | Event / Filter                         | Source table             | Reachable via DAL?                                                                                    |
+| ----------------------------- | -------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `notification-bell-${userId}` | `INSERT` where `user_id = :userId`     | `notifications`          | `notifications.list`, `notifications.unreadCount`                                                     |
+| `chat:${conversationId}`      | `INSERT` where `conversation_id = :id` | `mod_chat_messages`      | `conversations.messages(...)` — hides `is_internal_note = true` unless caller has `canManageLiveChat` |
+| `conversations:${siteId}`     | `UPDATE` where `site_id = :siteId`     | `mod_chat_conversations` | `conversations.list(siteId)`                                                                          |
+| `presence:chat:${siteId}`     | presence state (no DB)                 | —                        | n/a (UI-only)                                                                                         |
+| `portal-events:${siteId}`     | broadcast (server `sendBroadcast`)     | —                        | n/a                                                                                                   |
 
 Client subscriptions **must** apply the same filter server-side that the DAL
 would apply; the DAL is the source of truth for what a portal user is allowed
@@ -241,3 +241,125 @@ channel on `canManageLiveChat` before subscribing or (b) filter
    `canManageLiveChat` and writes a `portal.conversation.notes.view` audit
    entry on every access.
 
+
+---
+
+## Session 3 — Commerce Foundation
+
+Session 3 extends the Portal DAL with six commerce namespaces: `orders` (new
+extension methods), `products`, `customers`, `quotes`, `bookings`, and
+`payments`. All live in `src/lib/portal/commerce-data-access.ts` and are wired
+onto `createPortalDAL(ctx)` alongside the Session 1/2 surfaces. Every method
+follows the same contract established by the foundation:
+
+1. `requireScope(ctx, siteId, "canManageX")` — audits denials, throws
+   `PortalAccessDeniedError` before any DB reach.
+2. `withPortalEvent("portal.dal.<ns>.<op>", …, async () => { … })` — emits a
+   structured start/ok/err timing event.
+3. `admin.from("mod_…").eq("site_id", scope.siteId)` — every query is scoped.
+4. Writes call `writePortalAudit` + `logAutomationEvent` with the keys below.
+
+### Namespaces
+
+- **orders** (extensions): `list`, `detail`, `updateStatus`, `recordShipment`,
+  `issueRefund`, `addInternalNote`.
+- **products**: `list`, `detail`, `adjustInventory`, `lowStockAlerts`.
+- **customers**: `list`, `detail` (read-only — PII, locked behind
+  `canManageCustomers`).
+- **quotes**: `list`, `detail`, `send`, `accept`, `reject`,
+  `convertToOrder`.
+- **bookings**: `list`, `detail`, `updateStatus`, `cancel` on
+  `mod_booking_appointments`.
+- **payments**: `listProofs`, `approveProof`, `rejectProof`, `bulkReview`.
+
+### Payment Proofs — storage model
+
+**Payment proofs are NOT a separate table.** The customer-facing storefront
+(`modules/ecommerce/actions/public-ecommerce-actions.ts#uploadPaymentProof`)
+writes directly into
+`mod_ecommod01_orders.metadata.payment_proof` as a JSON object:
+
+```jsonc
+{
+  "storage_path": "<site>/<order>/<uuid>.png",
+  "file_name": "receipt.png",
+  "content_type": "image/png",
+  "file_size": 123456,
+  "uploaded_at": "2026-02-17T16:35:03.000Z",
+  "status": "pending_review",  // normalized to "pending" by the DAL
+  "reviewer_id": null,
+  "reviewed_at": null,
+  "reason": null
+}
+```
+
+The DAL queries `mod_ecommod01_orders` with
+`.not("metadata->payment_proof", "is", null)` and uses the **order id** as the
+proof's stable handle. Approvals merge a patch back into
+`metadata.payment_proof` (status + reviewer + timestamp) and also flip
+`payment_status = "paid"` and `status = "confirmed"` on the order itself.
+Rejections require a reason (min. 3 chars), which is surfaced to the
+customer via the standard notification dispatcher.
+
+The portal signs storage URLs on demand via `admin.storage.from("payment-proofs")
+.createSignedUrl(storagePath, 60 * 5)` — the bucket is private and the URL
+expires after 5 minutes.
+
+### Emitted Automation Events
+
+All writes emit one or more of the following event keys (all verified against
+`EVENT_REGISTRY` in `src/modules/automation/lib/event-types.ts`):
+
+- `ecommerce.order.status_changed`, `ecommerce.order.shipped`,
+  `ecommerce.order.refunded`, `ecommerce.order.note_added`.
+- `ecommerce.product.stock_adjusted`, `ecommerce.product.low_stock`.
+- `ecommerce.quote.sent`, `ecommerce.quote.accepted`,
+  `ecommerce.quote.rejected`, `ecommerce.quote.converted_to_order`.
+- `booking.appointment.status_changed`, `booking.appointment.cancelled`.
+- `ecommerce.payment.received` (proof approved),
+  `ecommerce.payment.proof_rejected`.
+
+Every payload includes `site_id` (implicit via the channel), amounts in
+**minor units** (`*_cents`), `currency`, `source: "portal"`, and
+`actor_user_id`.
+
+### Money Invariants
+
+All monetary values crossing the DAL are **cents (minor units)**. Helpers in
+`src/lib/money.ts`:
+
+- `toCents(decimal, currency)` — parse DB `NUMERIC` or storefront strings.
+- `fromCents(cents, currency)` — format for UI.
+- Locally in `commerce-data-access.ts`: `decimalToCents(v)` clamps to ≥0 and
+  handles `null | string | number`.
+
+Refund amounts, order totals, product prices, quote line items, proof amounts
+— all normalized to cents before any portal surface reads them.
+
+### Portal-First Payment Proofs UI
+
+`src/app/portal/sites/[siteId]/payment-proofs/` is the first **portal-first**
+commerce surface that uses the DAL end-to-end:
+
+- `page.tsx` — RSC that calls `dal.payments.listProofs(siteId, { status })`.
+- `proofs-queue.tsx` — client component with checkbox multi-select, per-row
+  approve / reject, bulk approve / reject with reason dialog, and a signed-URL
+  preview link.
+- `_actions.ts` — server actions (`approvePaymentProofAction`,
+  `rejectPaymentProofAction`, `bulkReviewPaymentProofsAction`,
+  `signPaymentProofUrlAction`) wrap the DAL and `revalidatePath` on success.
+
+The other commerce routes (`orders`, `products`, `customers`, `quotes`,
+`bookings`) continue to mount the shared `EcommerceDashboard` inside a
+`PortalProvider`; the DAL is now available to them as a portal-specific write
+path for follow-on portal-first refactors without touching agency surfaces.
+
+### Tests
+
+`src/lib/portal/__tests__/commerce-dal.test.ts` — 13 deny-path assertions
+covering `orders.list/detail/updateStatus`, `products.list/adjustInventory`,
+`customers.list`, `quotes.list/convertToOrder`, `bookings.list/updateStatus`,
+and `payments.listProofs/approveProof/rejectProof`. Every test verifies that
+`auditPortalDenied` is written and that the admin Supabase client is NEVER
+invoked when the scope check fails — the same contract enforced by Session 1
+and Session 2A tests.

@@ -135,10 +135,16 @@ export async function sendBrandedEmail(
     // 3b. Apply user overrides from workflow step config (if provided)
     if (options.subjectOverride) {
       // Simple merge-variable substitution for the override
-      subject = substituteMergeVarsSimple(options.subjectOverride, options.data);
+      subject = substituteMergeVarsSimple(
+        options.subjectOverride,
+        options.data,
+      );
     }
     if (options.bodyOverride) {
-      const overrideHtml = substituteMergeVarsSimple(options.bodyOverride, options.data);
+      const overrideHtml = substituteMergeVarsSimple(
+        options.bodyOverride,
+        options.data,
+      );
       // Prepend the custom body to the template content
       html = html.replace(
         /(<div[^>]*style="[^"]*padding:\s*24px[^"]*"[^>]*>)/i,
@@ -167,7 +173,11 @@ export async function sendBrandedEmail(
     //    Retry budget: 3 attempts total, 200ms → 800ms → 3.2s.
     //    Non-transient errors (invalid recipient, auth, quota-exceeded) fail
     //    fast without retry.
-    let lastError: { name?: string; message: string; statusCode?: number } | null = null;
+    let lastError: {
+      name?: string;
+      message: string;
+      statusCode?: number;
+    } | null = null;
     let data: { id?: string } | null = null;
     let attempts = 0;
     const MAX_ATTEMPTS = 3;
@@ -200,7 +210,10 @@ export async function sendBrandedEmail(
     }
 
     if (lastError) {
-      console.error(`[Email] Resend error after ${attempts} attempt(s):`, lastError);
+      console.error(
+        `[Email] Resend error after ${attempts} attempt(s):`,
+        lastError,
+      );
       // Best-effort: log the failure to email_logs too so the outbox shows it.
       logEmailSent({
         agencyId: agencyId || undefined,

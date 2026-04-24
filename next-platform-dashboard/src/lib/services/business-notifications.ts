@@ -262,7 +262,8 @@ export async function notifyNewBooking(
     // Portal dispatch: agency owner + portal users with canManageBookings.
     await dispatchBusinessEvent({
       eventType: "new_booking",
-      siteTemplateType: "booking_confirmation_owner" as NotificationTemplateType,
+      siteTemplateType:
+        "booking_confirmation_owner" as NotificationTemplateType,
       permission: "canManageBookings",
       siteId: data.siteId,
       resourceType: "appointment",
@@ -472,7 +473,11 @@ export async function notifyBookingCancelled(
       title: `Booking Cancelled: ${data.serviceName}`,
       message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been cancelled${data.reason ? `: ${data.reason}` : ""}.`,
       link: dashboardUrl,
-      metadata: { appointmentId: data.appointmentId, siteId: data.siteId, cancelledBy: data.cancelledBy },
+      metadata: {
+        appointmentId: data.appointmentId,
+        siteId: data.siteId,
+        cancelledBy: data.cancelledBy,
+      },
       push: {
         title: `Booking Cancelled: ${data.serviceName}`,
         body: `${data.customerName} — ${dateStr} at ${timeStr}${data.reason ? ` (${data.reason})` : ""}`,
@@ -1048,7 +1053,8 @@ export async function notifyBookingPaymentReceived(
 
     await dispatchBusinessEvent({
       eventType: "payment_received",
-      siteTemplateType: "booking_payment_received_owner" as NotificationTemplateType,
+      siteTemplateType:
+        "booking_payment_received_owner" as NotificationTemplateType,
       permission: "canManageBookings",
       siteId: data.siteId,
       resourceType: "appointment",
@@ -1743,7 +1749,8 @@ export async function notifyPaymentProofUploaded(
 
     await dispatchBusinessEvent({
       eventType: "payment_received",
-      siteTemplateType: "payment_proof_uploaded_owner" as NotificationTemplateType,
+      siteTemplateType:
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
       permission: "canManageOrders",
       siteId,
       resourceType: "order",
@@ -2529,7 +2536,8 @@ export async function notifyBookingPaymentProofUploaded(
 
     await dispatchBusinessEvent({
       eventType: "payment_received",
-      siteTemplateType: "payment_proof_uploaded_owner" as NotificationTemplateType,
+      siteTemplateType:
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
       permission: "canManageBookings",
       siteId,
       resourceType: "appointment",
@@ -2644,7 +2652,8 @@ export async function notifyQuoteAmendmentRequested(
 
     await dispatchBusinessEvent({
       eventType: "quote_amendment_requested",
-      siteTemplateType: "quote_amendment_requested_owner" as NotificationTemplateType,
+      siteTemplateType:
+        "quote_amendment_requested_owner" as NotificationTemplateType,
       permission: "canManageQuotes",
       siteId,
       resourceType: "quote",

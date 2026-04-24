@@ -30,6 +30,21 @@ import {
 } from "./permission-resolver";
 import { auditPortalDenied, writePortalAudit } from "./audit-log";
 import { logPortalEvent, withPortalEvent } from "./observability";
+import { toCents } from "@/lib/money";
+import {
+  createBookingsNamespace,
+  createCustomersNamespace,
+  createOrdersNamespaceExtensions,
+  createPaymentsNamespace,
+  createProductsNamespace,
+  createQuotesNamespace,
+  type PortalBookingsNamespace,
+  type PortalCustomersNamespace,
+  type PortalOrdersNamespaceExtensions,
+  type PortalPaymentsNamespace,
+  type PortalProductsNamespace,
+  type PortalQuotesNamespace,
+} from "./commerce-data-access";
 
 // =============================================================================
 // DAL CONTEXT
@@ -198,7 +213,12 @@ export interface PortalDAL {
   };
   orders: {
     summaryForSite(siteId: string): Promise<PortalOrderSummary>;
-  };
+  } & PortalOrdersNamespaceExtensions;
+  products: PortalProductsNamespace;
+  customers: PortalCustomersNamespace;
+  quotes: PortalQuotesNamespace;
+  bookings: PortalBookingsNamespace;
+  payments: PortalPaymentsNamespace;
   conversations: {
     summaryForSite(siteId: string): Promise<PortalConversationSummary>;
     list(
@@ -250,7 +270,13 @@ export function createPortalDAL(ctx: PortalDALContext): PortalDAL {
     },
     orders: {
       summaryForSite: (siteId: string) => summaryOrders(ctx, siteId),
+      ...createOrdersNamespaceExtensions(ctx),
     },
+    products: createProductsNamespace(ctx),
+    customers: createCustomersNamespace(ctx),
+    quotes: createQuotesNamespace(ctx),
+    bookings: createBookingsNamespace(ctx),
+    payments: createPaymentsNamespace(ctx),
     conversations: {
       summaryForSite: (siteId: string) => summaryConversations(ctx, siteId),
       list: (siteId, filter) => listConversations(ctx, siteId, filter),
@@ -363,7 +389,8 @@ interface OrderRow {
   customer_email: string | null;
   status: string | null;
   payment_status: string | null;
-  total: number | null;
+  /** DECIMAL(10,2) — Postgres may return it as number or string depending on driver. */
+  total: number | string | null;
   created_at: string | null;
 }
 
@@ -417,7 +444,9 @@ async function summaryOrders(
         if (r.status === "pending") pending++;
         if (r.payment_status === "paid") paid++;
         if (r.payment_status === "paid") {
-          revenueCents += Math.max(0, Math.round(Number(r.total ?? 0)));
+          // r.total is DECIMAL(10,2) in ecommerce; convert to integer cents
+          // via the money helper to preserve minor-unit precision (Session 3 §4.7).
+          revenueCents += Math.max(0, toCents(r.total));
         }
       }
 
@@ -427,7 +456,7 @@ async function summaryOrders(
         customerEmail: r.customer_email,
         status: r.status ?? "unknown",
         paymentStatus: r.payment_status,
-        totalCents: Math.max(0, Math.round(Number(r.total ?? 0))),
+        totalCents: Math.max(0, toCents(r.total)),
         createdAt: r.created_at ?? "",
       }));
 
@@ -593,9 +622,7 @@ interface ChatConversationRow {
   visitor?: ChatVisitorStub | ChatVisitorStub[] | null;
 }
 
-function mapConversation(
-  row: ChatConversationRow,
-): PortalConversationListItem {
+function mapConversation(row: ChatConversationRow): PortalConversationListItem {
   const visitor = Array.isArray(row.visitor) ? row.visitor[0] : row.visitor;
   return {
     id: row.id,
@@ -638,8 +665,7 @@ async function listConversations(
         .eq("site_id", scope.siteId);
 
       if (filter?.status && filter.status !== "all") {
-        if (filter.status === "active")
-          q = q.in("status", ["active", "open"]);
+        if (filter.status === "active") q = q.in("status", ["active", "open"]);
         else if (filter.status === "pending")
           q = q.in("status", ["pending", "queued"]);
         else if (filter.status === "closed")
@@ -860,8 +886,7 @@ async function listNotifications(
     .eq("user_id", ctx.user.userId);
 
   if (filter?.unreadOnly) q = q.eq("is_read", false);
-  if (filter?.archived !== undefined)
-    q = q.eq("is_archived", filter.archived);
+  if (filter?.archived !== undefined) q = q.eq("is_archived", filter.archived);
   else q = q.eq("is_archived", false);
   if (filter?.type) q = q.eq("type", filter.type);
   if (filter?.siteId !== undefined) {
@@ -979,13 +1004,11 @@ async function getPreference(
       .eq("event_type", eventType)
       .eq("site_id", siteId)
       .maybeSingle();
-    const row = data as
-      | {
-          in_app_enabled: boolean;
-          email_enabled: boolean;
-          push_enabled: boolean;
-        }
-      | null;
+    const row = data as {
+      in_app_enabled: boolean;
+      email_enabled: boolean;
+      push_enabled: boolean;
+    } | null;
     if (row) {
       return {
         inApp: row.in_app_enabled,
@@ -1002,15 +1025,17 @@ async function getPreference(
     .eq("event_type", eventType)
     .is("site_id", null)
     .maybeSingle();
-  const g = globalData as
-    | {
-        in_app_enabled: boolean;
-        email_enabled: boolean;
-        push_enabled: boolean;
-      }
-    | null;
+  const g = globalData as {
+    in_app_enabled: boolean;
+    email_enabled: boolean;
+    push_enabled: boolean;
+  } | null;
   if (g) {
-    return { inApp: g.in_app_enabled, email: g.email_enabled, push: g.push_enabled };
+    return {
+      inApp: g.in_app_enabled,
+      email: g.email_enabled,
+      push: g.push_enabled,
+    };
   }
   return { inApp: true, email: true, push: true };
 }

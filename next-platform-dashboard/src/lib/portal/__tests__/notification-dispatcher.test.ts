@@ -14,12 +14,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
  *      still writing `portal_send_log` rows tagged `skipped_preference`.
  */
 
-const resolveInterestedRecipientsMock = vi.fn<
-  (...args: unknown[]) => Promise<unknown[]>
->();
-const dedupeRecipientsMock = vi.fn<(r: unknown[]) => unknown[]>(
-  (r) => r,
-);
+const resolveInterestedRecipientsMock =
+  vi.fn<(...args: unknown[]) => Promise<unknown[]>>();
+const dedupeRecipientsMock = vi.fn<(r: unknown[]) => unknown[]>((r) => r);
 
 const createNotificationMock = vi.fn<
   (...args: unknown[]) => Promise<{ id: string }>
@@ -27,9 +24,9 @@ const createNotificationMock = vi.fn<
 const sendBrandedEmailMock = vi.fn<
   (...args: unknown[]) => Promise<{ id: string }>
 >(async () => ({ id: "msg-1" }));
-const writeSendLogMock = vi.fn<
-  (...args: unknown[]) => Promise<{ id: string }>
->(async () => ({ id: "log-1" }));
+const writeSendLogMock = vi.fn<(...args: unknown[]) => Promise<{ id: string }>>(
+  async () => ({ id: "log-1" }),
+);
 const updateSendLogStateMock = vi.fn<
   (...args: unknown[]) => Promise<undefined>
 >(async () => undefined);
@@ -117,9 +114,8 @@ describe("dispatchBusinessEvent", () => {
       },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const result = await dispatchBusinessEvent({
       eventType: "new_order",
@@ -150,9 +146,8 @@ describe("dispatchBusinessEvent", () => {
       { userId: "u-2", email: "c@d", recipientClass: "portal_user" },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const result = await dispatchBusinessEvent({
       eventType: "new_order",
@@ -179,9 +174,8 @@ describe("dispatchBusinessEvent", () => {
       new Error("db unreachable"),
     );
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     await expect(
       dispatchBusinessEvent({

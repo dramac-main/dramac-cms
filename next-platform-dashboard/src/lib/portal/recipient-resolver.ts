@@ -32,23 +32,24 @@ export interface DispatchRecipient {
   siteId: string;
 }
 
-const PERMISSION_TO_CLIENT_COLUMN: Record<PortalPermissionKey, string | null> = {
-  canViewAnalytics: "can_view_analytics",
-  canEditContent: "can_edit_content",
-  canViewInvoices: "can_view_invoices",
-  canManageInvoices: "can_manage_invoices" as string, // may not exist yet; falls back to view_invoices
-  canPublish: null,
-  canManageLiveChat: "can_manage_live_chat",
-  canManageOrders: "can_manage_orders",
-  canManageProducts: "can_manage_products",
-  canManageBookings: "can_manage_bookings",
-  canManageCrm: "can_manage_crm",
-  canManageAutomation: "can_manage_automation",
-  canManageQuotes: "can_manage_quotes",
-  canManageAgents: "can_manage_agents",
-  canManageCustomers: "can_manage_customers",
-  canManageMarketing: "can_manage_marketing",
-};
+const PERMISSION_TO_CLIENT_COLUMN: Record<PortalPermissionKey, string | null> =
+  {
+    canViewAnalytics: "can_view_analytics",
+    canEditContent: "can_edit_content",
+    canViewInvoices: "can_view_invoices",
+    canManageInvoices: "can_manage_invoices" as string, // may not exist yet; falls back to view_invoices
+    canPublish: null,
+    canManageLiveChat: "can_manage_live_chat",
+    canManageOrders: "can_manage_orders",
+    canManageProducts: "can_manage_products",
+    canManageBookings: "can_manage_bookings",
+    canManageCrm: "can_manage_crm",
+    canManageAutomation: "can_manage_automation",
+    canManageQuotes: "can_manage_quotes",
+    canManageAgents: "can_manage_agents",
+    canManageCustomers: "can_manage_customers",
+    canManageMarketing: "can_manage_marketing",
+  };
 
 interface SiteRow {
   id: string;

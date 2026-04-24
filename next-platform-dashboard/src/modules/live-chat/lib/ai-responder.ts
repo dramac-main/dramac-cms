@@ -273,7 +273,8 @@ export async function generateAutoResponse(
           .select("manual_payment_instructions")
           .eq("site_id", siteId)
           .single();
-        paymentInstructions = bookingSettings?.manual_payment_instructions || null;
+        paymentInstructions =
+          bookingSettings?.manual_payment_instructions || null;
       }
       // Fall back to ecommerce settings (always needed for orders, fallback for bookings)
       if (!paymentInstructions) {

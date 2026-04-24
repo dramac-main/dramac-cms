@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     const errorMsg =
       body.type === "email.bounced"
-        ? body.data.bounce?.message ?? "bounced"
+        ? (body.data.bounce?.message ?? "bounced")
         : body.type === "email.complained"
           ? "complained"
           : body.type === "email.failed"

@@ -60,9 +60,7 @@ vi.mock("../observability", () => ({
   ) => fn(),
 }));
 
-function makePermissionedUser(
-  overrides: Partial<PortalUser> = {},
-): PortalUser {
+function makePermissionedUser(overrides: Partial<PortalUser> = {}): PortalUser {
   return {
     userId: "auth-user-1",
     clientId: "client-1",

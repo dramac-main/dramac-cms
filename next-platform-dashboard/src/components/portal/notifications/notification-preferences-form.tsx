@@ -29,8 +29,7 @@ interface Props {
 }
 
 export function NotificationPreferencesForm({ groups, initial }: Props) {
-  const [state, setState] =
-    useState<Record<string, ChannelState>>(initial);
+  const [state, setState] = useState<Record<string, ChannelState>>(initial);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -129,7 +128,11 @@ function ChannelSwitch({
 }) {
   return (
     <div className="flex justify-center">
-      <Switch checked={checked} disabled={disabled} onCheckedChange={onChange} />
+      <Switch
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+      />
     </div>
   );
 }

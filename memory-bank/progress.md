@@ -1,23 +1,25 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Portal Overhaul — Session 2 (2A + 2B + 2C) complete
+**Last Updated**: Portal Overhaul — Session 3 (Commerce) complete
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
 
 ---
 
 ## Client Portal Overhaul (7-session plan)
 
-| Session | Scope                                                 | Status      |
-| ------- | ----------------------------------------------------- | ----------- |
-| 1       | Shell, permission resolver, DAL, dashboard            | ✅ Complete |
-| 2A      | Communication foundation (dispatcher + send-log)      | ✅ Complete |
-| 2B      | Chiko AI per-site toggle + status banner              | ✅ Complete |
-| 2C      | Notification preferences UI + archive action          | ✅ Complete |
-| 3       | Live chat module (portal admin surfaces)              | ⬜ Pending  |
-| 4       | Bookings / CRM (portal)                               | ⬜ Pending  |
-| 5       | Automation / marketing (portal)                       | ⬜ Pending  |
-| 6       | Playwright E2E + observability polish                 | ⬜ Pending  |
-| 7       | Launch hardening + docs                               | ⬜ Pending  |
+| Session | Scope                                            | Status      |
+| ------- | ------------------------------------------------ | ----------- |
+| 1       | Shell, permission resolver, DAL, dashboard       | ✅ Complete |
+| 2A      | Communication foundation (dispatcher + send-log) | ✅ Complete |
+| 2B      | Chiko AI per-site toggle + status banner         | ✅ Complete |
+| 2C      | Notification preferences UI + archive action     | ✅ Complete |
+| 3       | Commerce DAL + portal-first payment-proofs UI    | ✅ Complete |
+| 4       | Bookings / CRM (portal)                          | ⬜ Pending  |
+| 5       | Automation / marketing (portal)                  | ⬜ Pending  |
+| 6       | Playwright E2E + observability polish            | ⬜ Pending  |
+| 7       | Launch hardening + docs                          | ⬜ Pending  |
+
+**Session 3 deliverables**: `src/lib/portal/commerce-data-access.ts` (~2700 lines, 6 namespaces — orders extensions, products, customers, quotes, bookings, payments); wired on `createPortalDAL(ctx)`; all writes emit `ecommerce.*` / `booking.*` automation events with money in cents. Payment proofs live in `mod_ecommod01_orders.metadata.payment_proof` JSON (no dedicated table); DAL refactored to query/mutate metadata in-place. Portal-first UI at `src/app/portal/sites/[siteId]/payment-proofs/{page,proofs-queue,_actions}.tsx` with bulk approve/reject + signed-URL preview. 13 new Vitest deny-path tests (`src/lib/portal/__tests__/commerce-dal.test.ts`); 28 portal tests total, all pass. `docs/PORTAL-FOUNDATION.md` gains Session 3 appendix.
 
 **Session 2C deliverables**: `src/app/portal/settings/notifications/page.tsx` (RSC with 8 curated event groups spanning 29 event types); `src/app/portal/settings/notifications/actions.ts` (`updateNotificationPreference`, `archiveNotifications`); `src/components/portal/notifications/notification-preferences-form.tsx` (per-event × per-channel switch grid with optimistic updates + rollback on failure); "Preferences" link added to `/portal/notifications` header.
 

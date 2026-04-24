@@ -105,7 +105,7 @@ export async function writeSendLog(
       });
       return null;
     }
-    return ((data as { id: string } | null)?.id) ?? null;
+    return (data as { id: string } | null)?.id ?? null;
   } catch (err) {
     logPortalEvent({
       event: "portal.send_log.insert_throw",
@@ -168,7 +168,11 @@ export async function updateSendLogState(
 export async function findSendLogByProviderMessageId(
   provider: string,
   providerMessageId: string,
-): Promise<{ id: string; siteId: string | null; userId: string | null } | null> {
+): Promise<{
+  id: string;
+  siteId: string | null;
+  userId: string | null;
+} | null> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
@@ -179,9 +183,11 @@ export async function findSendLogByProviderMessageId(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    const row = data as
-      | { id: string; site_id: string | null; user_id: string | null }
-      | null;
+    const row = data as {
+      id: string;
+      site_id: string | null;
+      user_id: string | null;
+    } | null;
     if (!row) return null;
     return { id: row.id, siteId: row.site_id, userId: row.user_id };
   } catch {

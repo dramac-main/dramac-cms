@@ -1,13 +1,30 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Bell, Clock, ExternalLink, MessageSquare, Globe, AlertCircle, Settings } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Bell,
+  Clock,
+  ExternalLink,
+  MessageSquare,
+  Globe,
+  AlertCircle,
+  Settings,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 // Button import removed - using NotificationMarkAllReadButton
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { getClientNotifications } from "@/lib/portal/notification-service";
-import { NotificationMarkReadButton, NotificationMarkAllReadButton } from "@/components/portal/notification-actions";
+import {
+  NotificationMarkReadButton,
+  NotificationMarkAllReadButton,
+} from "@/components/portal/notification-actions";
 import { formatDistanceToNow } from "date-fns";
 
 export const metadata: Metadata = {
@@ -28,7 +45,7 @@ export default async function PortalNotificationsPage() {
   const user = await requirePortalAuth();
   const notifications = await getClientNotifications(user.clientId);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div className="space-y-6">
@@ -37,9 +54,9 @@ export default async function PortalNotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
           <p className="text-muted-foreground mt-1">
-            {unreadCount > 0 
-              ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-              : 'All caught up!'}
+            {unreadCount > 0
+              ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
+              : "All caught up!"}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -75,22 +92,29 @@ export default async function PortalNotificationsPage() {
                 <div
                   key={notification.id}
                   className={`p-4 hover:bg-muted/50 transition-colors ${
-                    !notification.isRead ? 'bg-primary/5' : ''
+                    !notification.isRead ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-full ${
-                      !notification.isRead ? 'bg-primary/10' : 'bg-muted'
-                    }`}>
-                      {notificationIcons[notification.type] || notificationIcons.info}
+                    <div
+                      className={`p-2 rounded-full ${
+                        !notification.isRead ? "bg-primary/10" : "bg-muted"
+                      }`}
+                    >
+                      {notificationIcons[notification.type] ||
+                        notificationIcons.info}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className={`font-medium ${
-                            !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
-                          }`}>
+                          <p
+                            className={`font-medium ${
+                              !notification.isRead
+                                ? "text-foreground"
+                                : "text-muted-foreground"
+                            }`}
+                          >
                             {notification.title}
                           </p>
                           <p className="text-sm text-muted-foreground mt-0.5">
@@ -109,11 +133,15 @@ export default async function PortalNotificationsPage() {
                       <div className="flex items-center gap-4 mt-2">
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                          {notification.createdAt &&
+                            formatDistanceToNow(
+                              new Date(notification.createdAt),
+                              { addSuffix: true },
+                            )}
                         </span>
 
                         {notification.link && (
-                          <Link 
+                          <Link
                             href={notification.link}
                             className="text-xs text-primary hover:underline flex items-center gap-1"
                           >
@@ -123,8 +151,8 @@ export default async function PortalNotificationsPage() {
                         )}
 
                         {!notification.isRead && (
-                          <NotificationMarkReadButton 
-                            notificationId={notification.id} 
+                          <NotificationMarkReadButton
+                            notificationId={notification.id}
                             clientId={user.clientId}
                           />
                         )}
