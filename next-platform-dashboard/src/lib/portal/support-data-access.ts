@@ -151,11 +151,7 @@ export type PortalTicketCategory =
   | "billing"
   | "content";
 export type PortalTicketPriority = "low" | "normal" | "high" | "urgent";
-export type PortalTicketStatus =
-  | "open"
-  | "in_progress"
-  | "resolved"
-  | "closed";
+export type PortalTicketStatus = "open" | "in_progress" | "resolved" | "closed";
 
 export interface PortalTicketListFilter {
   status?: PortalTicketStatus | PortalTicketStatus[] | "all";
@@ -376,8 +372,7 @@ function createTicketsNamespace(
           const scope = await requireScope(ctx, siteId);
           const subject = stringOrNull(input.subject);
           const description = stringOrNull(input.description);
-          if (!subject)
-            throw new Error("[portal][sup] subject_required");
+          if (!subject) throw new Error("[portal][sup] subject_required");
           if (!description)
             throw new Error("[portal][sup] description_required");
 
@@ -433,8 +428,7 @@ function createTicketsNamespace(
         async () => {
           const scope = await requireScope(ctx, siteId);
           const message = stringOrNull(input.message);
-          if (!message)
-            throw new Error("[portal][sup] message_required");
+          if (!message) throw new Error("[portal][sup] message_required");
 
           const admin = createAdminClient() as any;
           // Double-scope check: ticket must belong to this client + site.
@@ -463,8 +457,7 @@ function createTicketsNamespace(
             .insert(row)
             .select("*")
             .single();
-          if (error)
-            throw new Error(`[portal][sup] reply: ${error.message}`);
+          if (error) throw new Error(`[portal][sup] reply: ${error.message}`);
 
           // Bump updated_at + transition open\u2192in_progress on first client
           // reply is the agent's responsibility \u2014 the DAL does not mutate

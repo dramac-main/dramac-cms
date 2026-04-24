@@ -291,9 +291,9 @@ describe("Portal Commerce DAL cross-tenant protection", () => {
     const { createPortalDAL, PortalAccessDeniedError } =
       await import("../data-access");
     const dal = createPortalDAL(CTX);
-    await expect(dal.payments.listProofs("foreign-site")).rejects.toBeInstanceOf(
-      PortalAccessDeniedError,
-    );
+    await expect(
+      dal.payments.listProofs("foreign-site"),
+    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
     expect(auditPortalDeniedMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "portal.permission.canManageOrders",

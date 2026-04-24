@@ -146,7 +146,9 @@ function stringOrNull(v: unknown): string | null {
  * Strip supplier-brand columns from any row returned to portal callers.
  * We never expose which transactional provider the platform uses.
  */
-function stripSupplierBrand<T extends Record<string, any>>(row: T | null | undefined): T | null {
+function stripSupplierBrand<T extends Record<string, any>>(
+  row: T | null | undefined,
+): T | null {
   if (!row) return null;
   const cleaned: Record<string, any> = {};
   for (const [k, v] of Object.entries(row)) {
@@ -202,7 +204,10 @@ function mapListRow(row: any): PortalListListItem {
 export interface PortalMarketingListsNamespace {
   list(siteId: string): Promise<PortalListListItem[]>;
   detail(siteId: string, listId: string): Promise<PortalListListItem>;
-  create(siteId: string, input: PortalCreateListInput): Promise<PortalListListItem>;
+  create(
+    siteId: string,
+    input: PortalCreateListInput,
+  ): Promise<PortalListListItem>;
   update(
     siteId: string,
     listId: string,
@@ -211,7 +216,9 @@ export interface PortalMarketingListsNamespace {
   delete(siteId: string, listId: string): Promise<void>;
 }
 
-function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamespace {
+function createListsNamespace(
+  ctx: PortalDALContext,
+): PortalMarketingListsNamespace {
   return {
     list: async (siteId) =>
       withPortalEvent(
@@ -225,10 +232,18 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
             .select("*")
             .eq("site_id", scope.siteId)
             .order("created_at", { ascending: false });
-          if (error) throw new Error(`[portal][mkt] list lists: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.marketing.lists.list", "mkt_list", null, {
-            count: (data ?? []).length,
-          });
+          if (error)
+            throw new Error(`[portal][mkt] list lists: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.marketing.lists.list",
+            "mkt_list",
+            null,
+            {
+              count: (data ?? []).length,
+            },
+          );
           return (data ?? []).map(mapListRow);
         },
       ),
@@ -245,8 +260,15 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
             .eq("site_id", scope.siteId)
             .eq("id", listId)
             .single();
-          if (error) throw new Error(`[portal][mkt] list not found: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.marketing.lists.detail", "mkt_list", listId);
+          if (error)
+            throw new Error(`[portal][mkt] list not found: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.marketing.lists.detail",
+            "mkt_list",
+            listId,
+          );
           return mapListRow(data);
         },
       ),
@@ -268,11 +290,19 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
             .insert(row)
             .select("*")
             .single();
-          if (error) throw new Error(`[portal][mkt] create list: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][mkt] create list: ${error.message}`);
           const mapped = mapListRow(data);
-          finalizeAudit(ctx, siteId, "portal.marketing.lists.create", "mkt_list", mapped.id, {
-            name: mapped.name,
-          });
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.marketing.lists.create",
+            "mkt_list",
+            mapped.id,
+            {
+              name: mapped.name,
+            },
+          );
           return mapped;
         },
       ),
@@ -284,9 +314,12 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
           const patch: Record<string, unknown> = {};
-          if ("name" in input && typeof input.name === "string") patch.name = input.name;
-          if ("description" in input) patch.description = stringOrNull(input.description);
-          if ("doubleOptIn" in input) patch.double_opt_in = Boolean(input.doubleOptIn);
+          if ("name" in input && typeof input.name === "string")
+            patch.name = input.name;
+          if ("description" in input)
+            patch.description = stringOrNull(input.description);
+          if ("doubleOptIn" in input)
+            patch.double_opt_in = Boolean(input.doubleOptIn);
           patch.updated_at = new Date().toISOString();
           const { data, error } = await admin
             .from(T.lists)
@@ -295,11 +328,19 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
             .eq("id", listId)
             .select("*")
             .single();
-          if (error) throw new Error(`[portal][mkt] update list: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][mkt] update list: ${error.message}`);
           const mapped = mapListRow(data);
-          finalizeAudit(ctx, siteId, "portal.marketing.lists.update", "mkt_list", listId, {
-            changed: Object.keys(patch),
-          });
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.marketing.lists.update",
+            "mkt_list",
+            listId,
+            {
+              changed: Object.keys(patch),
+            },
+          );
           return mapped;
         },
       ),
@@ -315,8 +356,15 @@ function createListsNamespace(ctx: PortalDALContext): PortalMarketingListsNamesp
             .delete()
             .eq("site_id", scope.siteId)
             .eq("id", listId);
-          if (error) throw new Error(`[portal][mkt] delete list: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.marketing.lists.delete", "mkt_list", listId);
+          if (error)
+            throw new Error(`[portal][mkt] delete list: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.marketing.lists.delete",
+            "mkt_list",
+            listId,
+          );
         },
       ),
   };
@@ -415,7 +463,10 @@ export interface PortalMarketingSubscribersNamespace {
     siteId: string,
     filter?: PortalSubscriberListFilter,
   ): Promise<PortalSubscriberListItem[]>;
-  detail(siteId: string, subscriberId: string): Promise<PortalSubscriberListItem>;
+  detail(
+    siteId: string,
+    subscriberId: string,
+  ): Promise<PortalSubscriberListItem>;
   create(
     siteId: string,
     input: PortalCreateSubscriberInput,
@@ -444,7 +495,10 @@ function createSubscribersNamespace(
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
-          let q = admin.from(T.subscribers).select("*").eq("site_id", scope.siteId);
+          let q = admin
+            .from(T.subscribers)
+            .select("*")
+            .eq("site_id", scope.siteId);
           if (filter?.status && filter.status !== "all") {
             if (Array.isArray(filter.status)) q = q.in("status", filter.status);
             else q = q.eq("status", filter.status);
@@ -493,7 +547,9 @@ function createSubscribersNamespace(
             .eq("id", subscriberId)
             .single();
           if (error)
-            throw new Error(`[portal][mkt] subscriber not found: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] subscriber not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -530,7 +586,9 @@ function createSubscribersNamespace(
             .select("*")
             .single();
           if (error)
-            throw new Error(`[portal][mkt] create subscriber: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] create subscriber: ${error.message}`,
+            );
           const mapped = mapSubscriberRow(data);
 
           // Optional list membership.
@@ -578,11 +636,15 @@ function createSubscribersNamespace(
           const patch: Record<string, unknown> = {};
           if ("email" in input && typeof input.email === "string")
             patch.email = input.email.toLowerCase().trim();
-          if ("firstName" in input) patch.first_name = stringOrNull(input.firstName);
-          if ("lastName" in input) patch.last_name = stringOrNull(input.lastName);
-          if ("emailOptIn" in input) patch.email_opt_in = Boolean(input.emailOptIn);
+          if ("firstName" in input)
+            patch.first_name = stringOrNull(input.firstName);
+          if ("lastName" in input)
+            patch.last_name = stringOrNull(input.lastName);
+          if ("emailOptIn" in input)
+            patch.email_opt_in = Boolean(input.emailOptIn);
           if ("smsOptIn" in input) patch.sms_opt_in = Boolean(input.smsOptIn);
-          if ("tags" in input && Array.isArray(input.tags)) patch.tags = input.tags;
+          if ("tags" in input && Array.isArray(input.tags))
+            patch.tags = input.tags;
           if ("status" in input) patch.status = input.status;
           patch.updated_at = new Date().toISOString();
           const { data, error } = await admin
@@ -593,7 +655,9 @@ function createSubscribersNamespace(
             .select("*")
             .single();
           if (error)
-            throw new Error(`[portal][mkt] update subscriber: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] update subscriber: ${error.message}`,
+            );
           const mapped = mapSubscriberRow(data);
           finalizeAudit(
             ctx,
@@ -666,7 +730,9 @@ function createSubscribersNamespace(
             .eq("site_id", scope.siteId)
             .eq("id", subscriberId);
           if (error)
-            throw new Error(`[portal][mkt] delete subscriber: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] delete subscriber: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -861,7 +927,9 @@ function createCampaignsNamespace(
             .eq("id", campaignId)
             .single();
           if (error)
-            throw new Error(`[portal][mkt] campaign not found: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] campaign not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -947,12 +1015,15 @@ function createCampaignsNamespace(
           if ("listId" in input) patch.list_id = stringOrNull(input.listId);
           if ("templateId" in input)
             patch.template_id = stringOrNull(input.templateId);
-          if ("fromName" in input) patch.from_name = stringOrNull(input.fromName);
+          if ("fromName" in input)
+            patch.from_name = stringOrNull(input.fromName);
           if ("fromEmail" in input)
             patch.from_email = stringOrNull(input.fromEmail);
           if ("replyTo" in input) patch.reply_to = stringOrNull(input.replyTo);
-          if ("htmlBody" in input) patch.html_body = stringOrNull(input.htmlBody);
-          if ("textBody" in input) patch.text_body = stringOrNull(input.textBody);
+          if ("htmlBody" in input)
+            patch.html_body = stringOrNull(input.htmlBody);
+          if ("textBody" in input)
+            patch.text_body = stringOrNull(input.textBody);
           patch.updated_at = new Date().toISOString();
           const { data, error } = await admin
             .from(T.campaigns)
@@ -1002,7 +1073,9 @@ function createCampaignsNamespace(
             .select("*")
             .single();
           if (error)
-            throw new Error(`[portal][mkt] schedule campaign: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] schedule campaign: ${error.message}`,
+            );
           const mapped = mapCampaignRow(data);
           finalizeAudit(
             ctx,
@@ -1039,7 +1112,9 @@ function createCampaignsNamespace(
             .eq("id", campaignId)
             .single();
           if (loadErr)
-            throw new Error(`[portal][mkt] campaign not found: ${loadErr.message}`);
+            throw new Error(
+              `[portal][mkt] campaign not found: ${loadErr.message}`,
+            );
 
           // Consent gate: refuse to send if audience has zero consented
           // recipients (everyone unsubscribed / bounced / never opted in).
@@ -1137,7 +1212,10 @@ function createCampaignsNamespace(
           const admin = createAdminClient() as any;
           const { data, error } = await admin
             .from(T.campaigns)
-            .update({ status: "cancelled", updated_at: new Date().toISOString() })
+            .update({
+              status: "cancelled",
+              updated_at: new Date().toISOString(),
+            })
             .eq("site_id", scope.siteId)
             .eq("id", campaignId)
             .select("*")
@@ -1283,7 +1361,9 @@ function createTemplatesNamespace(
             .eq("id", templateId)
             .single();
           if (error)
-            throw new Error(`[portal][mkt] template not found: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] template not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -1340,9 +1420,12 @@ function createTemplatesNamespace(
           if ("name" in input && typeof input.name === "string")
             patch.name = input.name;
           if ("subject" in input) patch.subject = stringOrNull(input.subject);
-          if ("category" in input) patch.category = stringOrNull(input.category);
-          if ("htmlBody" in input) patch.html_body = stringOrNull(input.htmlBody);
-          if ("textBody" in input) patch.text_body = stringOrNull(input.textBody);
+          if ("category" in input)
+            patch.category = stringOrNull(input.category);
+          if ("htmlBody" in input)
+            patch.html_body = stringOrNull(input.htmlBody);
+          if ("textBody" in input)
+            patch.text_body = stringOrNull(input.textBody);
           if ("blocks" in input) patch.blocks = input.blocks;
           patch.updated_at = new Date().toISOString();
           const { data, error } = await admin
@@ -1496,7 +1579,9 @@ function createSequencesNamespace(
             .eq("id", sequenceId)
             .single();
           if (error)
-            throw new Error(`[portal][mkt] sequence not found: ${error.message}`);
+            throw new Error(
+              `[portal][mkt] sequence not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -1594,7 +1679,9 @@ function createSequencesNamespace(
             .eq("id", subscriberId)
             .single();
           if (subErr)
-            throw new Error(`[portal][mkt] subscriber not found: ${subErr.message}`);
+            throw new Error(
+              `[portal][mkt] subscriber not found: ${subErr.message}`,
+            );
           if (sub.status !== "active" || sub.email_opt_in !== true) {
             finalizeAudit(
               ctx,
@@ -1614,8 +1701,7 @@ function createSequencesNamespace(
             status: "active",
             enrolled_at: new Date().toISOString(),
           });
-          if (error)
-            throw new Error(`[portal][mkt] enroll: ${error.message}`);
+          if (error) throw new Error(`[portal][mkt] enroll: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -1740,7 +1826,10 @@ function mapSubmissionRow(row: any): PortalFormSubmissionItem {
 export interface PortalMarketingFormsNamespace {
   list(siteId: string): Promise<PortalFormListItem[]>;
   detail(siteId: string, formId: string): Promise<PortalFormListItem>;
-  create(siteId: string, input: PortalCreateFormInput): Promise<PortalFormListItem>;
+  create(
+    siteId: string,
+    input: PortalCreateFormInput,
+  ): Promise<PortalFormListItem>;
   update(
     siteId: string,
     formId: string,

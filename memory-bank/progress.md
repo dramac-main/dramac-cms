@@ -7,20 +7,20 @@
 
 ## Client Portal Overhaul (7-session plan)
 
-| Session | Scope                                                    | Status      |
-| ------- | -------------------------------------------------------- | ----------- |
-| 1       | Shell, permission resolver, DAL, dashboard               | ✅ Complete |
-| 2A      | Communication foundation (dispatcher + send-log)         | ✅ Complete |
-| 2B      | Chiko AI per-site toggle + status banner                 | ✅ Complete |
-| 2C      | Notification preferences UI + archive action             | ✅ Complete |
-| 3       | Commerce DAL + portal-first payment-proofs UI            | ✅ Complete |
-| 4A      | Invoicing DAL + portal pages                             | ✅ Complete |
-| 4B      | CRM DAL + portal pages                                   | ✅ Complete |
-| 4C      | Marketing DAL + portal pages                             | ✅ Complete |
-| 4D      | Support + Communications DAL + send-log viewer page      | ✅ Complete |
-| 5       | Automation (portal)                                      | ⬜ Pending  |
-| 6       | Playwright E2E + observability polish                    | ⬜ Pending  |
-| 7       | Launch hardening + docs                                  | ⬜ Pending  |
+| Session | Scope                                               | Status      |
+| ------- | --------------------------------------------------- | ----------- |
+| 1       | Shell, permission resolver, DAL, dashboard          | ✅ Complete |
+| 2A      | Communication foundation (dispatcher + send-log)    | ✅ Complete |
+| 2B      | Chiko AI per-site toggle + status banner            | ✅ Complete |
+| 2C      | Notification preferences UI + archive action        | ✅ Complete |
+| 3       | Commerce DAL + portal-first payment-proofs UI       | ✅ Complete |
+| 4A      | Invoicing DAL + portal pages                        | ✅ Complete |
+| 4B      | CRM DAL + portal pages                              | ✅ Complete |
+| 4C      | Marketing DAL + portal pages                        | ✅ Complete |
+| 4D      | Support + Communications DAL + send-log viewer page | ✅ Complete |
+| 5       | Automation (portal)                                 | ⬜ Pending  |
+| 6       | Playwright E2E + observability polish               | ⬜ Pending  |
+| 7       | Launch hardening + docs                             | ⬜ Pending  |
 
 **Session 4 deliverables** (commits `debe0e00` 4A, `2a00fea0` 4B, `eaa0e4a4` 4C, this commit 4D): five new DAL namespaces wired on `createPortalDAL(ctx)` — `invoicing`, `crm`, `marketing`, `support`, `communications`. 85/85 portal vitest tests pass across 10 files. New invariants documented in `PORTAL-FOUNDATION.md` Session 4 appendix: double-scope rule (support+comms filter on both `site_id` and `client_id`), no-supplier-leak (`stripSupplierBrand` strips `provider*` / `resend` / `sendgrid` / `mailgun` / `postmark` / `twilio` columns from `portal_send_log`), authoritative-owner rule (invoicing), consent-gate (marketing), forward-contract for future `internal_note` column (support). First **universal permission** (`canManageSupport`, defaults `true`, no DB column) wired through `portal-auth.ts`, `portal-layout-client.tsx`, `portal-sidebar.tsx`, and `recipient-resolver.ts` (`canManageSupport: null` in `PERMISSION_TO_CLIENT_COLUMN` map). New portal page: `/portal/sites/[siteId]/communications` (read-only send-log viewer, payment-proofs-style RSC pattern).
 

@@ -27,6 +27,7 @@ import {
   UserCog,
   Receipt,
   Bot,
+  Send,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -174,6 +175,17 @@ export function getPortalNavigationGroups(
         title: "Chat Agents",
         href: siteUrl("chat-agents")!,
         icon: Bot,
+      });
+    }
+
+    // Communications (Session 4D): read-only delivery log for all
+    // branded messages sent on this site. Gated on canViewAnalytics
+    // per the page's own auth check.
+    if (permissions.canViewAnalytics) {
+      operationsItems.push({
+        title: "Communications",
+        href: siteUrl("communications")!,
+        icon: Send,
       });
     }
   }

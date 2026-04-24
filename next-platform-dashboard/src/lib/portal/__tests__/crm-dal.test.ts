@@ -248,9 +248,9 @@ describe("portal CRM DAL — deny paths", () => {
     const { createCRMNamespace, PortalAccessDeniedError } =
       await importModule();
     const ns = createCRMNamespace(CTX);
-    await expect(
-      ns.deals.markWon("site-1", "deal-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.deals.markWon("site-1", "deal-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
   });
 
   it("activities.create denies without canManageCrm", async () => {
@@ -340,13 +340,13 @@ describe("portal CRM DAL — happy paths", () => {
 
     // Event emitted with portal source metadata.
     expect(logAutomationEventMock).toHaveBeenCalledTimes(1);
-    const [siteId, eventType, payload, meta] =
-      logAutomationEventMock.mock.calls[0] as [
-        string,
-        string,
-        Record<string, unknown>,
-        Record<string, unknown>,
-      ];
+    const [siteId, eventType, payload, meta] = logAutomationEventMock.mock
+      .calls[0] as [
+      string,
+      string,
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ];
     expect(siteId).toBe("site-1");
     expect(eventType).toBe("crm.contact.created");
     expect(payload.source).toBe("portal");
@@ -365,7 +365,12 @@ describe("portal CRM DAL — happy paths", () => {
       description: null,
       pipeline_id: "p-1",
       stage_id: "s-1",
-      stage: { id: "s-1", name: "Qualified", stage_type: "open", probability: 25 },
+      stage: {
+        id: "s-1",
+        name: "Qualified",
+        stage_type: "open",
+        probability: 25,
+      },
       contact_id: null,
       company_id: null,
       amount: 12345.67,

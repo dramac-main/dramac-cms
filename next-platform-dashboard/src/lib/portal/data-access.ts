@@ -49,10 +49,7 @@ import {
   createInvoicingNamespace,
   type PortalInvoicingNamespace,
 } from "./invoicing-data-access";
-import {
-  createCRMNamespace,
-  type PortalCRMNamespace,
-} from "./crm-data-access";
+import { createCRMNamespace, type PortalCRMNamespace } from "./crm-data-access";
 import {
   createMarketingNamespace,
   type PortalMarketingNamespace,

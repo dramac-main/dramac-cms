@@ -241,7 +241,6 @@ channel on `canManageLiveChat` before subscribing or (b) filter
    `canManageLiveChat` and writes a `portal.conversation.notes.view` audit
    entry on every access.
 
-
 ---
 
 ## Session 3 — Commerce Foundation
@@ -286,10 +285,10 @@ writes directly into
   "content_type": "image/png",
   "file_size": 123456,
   "uploaded_at": "2026-02-17T16:35:03.000Z",
-  "status": "pending_review",  // normalized to "pending" by the DAL
+  "status": "pending_review", // normalized to "pending" by the DAL
   "reviewer_id": null,
   "reviewed_at": null,
-  "reason": null
+  "reason": null,
 }
 ```
 
@@ -363,7 +362,6 @@ and `payments.listProofs/approveProof/rejectProof`. Every test verifies that
 `auditPortalDenied` is written and that the admin Supabase client is NEVER
 invoked when the scope check fails — the same contract enforced by Session 1
 and Session 2A tests.
-
 
 ---
 
@@ -447,21 +445,21 @@ support tickets against their own site. To register a universal flag:
 
 The `createPortalDAL(ctx)` object now exposes the following namespaces:
 
-| Namespace          | Source module                         | Session |
-|--------------------|---------------------------------------|---------|
-| `sites`            | `data-access.ts`                      | 1       |
-| `orders`           | `data-access.ts` + commerce extension | 1/3     |
-| `conversations`    | `communication-data-access.ts`        | 2       |
-| `products`         | `commerce-data-access.ts`             | 3       |
-| `customers`        | `commerce-data-access.ts`             | 3       |
-| `quotes`           | `commerce-data-access.ts`             | 3       |
-| `bookings`         | `commerce-data-access.ts`             | 3       |
-| `payments`         | `commerce-data-access.ts`             | 3       |
-| `invoicing`        | `invoicing-data-access.ts`            | 4A      |
-| `crm`              | `crm-data-access.ts`                  | 4B      |
-| `marketing`        | `marketing-data-access.ts`            | 4C      |
-| `support`          | `support-data-access.ts`              | 4D      |
-| `communications`   | `communications-data-access.ts`       | 4D      |
+| Namespace        | Source module                         | Session |
+| ---------------- | ------------------------------------- | ------- |
+| `sites`          | `data-access.ts`                      | 1       |
+| `orders`         | `data-access.ts` + commerce extension | 1/3     |
+| `conversations`  | `communication-data-access.ts`        | 2       |
+| `products`       | `commerce-data-access.ts`             | 3       |
+| `customers`      | `commerce-data-access.ts`             | 3       |
+| `quotes`         | `commerce-data-access.ts`             | 3       |
+| `bookings`       | `commerce-data-access.ts`             | 3       |
+| `payments`       | `commerce-data-access.ts`             | 3       |
+| `invoicing`      | `invoicing-data-access.ts`            | 4A      |
+| `crm`            | `crm-data-access.ts`                  | 4B      |
+| `marketing`      | `marketing-data-access.ts`            | 4C      |
+| `support`        | `support-data-access.ts`              | 4D      |
+| `communications` | `communications-data-access.ts`       | 4D      |
 
 ### Pages delivered in Session 4
 
@@ -482,5 +480,3 @@ filters were applied. Every DAL ships deny-tests that verify
 `auditPortalDenied` was written **and** the admin Supabase client was
 never invoked on denial — the same contract as Sessions 1–3.
 Session 4 adds 85 portal DAL tests across 10 files.
-
-

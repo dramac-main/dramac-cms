@@ -326,8 +326,7 @@ function createSendLogNamespace(
           q = q.range(0, 4999);
 
           const { data, error } = await q;
-          if (error)
-            throw new Error(`[portal][comms] stats: ${error.message}`);
+          if (error) throw new Error(`[portal][comms] stats: ${error.message}`);
           const byState: Record<string, number> = {};
           const byChannel: Record<string, number> = {};
           for (const row of (data ?? []) as Array<{

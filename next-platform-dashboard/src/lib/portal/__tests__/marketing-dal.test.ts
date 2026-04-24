@@ -289,13 +289,13 @@ describe("portal Marketing DAL — happy paths", () => {
 
     // Event + metadata.
     expect(logAutomationEventMock).toHaveBeenCalledTimes(1);
-    const [siteId, eventType, payload, meta] =
-      logAutomationEventMock.mock.calls[0] as [
-        string,
-        string,
-        Record<string, unknown>,
-        Record<string, unknown>,
-      ];
+    const [siteId, eventType, payload, meta] = logAutomationEventMock.mock
+      .calls[0] as [
+      string,
+      string,
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ];
     expect(siteId).toBe("site-1");
     expect(eventType).toBe("marketing.subscriber.subscribed");
     expect(payload.source).toBe("portal");
@@ -329,9 +329,8 @@ describe("portal Marketing DAL — happy paths", () => {
       resend_plan_tier: "pro",
       provider_webhook_id: "wh_42",
     };
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: rawRow, error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: rawRow, error: null })) as any);
 
     const { createMarketingNamespace } = await importModule();
     const ns = createMarketingNamespace(CTX);
@@ -447,9 +446,9 @@ describe("portal Marketing DAL — happy paths", () => {
 
     const { createMarketingNamespace } = await importModule();
     const ns = createMarketingNamespace(CTX);
-    await expect(
-      ns.campaigns.sendNow("site-1", "cmp-1"),
-    ).rejects.toThrowError("no_consented_recipients");
+    await expect(ns.campaigns.sendNow("site-1", "cmp-1")).rejects.toThrowError(
+      "no_consented_recipients",
+    );
 
     // No status mutation happened after the consent gate fired.
     expect(updateCalls).toBe(0);
@@ -568,9 +567,8 @@ describe("portal Marketing DAL — happy paths", () => {
       resend_plan_tier: "pro",
       provider_batch_id: "b_1",
     };
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: rawRow, error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: rawRow, error: null })) as any);
 
     const { createMarketingNamespace } = await importModule();
     const ns = createMarketingNamespace(CTX);

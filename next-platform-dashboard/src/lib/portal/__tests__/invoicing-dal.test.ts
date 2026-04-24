@@ -165,9 +165,7 @@ describe("portal invoicing DAL — deny paths", () => {
       ns.invoices.create("site-1", {
         clientName: "X",
         dueDate: "2025-12-31",
-        lineItems: [
-          { name: "Work", quantity: 1, unitPriceCents: 1000 },
-        ],
+        lineItems: [{ name: "Work", quantity: 1, unitPriceCents: 1000 }],
       }),
     ).rejects.toBeInstanceOf(PortalAccessDeniedError);
     expect(adminFromMock).not.toHaveBeenCalled();
@@ -192,9 +190,9 @@ describe("portal invoicing DAL — deny paths", () => {
     const { createInvoicingNamespace, PortalAccessDeniedError } =
       await importModule();
     const ns = createInvoicingNamespace(CTX);
-    await expect(
-      ns.creditNotes.issue("site-1", "cn-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.creditNotes.issue("site-1", "cn-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
   });
 
   it("recurring.pause denies without canManageInvoices", async () => {
@@ -202,9 +200,9 @@ describe("portal invoicing DAL — deny paths", () => {
     const { createInvoicingNamespace, PortalAccessDeniedError } =
       await importModule();
     const ns = createInvoicingNamespace(CTX);
-    await expect(
-      ns.recurring.pause("site-1", "rec-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.recurring.pause("site-1", "rec-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
   });
 
   it("expenses.create denies without canManageInvoices", async () => {
@@ -236,9 +234,9 @@ describe("portal invoicing DAL — deny paths", () => {
     const { createInvoicingNamespace, PortalAccessDeniedError } =
       await importModule();
     const ns = createInvoicingNamespace(CTX);
-    await expect(
-      ns.bills.approve("site-1", "bill-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.bills.approve("site-1", "bill-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
   });
 
   it("statements.get denies without canViewInvoices", async () => {

@@ -155,9 +155,9 @@ describe("portal Communications DAL — deny paths", () => {
     const { createCommunicationsNamespace, PortalAccessDeniedError } =
       await importModule();
     const ns = createCommunicationsNamespace(CTX);
-    await expect(
-      ns.sendLog.detail("site-1", "log-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.sendLog.detail("site-1", "log-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
   });
 
   it("sendLog.stats denies without canViewAnalytics", async () => {
@@ -201,9 +201,8 @@ describe("portal Communications DAL — happy paths", () => {
 
   it("sendLog.list strips provider + provider_* + brand columns", async () => {
     checkPortalPermissionMock.mockResolvedValue(ALLOWED);
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: [LOG_ROW], error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: [LOG_ROW], error: null })) as any);
 
     const { createCommunicationsNamespace } = await importModule();
     const ns = createCommunicationsNamespace(CTX);
@@ -303,9 +302,8 @@ describe("portal Communications DAL — happy paths", () => {
       { channel: "sms", delivery_state: "sent" },
       { channel: "in_app", delivery_state: "delivered" },
     ];
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: ROWS, error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: ROWS, error: null })) as any);
 
     const { createCommunicationsNamespace } = await importModule();
     const ns = createCommunicationsNamespace(CTX);

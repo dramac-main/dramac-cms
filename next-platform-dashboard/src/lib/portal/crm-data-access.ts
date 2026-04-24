@@ -307,10 +307,18 @@ function createContactsNamespace(
             q = q.range(from, to);
           }
           const { data, error } = await q;
-          if (error) throw new Error(`[portal][crm] list contacts: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.crm.contacts.list", "crm_contact", null, {
-            count: (data ?? []).length,
-          });
+          if (error)
+            throw new Error(`[portal][crm] list contacts: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.crm.contacts.list",
+            "crm_contact",
+            null,
+            {
+              count: (data ?? []).length,
+            },
+          );
           return (data ?? []).map(mapContactRow);
         },
       ),
@@ -334,7 +342,10 @@ function createContactsNamespace(
             .eq("site_id", scope.siteId)
             .eq("id", contactId)
             .single();
-          if (error) throw new Error(`[portal][crm] contact not found: ${error.message}`);
+          if (error)
+            throw new Error(
+              `[portal][crm] contact not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -389,7 +400,8 @@ function createContactsNamespace(
             .insert(row)
             .select(`*, company:${T.companies}(id, name)`)
             .single();
-          if (error) throw new Error(`[portal][crm] create contact: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] create contact: ${error.message}`);
           const mapped = mapContactRow(data);
           finalizeAudit(
             ctx,
@@ -436,15 +448,18 @@ function createContactsNamespace(
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
           const patch: Record<string, unknown> = {};
-          if ("firstName" in input) patch.first_name = stringOrNull(input.firstName);
-          if ("lastName" in input) patch.last_name = stringOrNull(input.lastName);
+          if ("firstName" in input)
+            patch.first_name = stringOrNull(input.firstName);
+          if ("lastName" in input)
+            patch.last_name = stringOrNull(input.lastName);
           if ("email" in input)
             patch.email = stringOrNull(
               input.email?.toLowerCase?.() ?? input.email,
             );
           if ("phone" in input) patch.phone = stringOrNull(input.phone);
           if ("mobile" in input) patch.mobile = stringOrNull(input.mobile);
-          if ("jobTitle" in input) patch.job_title = stringOrNull(input.jobTitle);
+          if ("jobTitle" in input)
+            patch.job_title = stringOrNull(input.jobTitle);
           if ("department" in input)
             patch.department = stringOrNull(input.department);
           if ("companyId" in input)
@@ -482,7 +497,8 @@ function createContactsNamespace(
             .eq("id", contactId)
             .select(`*, company:${T.companies}(id, name)`)
             .single();
-          if (error) throw new Error(`[portal][crm] update contact: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] update contact: ${error.message}`);
           const mapped = mapContactRow(data);
           finalizeAudit(
             ctx,
@@ -528,7 +544,8 @@ function createContactsNamespace(
             .delete()
             .eq("site_id", scope.siteId)
             .eq("id", contactId);
-          if (error) throw new Error(`[portal][crm] delete contact: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] delete contact: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -621,9 +638,10 @@ function mapCompanyRow(row: any): PortalCompanyListItem {
     website: row.website ?? null,
     phone: row.phone ?? null,
     employeeCount: row.employee_count ?? null,
-    annualRevenue: row.annual_revenue === null || row.annual_revenue === undefined
-      ? null
-      : Number(row.annual_revenue),
+    annualRevenue:
+      row.annual_revenue === null || row.annual_revenue === undefined
+        ? null
+        : Number(row.annual_revenue),
     status: row.status ?? "active",
     accountType: row.account_type ?? null,
     tags: Array.isArray(row.tags) ? row.tags : [],
@@ -657,7 +675,13 @@ function createCompaniesNamespace(
     list: async (siteId, filter) =>
       withPortalEvent(
         "portal.dal.crm.companies.list",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -678,7 +702,9 @@ function createCompaniesNamespace(
             q = q.overlaps("tags", filter.tags);
           if (filter?.search) {
             const s = filter.search.replace(/%/g, "").trim();
-            q = q.or(`name.ilike.%${s}%,domain.ilike.%${s}%,industry.ilike.%${s}%`);
+            q = q.or(
+              `name.ilike.%${s}%,domain.ilike.%${s}%,industry.ilike.%${s}%`,
+            );
           }
           const sortBy = filter?.sortBy ?? "created_at";
           const sortAsc = (filter?.sortDir ?? "desc") === "asc";
@@ -689,10 +715,18 @@ function createCompaniesNamespace(
             q = q.range(from, to);
           }
           const { data, error } = await q;
-          if (error) throw new Error(`[portal][crm] list companies: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.crm.companies.list", "crm_company", null, {
-            count: (data ?? []).length,
-          });
+          if (error)
+            throw new Error(`[portal][crm] list companies: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.crm.companies.list",
+            "crm_company",
+            null,
+            {
+              count: (data ?? []).length,
+            },
+          );
           return (data ?? []).map(mapCompanyRow);
         },
       ),
@@ -700,7 +734,13 @@ function createCompaniesNamespace(
     detail: async (siteId, companyId) =>
       withPortalEvent(
         "portal.dal.crm.companies.detail",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -710,7 +750,10 @@ function createCompaniesNamespace(
             .eq("site_id", scope.siteId)
             .eq("id", companyId)
             .single();
-          if (error) throw new Error(`[portal][crm] company not found: ${error.message}`);
+          if (error)
+            throw new Error(
+              `[portal][crm] company not found: ${error.message}`,
+            );
           finalizeAudit(
             ctx,
             siteId,
@@ -725,7 +768,13 @@ function createCompaniesNamespace(
     create: async (siteId, input) =>
       withPortalEvent(
         "portal.dal.crm.companies.create",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           if (!input.name || input.name.trim().length === 0) {
@@ -759,7 +808,8 @@ function createCompaniesNamespace(
             .insert(row)
             .select("*")
             .single();
-          if (error) throw new Error(`[portal][crm] create company: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] create company: ${error.message}`);
           const mapped = mapCompanyRow(data);
           finalizeAudit(
             ctx,
@@ -788,7 +838,13 @@ function createCompaniesNamespace(
     update: async (siteId, companyId, input) =>
       withPortalEvent(
         "portal.dal.crm.companies.update",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -798,7 +854,8 @@ function createCompaniesNamespace(
           if ("domain" in input) patch.domain = stringOrNull(input.domain);
           if ("description" in input)
             patch.description = stringOrNull(input.description);
-          if ("industry" in input) patch.industry = stringOrNull(input.industry);
+          if ("industry" in input)
+            patch.industry = stringOrNull(input.industry);
           if ("website" in input) patch.website = stringOrNull(input.website);
           if ("phone" in input) patch.phone = stringOrNull(input.phone);
           if ("employeeCount" in input)
@@ -817,7 +874,8 @@ function createCompaniesNamespace(
           if ("status" in input) patch.status = input.status;
           if ("accountType" in input)
             patch.account_type = input.accountType ?? null;
-          if ("tags" in input && Array.isArray(input.tags)) patch.tags = input.tags;
+          if ("tags" in input && Array.isArray(input.tags))
+            patch.tags = input.tags;
           if ("ownerId" in input) patch.owner_id = stringOrNull(input.ownerId);
           if ("customFields" in input) patch.custom_fields = input.customFields;
           patch.updated_at = new Date().toISOString();
@@ -829,7 +887,8 @@ function createCompaniesNamespace(
             .eq("id", companyId)
             .select("*")
             .single();
-          if (error) throw new Error(`[portal][crm] update company: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] update company: ${error.message}`);
           const mapped = mapCompanyRow(data);
           finalizeAudit(
             ctx,
@@ -859,7 +918,13 @@ function createCompaniesNamespace(
     delete: async (siteId, companyId) =>
       withPortalEvent(
         "portal.dal.crm.companies.delete",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -868,7 +933,8 @@ function createCompaniesNamespace(
             .delete()
             .eq("site_id", scope.siteId)
             .eq("id", companyId);
-          if (error) throw new Error(`[portal][crm] delete company: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] delete company: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -963,9 +1029,10 @@ function mapDealRow(row: any): PortalDealListItem {
     stageName: row.stage?.name ?? null,
     contactId: row.contact_id ?? null,
     companyId: row.company_id ?? null,
-    amount: row.amount === null || row.amount === undefined
-      ? null
-      : Number(row.amount),
+    amount:
+      row.amount === null || row.amount === undefined
+        ? null
+        : Number(row.amount),
     currency: row.currency ?? "USD",
     probability: Number(row.probability ?? 0),
     status: row.status ?? "open",
@@ -979,9 +1046,15 @@ function mapDealRow(row: any): PortalDealListItem {
 }
 
 export interface PortalCRMDealsNamespace {
-  list(siteId: string, filter?: PortalDealListFilter): Promise<PortalDealListItem[]>;
+  list(
+    siteId: string,
+    filter?: PortalDealListFilter,
+  ): Promise<PortalDealListItem[]>;
   detail(siteId: string, dealId: string): Promise<PortalDealListItem>;
-  create(siteId: string, input: PortalCreateDealInput): Promise<PortalDealListItem>;
+  create(
+    siteId: string,
+    input: PortalCreateDealInput,
+  ): Promise<PortalDealListItem>;
   update(
     siteId: string,
     dealId: string,
@@ -1027,7 +1100,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     list: async (siteId, filter) =>
       withPortalEvent(
         "portal.dal.crm.deals.list",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1052,7 +1131,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             q = q.gte("amount", filter.minAmount);
           if (typeof filter?.maxAmount === "number")
             q = q.lte("amount", filter.maxAmount);
-          if (filter?.closeFrom) q = q.gte("expected_close_date", filter.closeFrom);
+          if (filter?.closeFrom)
+            q = q.gte("expected_close_date", filter.closeFrom);
           if (filter?.closeTo) q = q.lte("expected_close_date", filter.closeTo);
           const sortBy = filter?.sortBy ?? "created_at";
           const sortAsc = (filter?.sortDir ?? "desc") === "asc";
@@ -1063,10 +1143,18 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             q = q.range(from, to);
           }
           const { data, error } = await q;
-          if (error) throw new Error(`[portal][crm] list deals: ${error.message}`);
-          finalizeAudit(ctx, siteId, "portal.crm.deals.list", "crm_deal", null, {
-            count: (data ?? []).length,
-          });
+          if (error)
+            throw new Error(`[portal][crm] list deals: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.crm.deals.list",
+            "crm_deal",
+            null,
+            {
+              count: (data ?? []).length,
+            },
+          );
           return (data ?? []).map(mapDealRow);
         },
       ),
@@ -1074,7 +1162,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     detail: async (siteId, dealId) =>
       withPortalEvent(
         "portal.dal.crm.deals.detail",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const row = await fetchDeal(scope, dealId);
@@ -1093,7 +1187,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     create: async (siteId, input) =>
       withPortalEvent(
         "portal.dal.crm.deals.create",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           if (!input.name || input.name.trim().length === 0)
@@ -1126,7 +1226,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .insert(row)
             .select(selectWithStage)
             .single();
-          if (error) throw new Error(`[portal][crm] create deal: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] create deal: ${error.message}`);
           const mapped = mapDealRow(data);
           finalizeAudit(
             ctx,
@@ -1158,11 +1259,18 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     update: async (siteId, dealId, input) =>
       withPortalEvent(
         "portal.dal.crm.deals.update",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const prior = await fetchDeal(scope, dealId);
-          if (!prior) throw new Error(`[portal][crm] deal not found: ${dealId}`);
+          if (!prior)
+            throw new Error(`[portal][crm] deal not found: ${dealId}`);
           const admin = createAdminClient() as any;
           const patch: Record<string, unknown> = {};
           if ("name" in input && input.name)
@@ -1181,7 +1289,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
               input.amount === null || input.amount === undefined
                 ? null
                 : Number(input.amount);
-          if ("currency" in input && input.currency) patch.currency = input.currency;
+          if ("currency" in input && input.currency)
+            patch.currency = input.currency;
           if (
             "probability" in input &&
             typeof input.probability === "number" &&
@@ -1192,7 +1301,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
           if ("expectedCloseDate" in input)
             patch.expected_close_date = stringOrNull(input.expectedCloseDate);
           if ("ownerId" in input) patch.owner_id = stringOrNull(input.ownerId);
-          if ("tags" in input && Array.isArray(input.tags)) patch.tags = input.tags;
+          if ("tags" in input && Array.isArray(input.tags))
+            patch.tags = input.tags;
           if ("customFields" in input) patch.custom_fields = input.customFields;
           patch.updated_at = new Date().toISOString();
 
@@ -1203,7 +1313,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .eq("id", dealId)
             .select(selectWithStage)
             .single();
-          if (error) throw new Error(`[portal][crm] update deal: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] update deal: ${error.message}`);
           const mapped = mapDealRow(data);
           finalizeAudit(
             ctx,
@@ -1254,11 +1365,18 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     moveStage: async (siteId, dealId, newStageId) =>
       withPortalEvent(
         "portal.dal.crm.deals.moveStage",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const prior = await fetchDeal(scope, dealId);
-          if (!prior) throw new Error(`[portal][crm] deal not found: ${dealId}`);
+          if (!prior)
+            throw new Error(`[portal][crm] deal not found: ${dealId}`);
           const admin = createAdminClient() as any;
 
           // fetch the target stage to carry probability + derive status
@@ -1279,9 +1397,7 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
           };
           if (stageRow.stage_type === "won" || stageRow.stage_type === "lost") {
             patch.status = stageRow.stage_type;
-            patch.actual_close_date = new Date()
-              .toISOString()
-              .split("T")[0];
+            patch.actual_close_date = new Date().toISOString().split("T")[0];
           } else if (prior.status !== "open") {
             patch.status = "open";
             patch.actual_close_date = null;
@@ -1294,7 +1410,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .eq("id", dealId)
             .select(selectWithStage)
             .single();
-          if (error) throw new Error(`[portal][crm] move stage: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] move stage: ${error.message}`);
           const mapped = mapDealRow(data);
           finalizeAudit(
             ctx,
@@ -1335,7 +1452,11 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
               scope.siteId,
               EVENT_REGISTRY.crm.deal.lost,
               ctx,
-              { id: mapped.id, amount: mapped.amount, currency: mapped.currency },
+              {
+                id: mapped.id,
+                amount: mapped.amount,
+                currency: mapped.currency,
+              },
               "deal",
               mapped.id,
             );
@@ -1347,7 +1468,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     markWon: async (siteId, dealId, options) =>
       withPortalEvent(
         "portal.dal.crm.deals.markWon",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1365,7 +1492,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .eq("id", dealId)
             .select(selectWithStage)
             .single();
-          if (error) throw new Error(`[portal][crm] mark won: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] mark won: ${error.message}`);
           const mapped = mapDealRow(data);
           finalizeAudit(
             ctx,
@@ -1395,7 +1523,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     markLost: async (siteId, dealId, options) =>
       withPortalEvent(
         "portal.dal.crm.deals.markLost",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1413,7 +1547,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .eq("id", dealId)
             .select(selectWithStage)
             .single();
-          if (error) throw new Error(`[portal][crm] mark lost: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] mark lost: ${error.message}`);
           const mapped = mapDealRow(data);
           finalizeAudit(
             ctx,
@@ -1443,7 +1578,13 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
     delete: async (siteId, dealId) =>
       withPortalEvent(
         "portal.dal.crm.deals.delete",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1452,7 +1593,8 @@ function createDealsNamespace(ctx: PortalDALContext): PortalCRMDealsNamespace {
             .delete()
             .eq("site_id", scope.siteId)
             .eq("id", dealId);
-          if (error) throw new Error(`[portal][crm] delete deal: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] delete deal: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -1581,7 +1723,13 @@ function createActivitiesNamespace(
     list: async (siteId, filter) =>
       withPortalEvent(
         "portal.dal.crm.activities.list",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1609,7 +1757,8 @@ function createActivitiesNamespace(
             q = q.range(from, to);
           }
           const { data, error } = await q;
-          if (error) throw new Error(`[portal][crm] list activities: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] list activities: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -1625,7 +1774,13 @@ function createActivitiesNamespace(
     create: async (siteId, input) =>
       withPortalEvent(
         "portal.dal.crm.activities.create",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1653,7 +1808,8 @@ function createActivitiesNamespace(
             .insert(row)
             .select("*")
             .single();
-          if (error) throw new Error(`[portal][crm] create activity: ${error.message}`);
+          if (error)
+            throw new Error(`[portal][crm] create activity: ${error.message}`);
           const mapped = mapActivityRow(data);
           finalizeAudit(
             ctx,
@@ -1684,7 +1840,13 @@ function createActivitiesNamespace(
     completeTask: async (siteId, activityId) =>
       withPortalEvent(
         "portal.dal.crm.activities.completeTask",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1701,7 +1863,9 @@ function createActivitiesNamespace(
             .select("*")
             .single();
           if (error)
-            throw new Error(`[portal][crm] complete activity: ${error.message}`);
+            throw new Error(
+              `[portal][crm] complete activity: ${error.message}`,
+            );
           const mapped = mapActivityRow(data);
           finalizeAudit(
             ctx,
@@ -1717,7 +1881,13 @@ function createActivitiesNamespace(
     delete: async (siteId, activityId) =>
       withPortalEvent(
         "portal.dal.crm.activities.delete",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1775,7 +1945,13 @@ function createPipelinesNamespace(
     list: async (siteId) =>
       withPortalEvent(
         "portal.dal.crm.pipelines.list",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1786,14 +1962,19 @@ function createPipelinesNamespace(
             .eq("is_active", true)
             .order("is_default", { ascending: false })
             .order("name", { ascending: true });
-          if (pErr) throw new Error(`[portal][crm] list pipelines: ${pErr.message}`);
+          if (pErr)
+            throw new Error(`[portal][crm] list pipelines: ${pErr.message}`);
           const ids = (pipelines ?? []).map((p: any) => p.id);
           const { data: stages, error: sErr } = await admin
             .from(T.stages)
             .select("*")
-            .in("pipeline_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"])
+            .in(
+              "pipeline_id",
+              ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"],
+            )
             .order("position", { ascending: true });
-          if (sErr) throw new Error(`[portal][crm] list stages: ${sErr.message}`);
+          if (sErr)
+            throw new Error(`[portal][crm] list stages: ${sErr.message}`);
           const stagesByPipeline = new Map<string, PortalPipelineStage[]>();
           for (const s of stages ?? []) {
             const arr = stagesByPipeline.get(s.pipeline_id) ?? [];
@@ -1834,7 +2015,13 @@ function createPipelinesNamespace(
     stagesFor: async (siteId, pipelineId) =>
       withPortalEvent(
         "portal.dal.crm.pipelines.stagesFor",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const admin = createAdminClient() as any;
@@ -1927,11 +2114,19 @@ function createSegmentsNamespace(
     resolve: async (siteId, query) =>
       withPortalEvent(
         "portal.dal.crm.segments.resolve",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           let q = await buildQuery(scope, query, false);
-          q = q.order("created_at", { ascending: false }).limit(query.limit ?? 500);
+          q = q
+            .order("created_at", { ascending: false })
+            .limit(query.limit ?? 500);
           const { data, error } = await q;
           if (error)
             throw new Error(`[portal][crm] segment resolve: ${error.message}`);
@@ -1950,7 +2145,13 @@ function createSegmentsNamespace(
     count: async (siteId, query) =>
       withPortalEvent(
         "portal.dal.crm.segments.count",
-        { agencyId: ctx.user.agencyId, clientId: ctx.user.clientId, authUserId: ctx.user.userId, siteId, isImpersonation: ctx.isImpersonation },
+        {
+          agencyId: ctx.user.agencyId,
+          clientId: ctx.user.clientId,
+          authUserId: ctx.user.userId,
+          siteId,
+          isImpersonation: ctx.isImpersonation,
+        },
         async () => {
           const scope = await requireScope(ctx, siteId);
           const q = await buildQuery(scope, query, true);

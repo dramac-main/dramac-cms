@@ -93,9 +93,7 @@ async function LogLoader({ siteId }: { siteId: string }) {
     dal.communications.sendLog.stats(siteId),
   ]);
 
-  const byChannel = Object.entries(stats.byChannel).sort(
-    (a, b) => b[1] - a[1],
-  );
+  const byChannel = Object.entries(stats.byChannel).sort((a, b) => b[1] - a[1]);
   const byState = Object.entries(stats.byState).sort((a, b) => b[1] - a[1]);
 
   return (

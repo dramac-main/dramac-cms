@@ -159,7 +159,12 @@ export interface PortalInvoiceListFilter {
   tags?: string[];
   limit?: number;
   offset?: number;
-  sortBy?: "created_at" | "issue_date" | "due_date" | "total" | "invoice_number";
+  sortBy?:
+    | "created_at"
+    | "issue_date"
+    | "due_date"
+    | "total"
+    | "invoice_number";
   sortDir?: "asc" | "desc";
 }
 
@@ -292,8 +297,9 @@ export interface PortalCreateInvoiceInput {
   lineItems: PortalCreateInvoiceLineItem[];
 }
 
-export interface PortalUpdateInvoiceInput
-  extends Partial<Omit<PortalCreateInvoiceInput, "lineItems">> {
+export interface PortalUpdateInvoiceInput extends Partial<
+  Omit<PortalCreateInvoiceInput, "lineItems">
+> {
   lineItems?: PortalCreateInvoiceLineItem[];
 }
 
@@ -420,12 +426,14 @@ async function nextDocumentNumber(
   siteId: string,
   docType: "invoice" | "credit_note" | "bill" | "po",
 ): Promise<string> {
-  const { data, error } = await (admin as unknown as {
-    rpc: (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: string | null; error: { message: string } | null }>;
-  }).rpc("generate_next_invoice_number", {
+  const { data, error } = await (
+    admin as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: string | null; error: { message: string } | null }>;
+    }
+  ).rpc("generate_next_invoice_number", {
     p_site_id: siteId,
     p_doc_type: docType,
   });
@@ -481,9 +489,7 @@ async function listInvoicesImpl(
       if (filter?.tags && filter.tags.length > 0)
         q = q.overlaps("tags", filter.tags);
 
-      q = q
-        .order(sortBy, { ascending: asc })
-        .range(offset, offset + limit - 1);
+      q = q.order(sortBy, { ascending: asc }).range(offset, offset + limit - 1);
 
       const { data, error } = await q;
       if (error) {
@@ -564,9 +570,7 @@ async function detailInvoiceImpl(
             .order("payment_date", { ascending: false }),
           (admin as any)
             .from(INV_TABLES.invoiceActivity)
-            .select(
-              "id,action,description,actor_type,actor_name,created_at",
-            )
+            .select("id,action,description,actor_type,actor_name,created_at")
             .eq("entity_id", invoiceId)
             .eq("site_id", scope.siteId)
             .order("created_at", { ascending: false })
@@ -601,8 +605,7 @@ async function detailInvoiceImpl(
         paymentDate: (r.payment_date as string) ?? "",
         paymentMethod: (r.payment_method as string) ?? "other",
         status: (r.status as string) ?? "completed",
-        transactionReference:
-          (r.transaction_reference as string) ?? null,
+        transactionReference: (r.transaction_reference as string) ?? null,
         notes: (r.notes as string) ?? null,
       }));
 
@@ -745,9 +748,7 @@ async function createInvoiceImpl(
       if (lineRows.length > 0) {
         const { error: liErr } = await (admin as any)
           .from(INV_TABLES.invoiceLineItems)
-          .insert(
-            lineRows.map((lr) => ({ ...lr, invoice_id: invoiceId })),
-          );
+          .insert(lineRows.map((lr) => ({ ...lr, invoice_id: invoiceId })));
         if (liErr) {
           // Rollback invoice
           await (admin as any)
@@ -829,8 +830,7 @@ async function updateInvoiceImpl(
       }
 
       const update: Record<string, unknown> = { updated_at: nowIso() };
-      if (input.clientName !== undefined)
-        update.client_name = input.clientName;
+      if (input.clientName !== undefined) update.client_name = input.clientName;
       if (input.clientEmail !== undefined)
         update.client_email = input.clientEmail;
       if (input.clientPhone !== undefined)
@@ -884,9 +884,7 @@ async function updateInvoiceImpl(
         if (lineRows.length > 0) {
           await (admin as any)
             .from(INV_TABLES.invoiceLineItems)
-            .insert(
-              lineRows.map((lr) => ({ ...lr, invoice_id: invoiceId })),
-            );
+            .insert(lineRows.map((lr) => ({ ...lr, invoice_id: invoiceId })));
         }
       }
 
@@ -1106,7 +1104,11 @@ async function addInvoiceNoteImpl(
       const timestamp = nowIso();
       const stamped = `[${timestamp}] ${ctx.user.fullName || ctx.user.email}: ${note}`;
       const updateField = isInternal
-        ? { internal_notes: c.internal_notes ? `${c.internal_notes}\n${stamped}` : stamped }
+        ? {
+            internal_notes: c.internal_notes
+              ? `${c.internal_notes}\n${stamped}`
+              : stamped,
+          }
         : { notes: c.notes ? `${c.notes}\n${stamped}` : stamped };
 
       const { error: updErr } = await (admin as any)
@@ -1228,8 +1230,7 @@ async function listPaymentsImpl(
           currency: (r.currency as string) ?? "USD",
           paymentDate: (r.payment_date as string) ?? "",
           paymentMethod: (r.payment_method as string) ?? "other",
-          paymentMethodDetail:
-            (r.payment_method_detail as string) ?? null,
+          paymentMethodDetail: (r.payment_method_detail as string) ?? null,
           transactionReference: (r.transaction_reference as string) ?? null,
           proofUrl: (r.proof_url as string) ?? null,
           status: (r.status as string) ?? "completed",
@@ -1262,7 +1263,9 @@ async function recordPaymentImpl(
       const admin = createAdminClient();
       const { data: invoice, error } = await (admin as any)
         .from(INV_TABLES.invoices)
-        .select("id,status,invoice_number,currency,total,amount_paid,amount_due,client_email")
+        .select(
+          "id,status,invoice_number,currency,total,amount_paid,amount_due,client_email",
+        )
         .eq("id", invoiceId)
         .eq("site_id", scope.siteId)
         .maybeSingle();
@@ -1283,9 +1286,7 @@ async function recordPaymentImpl(
         client_email: string | null;
       };
       if (["void", "cancelled", "draft"].includes(inv.status)) {
-        throw new Error(
-          `Cannot record payment on ${inv.status} invoice`,
-        );
+        throw new Error(`Cannot record payment on ${inv.status} invoice`);
       }
 
       const total = numCents(inv.total);
@@ -1435,7 +1436,9 @@ async function recordRefundImpl(
       const admin = createAdminClient();
       const { data: invoice, error } = await (admin as any)
         .from(INV_TABLES.invoices)
-        .select("id,status,invoice_number,currency,amount_paid,amount_due,total,client_email")
+        .select(
+          "id,status,invoice_number,currency,amount_paid,amount_due,total,client_email",
+        )
         .eq("id", invoiceId)
         .eq("site_id", scope.siteId)
         .maybeSingle();
@@ -1716,13 +1719,16 @@ async function applyCreditToInvoiceImpl(
         credit_number: string;
       };
       const remaining = numCents(cr.amount_remaining);
-      if (amountCents > remaining) throw new Error("Amount exceeds remaining credit");
+      if (amountCents > remaining)
+        throw new Error("Amount exceeds remaining credit");
       if (!["issued", "partially_applied"].includes(cr.status))
         throw new Error("Credit note is not issuable/applicable");
 
       const { data: invoice, error: iErr } = await (admin as any)
         .from(INV_TABLES.invoices)
-        .select("id,status,total,amount_paid,amount_due,credits_applied,invoice_number,currency")
+        .select(
+          "id,status,total,amount_paid,amount_due,credits_applied,invoice_number,currency",
+        )
         .eq("id", invoiceId)
         .eq("site_id", scope.siteId)
         .maybeSingle();
@@ -1753,15 +1759,19 @@ async function applyCreditToInvoiceImpl(
       if (appErr) throw new Error("Failed to record credit application");
 
       // Update credit note totals
-      const newApplied = numCents(cr.amount_remaining) >= 0
-        ? (remaining === amountCents ? "fully_applied" : "partially_applied")
-        : "partially_applied";
-      const creditAppliedNew =
-        (await (admin as any)
+      const newApplied =
+        numCents(cr.amount_remaining) >= 0
+          ? remaining === amountCents
+            ? "fully_applied"
+            : "partially_applied"
+          : "partially_applied";
+      const creditAppliedNew = (
+        await (admin as any)
           .from(INV_TABLES.creditNotes)
           .select("amount_applied")
           .eq("id", creditId)
-          .single()).data?.amount_applied;
+          .single()
+      ).data?.amount_applied;
       const creditAppliedCents = numCents(creditAppliedNew) + amountCents;
       const creditRemainingCents = remaining - amountCents;
 
@@ -1770,7 +1780,8 @@ async function applyCreditToInvoiceImpl(
         .update({
           amount_applied: creditAppliedCents,
           amount_remaining: creditRemainingCents,
-          status: creditRemainingCents === 0 ? "fully_applied" : "partially_applied",
+          status:
+            creditRemainingCents === 0 ? "fully_applied" : "partially_applied",
           updated_at: nowIso(),
         })
         .eq("id", creditId)
@@ -1782,7 +1793,11 @@ async function applyCreditToInvoiceImpl(
       const creditsNew = numCents(inv.credits_applied) + amountCents;
       const dueNew = Math.max(0, total - paid - creditsNew);
       const statusNew =
-        dueNew === 0 ? "paid" : paid > 0 || creditsNew > 0 ? "partial" : inv.status;
+        dueNew === 0
+          ? "paid"
+          : paid > 0 || creditsNew > 0
+            ? "partial"
+            : inv.status;
 
       await (admin as any)
         .from(INV_TABLES.invoices)
@@ -2119,8 +2134,7 @@ async function createExpenseImpl(
       isImpersonation: ctx.isImpersonation,
     },
     async () => {
-      if (input.amountCents <= 0)
-        throw new Error("Amount must be positive");
+      if (input.amountCents <= 0) throw new Error("Amount must be positive");
       const admin = createAdminClient();
       const { data, error } = await (admin as any)
         .from(INV_TABLES.expenses)
@@ -2204,7 +2218,11 @@ async function approveExpenseImpl(
           "canManageInvoices",
         );
       }
-      const c = current as { status: string; amount: number | string; currency: string };
+      const c = current as {
+        status: string;
+        amount: number | string;
+        currency: string;
+      };
       if (c.status !== "pending")
         throw new Error("Only pending expenses can be approved");
       await (admin as any)
@@ -2532,7 +2550,8 @@ async function listBillsImpl(
       const { data, error } = await q;
       if (error) throw new Error("Failed to load bills");
       return (data ?? []).map((r: Record<string, unknown>) => {
-        const vendor = (r[INV_TABLES.vendors] as { name?: string } | null) ?? null;
+        const vendor =
+          (r[INV_TABLES.vendors] as { name?: string } | null) ?? null;
         return {
           id: r.id as string,
           billNumber: (r.bill_number as string) ?? "",
@@ -2694,7 +2713,10 @@ async function getStatementImpl(
       else if (input.companyId)
         invFilteredQuery = invFilteredQuery.eq("company_id", input.companyId);
       else if (input.clientEmail)
-        invFilteredQuery = invFilteredQuery.eq("client_email", input.clientEmail);
+        invFilteredQuery = invFilteredQuery.eq(
+          "client_email",
+          input.clientEmail,
+        );
       else throw new Error("One of contactId/companyId/clientEmail required");
 
       const { data: invoices, error: invErr } = await invFilteredQuery;
@@ -2765,7 +2787,7 @@ async function getStatementImpl(
 
       for (const entry of merged) {
         if (entry.kind === "invoice") {
-          const r = entry.row as typeof invRows[number];
+          const r = entry.row as (typeof invRows)[number];
           const total = numCents(r.total);
           running += total;
           totalInvoiced += total;
@@ -2978,8 +3000,7 @@ export function createInvoicingNamespace(
   return {
     invoices: {
       list: (siteId, filter) => listInvoicesImpl(ctx, siteId, filter),
-      detail: (siteId, invoiceId) =>
-        detailInvoiceImpl(ctx, siteId, invoiceId),
+      detail: (siteId, invoiceId) => detailInvoiceImpl(ctx, siteId, invoiceId),
       create: (siteId, input) => createInvoiceImpl(ctx, siteId, input),
       update: (siteId, invoiceId, input) =>
         updateInvoiceImpl(ctx, siteId, invoiceId, input),
@@ -3000,16 +3021,9 @@ export function createInvoicingNamespace(
     },
     creditNotes: {
       list: (siteId, filter) => listCreditNotesImpl(ctx, siteId, filter),
-      issue: (siteId, creditId) =>
-        issueCreditNoteImpl(ctx, siteId, creditId),
+      issue: (siteId, creditId) => issueCreditNoteImpl(ctx, siteId, creditId),
       applyToInvoice: (siteId, creditId, invoiceId, amountCents) =>
-        applyCreditToInvoiceImpl(
-          ctx,
-          siteId,
-          creditId,
-          invoiceId,
-          amountCents,
-        ),
+        applyCreditToInvoiceImpl(ctx, siteId, creditId, invoiceId, amountCents),
     },
     recurring: {
       list: (siteId, filter) => listRecurringImpl(ctx, siteId, filter),

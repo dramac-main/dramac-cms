@@ -264,13 +264,13 @@ describe("portal Support DAL — happy paths", () => {
     expect(insertedRow.priority).toBe("normal");
 
     expect(logAutomationEventMock).toHaveBeenCalledTimes(1);
-    const [siteId, eventType, payload, meta] =
-      logAutomationEventMock.mock.calls[0] as [
-        string,
-        string,
-        Record<string, unknown>,
-        Record<string, unknown>,
-      ];
+    const [siteId, eventType, payload, meta] = logAutomationEventMock.mock
+      .calls[0] as [
+      string,
+      string,
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ];
     expect(siteId).toBe("site-1");
     expect(eventType).toBe("support.ticket.created");
     expect(payload.source).toBe("portal");
@@ -281,9 +281,8 @@ describe("portal Support DAL — happy paths", () => {
 
   it("tickets.create rejects empty subject", async () => {
     checkPortalPermissionMock.mockResolvedValue(ALLOWED);
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: null, error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: null, error: null })) as any);
 
     const { createSupportNamespace } = await importModule();
     const ns = createSupportNamespace(CTX);
@@ -294,9 +293,8 @@ describe("portal Support DAL — happy paths", () => {
 
   it("tickets.create rejects empty description", async () => {
     checkPortalPermissionMock.mockResolvedValue(ALLOWED);
-    adminFromMock.mockImplementation(
-      (() => makeTable({ data: null, error: null })) as any,
-    );
+    adminFromMock.mockImplementation((() =>
+      makeTable({ data: null, error: null })) as any);
 
     const { createSupportNamespace } = await importModule();
     const ns = createSupportNamespace(CTX);
