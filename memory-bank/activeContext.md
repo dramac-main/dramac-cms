@@ -1,8 +1,40 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 5 (Content & Infrastructure) COMPLETE ✅
+**Last Updated**: Portal Overhaul — Session 6 (Polish • Mobile • Acceptance) COMPLETE ✅
 
-## Current State: Portal Overhaul — Session 5 — COMPLETE ✅
+## Current State: Portal Overhaul — Session 6 — COMPLETE ✅
+
+Session 6 hardens the entire portal surface for production: commerce
+namespaces got a full portal-first rewrite (orders/products/customers/
+quotes/bookings — server pages + Suspense + skeletons + error boundaries
++ URL-driven filters + mobile card layout), the four remaining
+`"use client"` pages (submissions/blog/media/seo) were wrapped in server
+auth-guard shells, a supplier-brand leak audit test was added (35 new
+tests), and an i18n extraction skeleton was landed.
+
+**Files shipped in Session 6**:
+
+- `src/components/portal/patterns/portal-status-pill.tsx` — shared
+  status pill with tone/size variants.
+- `src/lib/portal/format.ts` — `formatPortalCurrency`,
+  `formatPortalDate`, `formatPortalRelative`.
+- Full commerce rewrite across orders / products / customers / quotes /
+  bookings: `_actions.ts`, `*-list-client.tsx`, `page.tsx`,
+  `[id]/page.tsx`, `[id]/*-detail-client.tsx`.
+- Server auth-guard shells for submissions/blog/media/seo: new
+  `page.tsx` → `*-client.tsx` (existing UI preserved, unified under
+  `requirePortalAuth` + `getClientSite` check).
+- `src/lib/portal/i18n/strings.ts` — portal string registry skeleton
+  (`t(key)`, `resolvePortalLocale(hint)`, 60+ keys covering nav and
+  commerce CTAs). Extraction-only — runtime locale switching ships in
+  a follow-up.
+- `src/lib/portal/__tests__/supplier-brand-leak.test.ts` — 35 new tests
+  asserting every documented token, prefix, and free-text pattern is
+  scrubbed.
+
+**Test results**: 12 files, 135 tests passing. `npx tsc --noEmit` clean.
+
+## Previous State: Portal Overhaul — Session 5 — COMPLETE ✅
 
 Session 5 delivers seven new DAL namespaces covering content authoring,
 SEO, forms, domains, business email, and module-apps — all gated behind
