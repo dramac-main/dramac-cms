@@ -1,77 +1,148 @@
 /**
- * Portal Bookings Page
- *
- * Mounts the existing BookingDashboard with portal access verification.
- * Permission: canManageBookings
+ * Portal Bookings — portal-first list page (Session 6A).
  */
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
-import { BookingDashboard } from "@/modules/booking/components/booking-dashboard";
-import { PortalProvider } from "@/lib/portal/portal-context";
+import { createPortalDAL } from "@/lib/portal/data-access";
+import { PageHeader } from "@/components/layout/page-header";
+import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
+import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
+import { BookingsListClient } from "./bookings-list-client";
+import type {
+  PortalAppointmentStatus,
+  PortalBookingListFilter,
+} from "@/lib/portal/commerce-data-access";
+
+export const metadata: Metadata = {
+  title: "Bookings | Client Portal",
+};
 
 interface PageProps {
   params: Promise<{ siteId: string }>;
+  searchParams?: Promise<{
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: string;
+  }>;
 }
 
-function BookingSkeleton() {
+const PAGE_SIZE = 25;
+const BOOKING_STATUS_VALUES = new Set<string>([
+  "all",
+  "pending",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+  "rescheduled",
+]);
+
+function sanitiseIsoDate(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const t = Date.parse(value);
+  return Number.isFinite(t) ? value : undefined;
+}
+
+export default async function PortalBookingsPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const user = await requirePortalAuth();
+  const { siteId } = await params;
+  const sp = (await searchParams) ?? {};
+
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "ecommerce",
+    "canManageBookings",
+  );
+
+  const statusRaw =
+    sp.status && BOOKING_STATUS_VALUES.has(sp.status) ? sp.status : "all";
+  const status = statusRaw as PortalAppointmentStatus | "all";
+  const from = sanitiseIsoDate(sp.from);
+  const to = sanitiseIsoDate(sp.to);
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+
+  const filter: PortalBookingListFilter = {
+    status,
+    from,
+    to,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  };
+
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-[400px] rounded-lg" />
+      <PageHeader
+        title="Bookings"
+        description="View and manage appointments across services and staff"
+      />
+      <Suspense fallback={<PortalPanelSkeleton rows={6} />}>
+        <BookingsLoader
+          siteId={siteId}
+          filter={filter}
+          page={page}
+          activeStatus={statusRaw}
+          activeFrom={from ?? ""}
+          activeTo={to ?? ""}
+        />
+      </Suspense>
     </div>
   );
 }
 
-export default async function PortalBookingsPage({ params }: PageProps) {
-  const user = await requirePortalAuth();
-  const { siteId } = await params;
-
-  const { permissions } = await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "booking",
-    "canManageBookings",
-  );
-
-  return (
-    <PortalProvider
-      value={{
-        isPortalView: true,
-        portalUser: {
-          clientId: user.clientId,
-          fullName: user.fullName,
-          email: user.email,
-          agencyId: user.agencyId,
-        },
-        permissions: {
-          canManageLiveChat: permissions.canManageLiveChat,
-          canManageOrders: permissions.canManageOrders,
-          canManageProducts: permissions.canManageProducts,
-          canManageBookings: permissions.canManageBookings,
-          canManageCrm: permissions.canManageCrm,
-          canManageAutomation: permissions.canManageAutomation,
-          canManageQuotes: permissions.canManageQuotes,
-          canManageAgents: permissions.canManageAgents,
-          canManageCustomers: permissions.canManageCustomers,
-          canManageMarketing: permissions.canManageMarketing,
-        },
-        siteId,
-      }}
-    >
-      <Suspense fallback={<BookingSkeleton />}>
-        <BookingDashboard siteId={siteId} />
-      </Suspense>
-    </PortalProvider>
-  );
+async function BookingsLoader({
+  siteId,
+  filter,
+  page,
+  activeStatus,
+  activeFrom,
+  activeTo,
+}: {
+  siteId: string;
+  filter: PortalBookingListFilter;
+  page: number;
+  activeStatus: string;
+  activeFrom: string;
+  activeTo: string;
+}) {
+  try {
+    const user = await requirePortalAuth();
+    const session = await getPortalSession();
+    const dal = createPortalDAL({
+      user,
+      isImpersonation: session.isImpersonating,
+      impersonatorEmail: session.impersonatorEmail,
+    });
+    const bookings = await dal.bookings.list(siteId, filter);
+    const hasMore = bookings.length === (filter.limit ?? PAGE_SIZE);
+    return (
+      <BookingsListClient
+        siteId={siteId}
+        bookings={bookings}
+        currentPage={page}
+        pageSize={filter.limit ?? PAGE_SIZE}
+        hasMore={hasMore}
+        activeStatus={activeStatus}
+        activeFrom={activeFrom}
+        activeTo={activeTo}
+      />
+    );
+  } catch (err) {
+    return (
+      <PortalErrorState
+        title="Couldn’t load bookings"
+        description={
+          err instanceof Error ? err.message : "Please refresh to try again."
+        }
+      />
+    );
+  }
 }

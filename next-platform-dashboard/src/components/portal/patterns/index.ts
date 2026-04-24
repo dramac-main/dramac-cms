@@ -10,3 +10,4 @@ export { PortalEmptyState } from "./portal-empty-state";
 export { PortalErrorState } from "./portal-error-state";
 export { PortalPanelSkeleton } from "./portal-panel-skeleton";
 export { PortalPanelBoundary } from "./portal-panel-boundary";
+export { PortalStatusPill } from "./portal-status-pill";

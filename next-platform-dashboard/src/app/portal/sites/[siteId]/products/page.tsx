@@ -1,82 +1,134 @@
 /**
- * Portal Products Page
- *
- * Mounts the existing EcommerceDashboard with initialView="products".
- * Permission: canManageProducts
+ * Portal Products — portal-first list page (Session 6A).
  */
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
-import { EcommerceDashboard } from "@/modules/ecommerce/components/ecommerce-dashboard";
-import { PortalProvider } from "@/lib/portal/portal-context";
+import { createPortalDAL } from "@/lib/portal/data-access";
+import { PageHeader } from "@/components/layout/page-header";
+import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
+import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
+import { ProductsListClient } from "./products-list-client";
+import type {
+  PortalProductListFilter,
+} from "@/lib/portal/commerce-data-access";
+
+export const metadata: Metadata = {
+  title: "Products | Client Portal",
+};
 
 interface PageProps {
   params: Promise<{ siteId: string }>;
+  searchParams?: Promise<{
+    status?: string;
+    q?: string;
+    lowStock?: string;
+    page?: string;
+  }>;
 }
 
-function EcommerceSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-lg" />
-        ))}
-      </div>
-    </div>
-  );
-}
+const PAGE_SIZE = 25;
+const PRODUCT_STATUS_VALUES = new Set<string>(["all", "active", "draft", "archived"]);
 
-export default async function PortalProductsPage({ params }: PageProps) {
+export default async function PortalProductsPage({
+  params,
+  searchParams,
+}: PageProps) {
   const user = await requirePortalAuth();
   const { siteId } = await params;
+  const sp = (await searchParams) ?? {};
 
-  const { site, permissions } = await verifyPortalModuleAccess(
+  await verifyPortalModuleAccess(
     user,
     siteId,
     "ecommerce",
     "canManageProducts",
   );
 
+  const status = (
+    sp.status && PRODUCT_STATUS_VALUES.has(sp.status) ? sp.status : "all"
+  ) as "all" | "active" | "draft" | "archived";
+  const search = (sp.q ?? "").slice(0, 120);
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const lowStockOnly = sp.lowStock === "true";
+
+  const filter: PortalProductListFilter = {
+    status,
+    search: search || undefined,
+    lowStockOnly,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  };
+
   return (
-    <PortalProvider
-      value={{
-        isPortalView: true,
-        portalUser: {
-          clientId: user.clientId,
-          fullName: user.fullName,
-          email: user.email,
-          agencyId: user.agencyId,
-        },
-        permissions: {
-          canManageLiveChat: permissions.canManageLiveChat,
-          canManageOrders: permissions.canManageOrders,
-          canManageProducts: permissions.canManageProducts,
-          canManageBookings: permissions.canManageBookings,
-          canManageCrm: permissions.canManageCrm,
-          canManageAutomation: permissions.canManageAutomation,
-          canManageQuotes: permissions.canManageQuotes,
-          canManageAgents: permissions.canManageAgents,
-          canManageCustomers: permissions.canManageCustomers,
-          canManageMarketing: permissions.canManageMarketing,
-        },
-        siteId,
-      }}
-    >
-      <Suspense fallback={<EcommerceSkeleton />}>
-        <EcommerceDashboard
+    <div className="space-y-6">
+      <PageHeader
+        title="Products"
+        description="Browse catalog, monitor stock, and adjust inventory"
+      />
+      <Suspense fallback={<PortalPanelSkeleton rows={6} />}>
+        <ProductsLoader
           siteId={siteId}
-          agencyId={site.agencyId}
-          userId={user.userId}
-          userName={user.fullName}
-          initialView="products"
+          filter={filter}
+          page={page}
+          activeStatus={status}
+          activeSearch={search}
+          lowStockOnly={lowStockOnly}
         />
       </Suspense>
-    </PortalProvider>
+    </div>
   );
 }
+
+async function ProductsLoader({
+  siteId,
+  filter,
+  page,
+  activeStatus,
+  activeSearch,
+  lowStockOnly,
+}: {
+  siteId: string;
+  filter: PortalProductListFilter;
+  page: number;
+  activeStatus: string;
+  activeSearch: string;
+  lowStockOnly: boolean;
+}) {
+  try {
+    const user = await requirePortalAuth();
+    const session = await getPortalSession();
+    const dal = createPortalDAL({
+      user,
+      isImpersonation: session.isImpersonating,
+      impersonatorEmail: session.impersonatorEmail,
+    });
+    const products = await dal.products.list(siteId, filter);
+    const hasMore = products.length === (filter.limit ?? PAGE_SIZE);
+    return (
+      <ProductsListClient
+        siteId={siteId}
+        products={products}
+        currentPage={page}
+        pageSize={filter.limit ?? PAGE_SIZE}
+        hasMore={hasMore}
+        activeStatus={activeStatus}
+        activeSearch={activeSearch}
+        lowStockOnly={lowStockOnly}
+      />
+    );
+  } catch (err) {
+    return (
+      <PortalErrorState
+        title="Couldn’t load products"
+        description={
+          err instanceof Error ? err.message : "Please refresh to try again."
+        }
+      />
+    );
+  }
+}
+
+

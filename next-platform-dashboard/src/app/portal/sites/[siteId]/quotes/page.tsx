@@ -1,83 +1,132 @@
 /**
- * Portal Quotes Page
- *
- * Mounts the existing EcommerceDashboard with initialView="quotes".
- * Permission: canManageQuotes
+ * Portal Quotes — portal-first list page (Session 6A).
  */
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
-import { EcommerceDashboard } from "@/modules/ecommerce/components/ecommerce-dashboard";
-import { PortalProvider } from "@/lib/portal/portal-context";
+import { createPortalDAL } from "@/lib/portal/data-access";
+import { PageHeader } from "@/components/layout/page-header";
+import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
+import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
+import { QuotesListClient } from "./quotes-list-client";
+import type {
+  PortalQuoteListFilter,
+  PortalQuoteStatus,
+} from "@/lib/portal/commerce-data-access";
+
+export const metadata: Metadata = {
+  title: "Quotes | Client Portal",
+};
 
 interface PageProps {
   params: Promise<{ siteId: string }>;
+  searchParams?: Promise<{
+    status?: string;
+    q?: string;
+    page?: string;
+  }>;
 }
 
-function EcommerceSkeleton() {
+const PAGE_SIZE = 25;
+const QUOTE_STATUS_VALUES = new Set<string>([
+  "all",
+  "draft",
+  "pending_approval",
+  "sent",
+  "viewed",
+  "accepted",
+  "rejected",
+  "expired",
+  "converted",
+  "cancelled",
+]);
+
+export default async function PortalQuotesPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const user = await requirePortalAuth();
+  const { siteId } = await params;
+  const sp = (await searchParams) ?? {};
+
+  await verifyPortalModuleAccess(user, siteId, "ecommerce", "canManageQuotes");
+
+  const statusRaw =
+    sp.status && QUOTE_STATUS_VALUES.has(sp.status) ? sp.status : "all";
+  const status = statusRaw as PortalQuoteStatus | "all";
+  const search = (sp.q ?? "").slice(0, 120);
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+
+  const filter: PortalQuoteListFilter = {
+    status,
+    search: search || undefined,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  };
+
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-      <Skeleton className="h-14 rounded-lg" />
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
-        ))}
-      </div>
+      <PageHeader
+        title="Quotes"
+        description="Review, respond to, and convert sales quotes"
+      />
+      <Suspense fallback={<PortalPanelSkeleton rows={6} />}>
+        <QuotesLoader
+          siteId={siteId}
+          filter={filter}
+          page={page}
+          activeStatus={statusRaw}
+          activeSearch={search}
+        />
+      </Suspense>
     </div>
   );
 }
 
-export default async function PortalQuotesPage({ params }: PageProps) {
-  const user = await requirePortalAuth();
-  const { siteId } = await params;
-
-  const { site, permissions } = await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "ecommerce",
-    "canManageQuotes",
-  );
-
-  return (
-    <PortalProvider
-      value={{
-        isPortalView: true,
-        portalUser: {
-          clientId: user.clientId,
-          fullName: user.fullName,
-          email: user.email,
-          agencyId: user.agencyId,
-        },
-        permissions: {
-          canManageLiveChat: permissions.canManageLiveChat,
-          canManageOrders: permissions.canManageOrders,
-          canManageProducts: permissions.canManageProducts,
-          canManageBookings: permissions.canManageBookings,
-          canManageCrm: permissions.canManageCrm,
-          canManageAutomation: permissions.canManageAutomation,
-          canManageQuotes: permissions.canManageQuotes,
-          canManageAgents: permissions.canManageAgents,
-          canManageCustomers: permissions.canManageCustomers,
-          canManageMarketing: permissions.canManageMarketing,
-        },
-        siteId,
-      }}
-    >
-      <Suspense fallback={<EcommerceSkeleton />}>
-        <EcommerceDashboard
-          siteId={siteId}
-          agencyId={site.agencyId}
-          userId={user.userId}
-          userName={user.fullName}
-          initialView="quotes"
-        />
-      </Suspense>
-    </PortalProvider>
-  );
+async function QuotesLoader({
+  siteId,
+  filter,
+  page,
+  activeStatus,
+  activeSearch,
+}: {
+  siteId: string;
+  filter: PortalQuoteListFilter;
+  page: number;
+  activeStatus: string;
+  activeSearch: string;
+}) {
+  try {
+    const user = await requirePortalAuth();
+    const session = await getPortalSession();
+    const dal = createPortalDAL({
+      user,
+      isImpersonation: session.isImpersonating,
+      impersonatorEmail: session.impersonatorEmail,
+    });
+    const quotes = await dal.quotes.list(siteId, filter);
+    const hasMore = quotes.length === (filter.limit ?? PAGE_SIZE);
+    return (
+      <QuotesListClient
+        siteId={siteId}
+        quotes={quotes}
+        currentPage={page}
+        pageSize={filter.limit ?? PAGE_SIZE}
+        hasMore={hasMore}
+        activeStatus={activeStatus}
+        activeSearch={activeSearch}
+      />
+    );
+  } catch (err) {
+    return (
+      <PortalErrorState
+        title="Couldn’t load quotes"
+        description={
+          err instanceof Error ? err.message : "Please refresh to try again."
+        }
+      />
+    );
+  }
 }

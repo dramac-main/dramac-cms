@@ -1,83 +1,155 @@
 /**
- * Portal Orders Page
+ * Portal Orders — portal-first list page (Session 6A).
  *
- * Mounts the existing EcommerceDashboard with initialView="orders".
- * Permission: canManageOrders
+ * Reads through `dal.orders.list` (permission + scope + audit + events).
+ * URL params drive filter / paging so state is sharable and refreshable.
  */
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
-import { EcommerceDashboard } from "@/modules/ecommerce/components/ecommerce-dashboard";
-import { PortalProvider } from "@/lib/portal/portal-context";
+import { createPortalDAL } from "@/lib/portal/data-access";
+import { PageHeader } from "@/components/layout/page-header";
+import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
+import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
+import { OrdersListClient } from "./orders-list-client";
+import type {
+  PortalOrderListFilter,
+  PortalOrderStatus,
+  PortalOrderPaymentStatus,
+} from "@/lib/portal/commerce-data-access";
+
+export const metadata: Metadata = {
+  title: "Orders | Client Portal",
+  description: "Review and manage customer orders",
+};
 
 interface PageProps {
   params: Promise<{ siteId: string }>;
+  searchParams?: Promise<{
+    status?: string;
+    paymentStatus?: string;
+    q?: string;
+    page?: string;
+  }>;
 }
 
-function EcommerceSkeleton() {
+const PAGE_SIZE = 25;
+
+const ORDER_STATUS_VALUES = new Set<string>([
+  "all",
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+]);
+const PAYMENT_STATUS_VALUES = new Set<string>([
+  "all",
+  "pending",
+  "paid",
+  "partially_refunded",
+  "refunded",
+  "failed",
+]);
+
+export default async function PortalOrdersPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const user = await requirePortalAuth();
+  const { siteId } = await params;
+  const sp = (await searchParams) ?? {};
+
+  await verifyPortalModuleAccess(user, siteId, "ecommerce", "canManageOrders");
+
+  const status = (
+    sp.status && ORDER_STATUS_VALUES.has(sp.status) ? sp.status : "all"
+  ) as PortalOrderStatus | "all";
+  const paymentStatus = (
+    sp.paymentStatus && PAYMENT_STATUS_VALUES.has(sp.paymentStatus)
+      ? sp.paymentStatus
+      : "all"
+  ) as PortalOrderPaymentStatus | "all";
+  const search = (sp.q ?? "").slice(0, 120);
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+
+  const filter: PortalOrderListFilter = {
+    status,
+    paymentStatus,
+    search: search || undefined,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  };
+
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-[400px] rounded-lg" />
+      <PageHeader
+        title="Orders"
+        description="Review, fulfill, and refund customer orders for this site"
+      />
+      <Suspense fallback={<PortalPanelSkeleton rows={6} />}>
+        <OrdersLoader
+          siteId={siteId}
+          filter={filter}
+          page={page}
+          activeStatus={status}
+          activePaymentStatus={paymentStatus}
+          activeSearch={search}
+        />
+      </Suspense>
     </div>
   );
 }
 
-export default async function PortalOrdersPage({ params }: PageProps) {
-  const user = await requirePortalAuth();
-  const { siteId } = await params;
-
-  const { site, permissions } = await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "ecommerce",
-    "canManageOrders",
-  );
-
-  return (
-    <PortalProvider
-      value={{
-        isPortalView: true,
-        portalUser: {
-          clientId: user.clientId,
-          fullName: user.fullName,
-          email: user.email,
-          agencyId: user.agencyId,
-        },
-        permissions: {
-          canManageLiveChat: permissions.canManageLiveChat,
-          canManageOrders: permissions.canManageOrders,
-          canManageProducts: permissions.canManageProducts,
-          canManageBookings: permissions.canManageBookings,
-          canManageCrm: permissions.canManageCrm,
-          canManageAutomation: permissions.canManageAutomation,
-          canManageQuotes: permissions.canManageQuotes,
-          canManageAgents: permissions.canManageAgents,
-          canManageCustomers: permissions.canManageCustomers,
-          canManageMarketing: permissions.canManageMarketing,
-        },
-        siteId,
-      }}
-    >
-      <Suspense fallback={<EcommerceSkeleton />}>
-        <EcommerceDashboard
-          siteId={siteId}
-          agencyId={site.agencyId}
-          userId={user.userId}
-          userName={user.fullName}
-          initialView="orders"
-        />
-      </Suspense>
-    </PortalProvider>
-  );
+async function OrdersLoader({
+  siteId,
+  filter,
+  page,
+  activeStatus,
+  activePaymentStatus,
+  activeSearch,
+}: {
+  siteId: string;
+  filter: PortalOrderListFilter;
+  page: number;
+  activeStatus: string;
+  activePaymentStatus: string;
+  activeSearch: string;
+}) {
+  try {
+    const user = await requirePortalAuth();
+    const session = await getPortalSession();
+    const dal = createPortalDAL({
+      user,
+      isImpersonation: session.isImpersonating,
+      impersonatorEmail: session.impersonatorEmail,
+    });
+    const orders = await dal.orders.list(siteId, filter);
+    const hasMore = orders.length === (filter.limit ?? PAGE_SIZE);
+    return (
+      <OrdersListClient
+        siteId={siteId}
+        orders={orders}
+        currentPage={page}
+        pageSize={filter.limit ?? PAGE_SIZE}
+        hasMore={hasMore}
+        activeStatus={activeStatus}
+        activePaymentStatus={activePaymentStatus}
+        activeSearch={activeSearch}
+      />
+    );
+  } catch (err) {
+    return (
+      <PortalErrorState
+        title="Couldn’t load orders"
+        description={
+          err instanceof Error ? err.message : "Please refresh to try again."
+        }
+      />
+    );
+  }
 }
