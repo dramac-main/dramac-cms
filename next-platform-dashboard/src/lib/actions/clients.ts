@@ -253,7 +253,7 @@ export async function inviteClientToPortal(clientId: string) {
 
   const { data: client } = await supabase
     .from("clients")
-    .select("id, email, name, agency_id")
+    .select("id, email, name, agency_id, portal_user_id")
     .eq("id", clientId)
     .eq("agency_id", profile.agency_id)
     .single();
@@ -266,16 +266,43 @@ export async function inviteClientToPortal(clientId: string) {
     return { error: "Client must have an email address" };
   }
 
-  // Mark the client as having portal access
-  const { error } = await supabase
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const {
+    ensurePortalAuthUser,
+    generatePortalMagicLink,
+    getPortalBaseUrl,
+  } = await import("@/lib/portal/portal-activation");
+  const admin = createAdminClient();
+
+  // Step 1: Ensure Supabase auth user exists and is linked to the client row.
+  let portalUserId = client.portal_user_id as string | null;
+  if (!portalUserId) {
+    const ensured = await ensurePortalAuthUser({
+      email: client.email,
+      clientId: client.id,
+      clientName: client.name,
+    });
+    if (!ensured.success) {
+      console.error(
+        "[Portal Invite] Failed to create/link auth user:",
+        ensured.error,
+      );
+      return { error: `Failed to create portal account: ${ensured.error}` };
+    }
+    portalUserId = ensured.userId;
+  }
+
+  // Step 2: Persist link + enable portal access (admin client bypasses RLS).
+  const { error: updateErr } = await admin
     .from("clients")
     .update({
+      portal_user_id: portalUserId,
       has_portal_access: true,
     })
     .eq("id", clientId);
-
-  if (error) {
-    return { error: error.message };
+  if (updateErr) {
+    console.error("[Portal Invite] Failed to persist portal linkage:", updateErr);
+    return { error: updateErr.message };
   }
 
   // Log activity
@@ -283,7 +310,19 @@ export async function inviteClientToPortal(clientId: string) {
     email: client.email,
   });
 
-  // Send portal invitation email (non-fatal if it fails)
+  // Step 3: Generate a branded magic link.
+  const { link: magicLink, generated: magicGenerated, error: magicErr } =
+    await generatePortalMagicLink({ email: client.email });
+  if (!magicGenerated) {
+    console.warn(
+      `[Portal Invite] Falling back to /portal/login (generateLink failed): ${magicErr}`,
+    );
+  }
+
+  // Step 4: Send the branded invitation email (non-fatal if it fails).
+  const portalUrl = magicGenerated
+    ? magicLink
+    : `${getPortalBaseUrl()}/portal/login`;
   try {
     const { sendBrandedEmail } = await import(
       "@/lib/email/send-branded-email"
@@ -291,7 +330,6 @@ export async function inviteClientToPortal(clientId: string) {
     const { getAgencyBranding } = await import("@/lib/queries/branding");
     const branding = await getAgencyBranding(profile.agency_id);
     const businessName = branding?.agency_display_name || "our team";
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/portal/login`;
 
     await sendBrandedEmail(profile.agency_id, {
       to: { email: client.email, name: client.name || client.email },
@@ -304,7 +342,7 @@ export async function inviteClientToPortal(clientId: string) {
     });
   } catch (emailErr) {
     console.error("[Portal Invite] Failed to send invitation email:", emailErr);
-    // Non-fatal — portal access is already enabled
+    // Non-fatal — portal access is already enabled and auth user is linked.
   }
 
   revalidatePath(`/dashboard/clients/${clientId}`);

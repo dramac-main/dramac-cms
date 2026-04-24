@@ -145,6 +145,22 @@ const portal_client_invitation: BrandedTemplate = {
     `Welcome to Your Client Portal\n\nHi ${data.clientName},\n\n${data.businessName} has activated your client portal.\n\nAccess it here: ${data.portalUrl}\n\nEnter your email address to receive a magic sign-in link — no password needed.\n\nIf you weren't expecting this, you can safely ignore this email.`,
 };
 
+const portal_magic_link: BrandedTemplate = {
+  subject: (data) => `Your sign-in link for ${data.businessName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Sign in to your portal</h1>
+      <p style="${EMAIL_STYLES.text}">Hi <strong>${data.clientName}</strong>,</p>
+      <p style="${EMAIL_STYLES.text}">Click the button below to sign in to your <strong>${data.businessName}</strong> client portal. No password needed — the link will log you in automatically.</p>
+      ${emailButton(b, String(data.magicLink), "Sign In to Portal")}
+      <p style="${EMAIL_STYLES.muted}">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
+      `Sign in to your ${data.businessName} portal`,
+    ),
+  text: (data) =>
+    `Sign in to your portal\n\nHi ${data.clientName},\n\nClick the link below to sign in to your ${data.businessName} client portal:\n\n${data.magicLink}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email.`,
+};
+
 // ============================================================================
 // SITE TEMPLATES
 // ============================================================================
@@ -1336,6 +1352,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   team_member_joined,
   portal_team_invitation,
   portal_client_invitation,
+  portal_magic_link,
   site_published,
   domain_connected,
   subscription_created,

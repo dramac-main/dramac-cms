@@ -298,44 +298,110 @@ export async function portalSignIn(
 }
 
 /**
- * Send magic link for portal login
+ * Send magic link for portal login.
+ *
+ * - Looks up the client row by email (admin client, bypasses RLS).
+ * - If the client has `has_portal_access = true` but `portal_user_id` is NULL
+ *   (legacy rows from the broken invite flow), we self-heal by creating /
+ *   linking the auth user on the fly so old invitations start working.
+ * - Generates a branded Supabase magic link via the admin API and dispatches
+ *   it through the agency's branded email pipeline so styling is consistent.
+ * - Returns `{ success: true }` for unknown emails to avoid leaking whether an
+ *   account exists.
  */
 export async function sendMagicLink(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
   const admin = createAdminClient();
+  const normalizedEmail = email.trim().toLowerCase();
 
-  // First verify this email has portal access (admin client bypasses RLS)
+  // Look up client (admin client bypasses RLS).
   const { data: client } = await admin
     .from("clients")
-    .select("id, portal_user_id, has_portal_access")
-    .eq("email", email)
+    .select("id, name, email, agency_id, portal_user_id, has_portal_access")
+    .eq("email", normalizedEmail)
     .eq("has_portal_access", true)
-    .single();
+    .maybeSingle();
 
   if (!client) {
-    // Don't reveal if email exists or not for security
-    return { success: true }; // Silently succeed but don't send email
+    // Don't reveal whether the email exists.
+    return { success: true };
   }
 
-  if (!client.portal_user_id) {
+  // Self-heal: if portal access is enabled but auth user never got created
+  // (pre-fix invitations), fix it now.
+  let portalUserId = client.portal_user_id as string | null;
+  if (!portalUserId) {
+    const { ensurePortalAuthUser } = await import(
+      "@/lib/portal/portal-activation"
+    );
+    const ensured = await ensurePortalAuthUser({
+      email: client.email ?? normalizedEmail,
+      clientId: client.id,
+      clientName: client.name,
+    });
+    if (!ensured.success) {
+      console.error(
+        "[Portal Magic Link] Self-heal failed for",
+        normalizedEmail,
+        ensured.error,
+      );
+      return {
+        success: false,
+        error:
+          "Portal account not set up. Please contact your agency to resend the invitation.",
+      };
+    }
+    portalUserId = ensured.userId;
+    const { error: linkErr } = await admin
+      .from("clients")
+      .update({ portal_user_id: portalUserId })
+      .eq("id", client.id);
+    if (linkErr) {
+      console.error(
+        "[Portal Magic Link] Self-heal link update failed:",
+        linkErr,
+      );
+    }
+  }
+
+  // Generate magic link via admin API.
+  const { generatePortalMagicLink } = await import(
+    "@/lib/portal/portal-activation"
+  );
+  const { link, generated, error: linkErr } = await generatePortalMagicLink({
+    email: normalizedEmail,
+  });
+  if (!generated) {
+    console.error("[Portal Magic Link] generateLink failed:", linkErr);
     return {
       success: false,
-      error: "Portal account not set up. Please contact your agency.",
+      error: "Failed to send login link. Please try again.",
     };
   }
 
-  // Send magic link
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/portal/verify`,
-    },
-  });
-
-  if (error) {
-    console.error("Magic link error:", error);
+  // Send through branded email pipeline so the link carries agency styling.
+  try {
+    const { sendBrandedEmail } = await import(
+      "@/lib/email/send-branded-email"
+    );
+    const { getAgencyBranding } = await import("@/lib/queries/branding");
+    const branding = await getAgencyBranding(client.agency_id as string);
+    const businessName = branding?.agency_display_name || "our team";
+    await sendBrandedEmail(client.agency_id as string, {
+      to: {
+        email: client.email ?? normalizedEmail,
+        name: client.name || client.email || normalizedEmail,
+      },
+      emailType: "portal_magic_link",
+      data: {
+        clientName: client.name || client.email || normalizedEmail,
+        businessName,
+        magicLink: link,
+      },
+    });
+  } catch (emailErr) {
+    console.error("[Portal Magic Link] branded send failed:", emailErr);
     return {
       success: false,
       error: "Failed to send login link. Please try again.",

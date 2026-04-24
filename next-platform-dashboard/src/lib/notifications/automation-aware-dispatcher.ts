@@ -1,22 +1,29 @@
 /**
- * Automation-Aware Notification Dispatcher
+ * Notification Dispatcher
  *
- * dispatchNotification  → no-op; automation workflows handle email / in-app.
- * dispatchChatNotification → ACTIVE; chat bridge messages are direct DB inserts
- *   into mod_chat_messages and must fire regardless of automation.  Automation
- *   handles emails but cannot insert real-time proactive chat messages.
+ * `dispatchNotification` directly invokes the provided notification function so
+ * branded emails, in-app notifications, and web push fire on every business
+ * event (booking created/confirmed/cancelled, order placed, etc.). Errors are
+ * caught and logged so callers are never blocked on a send failure.
+ *
+ * Automation workflows run in parallel via `logAutomationEvent()` at the call
+ * site — the two paths are complementary, not mutually exclusive: hard-coded
+ * handlers guarantee the baseline "this email always sends", automation adds
+ * custom workflows on top.
  */
-
-/**
- * @deprecated Automation is the sole path for email/in-app notifications.
- * This is intentionally a no-op — keep for compatibility.
- */
-export async function dispatchNotification(_params: {
+export async function dispatchNotification(params: {
   siteId: string;
   eventType: string;
   notificationFunction: () => Promise<unknown>;
 }): Promise<void> {
-  // No-op: automation workflows handle all email/in-app notifications.
+  try {
+    await params.notificationFunction();
+  } catch (err) {
+    console.error(
+      `[NotificationDispatcher] Failed to dispatch ${params.eventType} for site ${params.siteId}:`,
+      err,
+    );
+  }
 }
 
 /**
