@@ -1,8 +1,100 @@
 # Active Context
 
-**Last Updated**: Vercel Route-Cap Hotfix — RESOLVED ✅ (after Session 6)
+**Last Updated**: Session 7 — Portal Activation Fix + Notification Dispatcher Fix + Ask Chiko Portal — SHIPPED ✅
 
-## Current State: Route Cap Hotfix — RESOLVED ✅
+## Current State: Session 7 — SHIPPED ✅
+
+Three independent problem areas fixed and shipped green on
+`dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK` (commit `0b0dc6bd` on top of fix
+commit `d74bc98d`).
+
+### 1. Portal activation (fix commit `d74bc98d`)
+Client portal invitation emails were delivering, but clients could never
+actually log in. Root cause: `inviteClientToPortal()` never provisioned a
+Supabase auth user, so `clients.portal_user_id` stayed null, and
+`sendMagicLink()` silently bailed on any row where `portal_user_id` was
+null even though `has_portal_access = true`.
+
+- New `src/lib/portal/portal-activation.ts`: exports
+  `ensurePortalAuthUser({email, clientId, clientName})`,
+  `getPortalBaseUrl()`, `generatePortalMagicLink({email})`.
+- Rewrote `inviteClientToPortal()` in
+  `src/lib/actions/clients.ts`: ensureAuth → update
+  `portal_user_id` + `has_portal_access=true` → generateLink → send
+  branded invite with `portalUrl: magicLink`.
+- Rewrote `sendMagicLink()` in `src/lib/portal/portal-auth.ts`:
+  admin lookup with `maybeSingle`, self-heal orphan clients rows,
+  admin `generateLink`, dispatch via `sendBrandedEmail`.
+- Added `"portal_magic_link"` to the `EmailType` union + matching
+  `BrandedTemplate` in `branded-templates.ts`.
+
+### 2. Notification dispatcher (fix commit `d74bc98d`)
+`automation-aware-dispatcher.ts` was a `@deprecated` no-op. Every single
+booking, order, and invoice notification callback was being swallowed.
+`dispatchNotification()` now actively invokes
+`params.notificationFunction()`. ~15 LOC change that restored all
+notifications system-wide.
+
+### 3. Ask Chiko — portal AI business assistant (feat commit `0b0dc6bd`)
+Added a client-facing Chiko tab at `/portal/ask-chiko` with full
+per-client tenancy enforcement.
+
+**Data layer** (Supabase migration `chiko_portal_client_scope`):
+```
+ALTER TABLE chiko_conversations
+  ADD COLUMN client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  ADD COLUMN scope TEXT NOT NULL DEFAULT 'agency'
+    CHECK (scope IN ('agency','portal'));
++ 3 RLS policies (view/create/update) for scope='portal'
+  gated on clients.portal_user_id = auth.uid()
++ idx_chiko_conversations_client, idx_chiko_conversations_scope
+```
+
+**Query builder** (`src/components/chiko/portal-chiko-query-builder.ts`):
+- Re-exports `classifyQuestion` + `QueryCategory` from agency builder.
+- `PortalChikoScope { clientId, agencyId, siteIds, clientName, companyName }`.
+- 7 tenant-scoped query functions — all filter via
+  `.in("site_id", scope.siteIds)`: revenue (invoices+orders 30d),
+  bookings (-7d→+30d), clients (crm_contacts + customers), orders
+  (orders + order_items top-5 qty), chat (chat_sessions 7d), marketing
+  (email_campaigns + form_submissions), general (parallel aggregate).
+- Exports `buildPortalContext(scope, question)`.
+
+**API route** (`src/app/api/portal/chiko/route.ts`,
+`maxDuration = 60`):
+- `getPortalUser()` → validate question (1-1000 chars) →
+  `usageTracker.checkUsageLimit(agencyId, "ai_actions")` →
+  `resolveClientSites(clientId)` → `buildPortalContext` → Claude Haiku
+  4.5 (`claude-haiku-4-5-20251001`, 1024 max_tokens) →
+  `recordUsage` → persist to `chiko_conversations` with
+  `scope:"portal"`, `client_id`, `user_id`.
+- System prompt explicitly forbids mentioning other clients, "DRAMAC",
+  or "agency".
+
+**UI**:
+- `ChikoChat` made reusable via new `ChikoChatProps`: `endpoint`
+  (default `/api/chiko`), `title`, `subtitle`, `placeholder`,
+  `emptyHeadline`, `emptyBody`. Existing agency page unaffected by
+  defaults.
+- New page `src/app/portal/ask-chiko/page.tsx`: server component,
+  `requirePortalAuth` → `<ChikoChat endpoint="/api/portal/chiko" ...>`.
+- Nav entry: `Sparkles` icon in `src/config/portal-navigation.ts`
+  `mainItems`, placed directly below Dashboard.
+
+### Key insights this session
+- Never assume a `@deprecated` no-op file is inert. It was swallowing
+  every booking + order + invoice notification system-wide. Always grep
+  for the actual call graph before trusting the deprecation marker.
+- Supabase's `portal_user_id` column joins `clients ⟷ auth.users` and
+  is the ONLY tenancy anchor for the portal. Whenever a portal row is
+  touched via service-role admin, the `portal_user_id` + `scope='portal'`
+  + `client_id` triple must all be present, otherwise RLS views from the
+  user session can't see it.
+- `in("site_id", scope.siteIds)` is the correct cross-table tenancy
+  filter for Chiko portal queries (beats `.eq` because clients can own
+  multiple sites in the portal). All 7 query functions use it.
+
+## Previous State: Vercel Route-Cap Hotfix — RESOLVED ✅ (pre-Session 7)
 
 Vercel deploy had been ERROR-looping on commits a4d929d / c8fc461 /
 92a06df / 687605e7 with `Maximum number of routes (rewrites, redirects,

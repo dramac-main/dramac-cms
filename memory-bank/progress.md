@@ -1,9 +1,38 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Vercel route-cap hotfix RESOLVED on commit c413340d (after Session 6)
+**Last Updated**: Session 7 — Portal activation fix + notification dispatcher fix + Ask Chiko portal — SHIPPED ✅ (commit `0b0dc6bd`, deploy `dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK`)
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
 
+## Session 7 (completed) — SHIPPED
+
+- ✅ **Critical portal activation bug — FIXED** (commit `d74bc98d`).
+  Client portal invites never created a Supabase auth user; login link
+  was dead. Rewrote `inviteClientToPortal()` + `sendMagicLink()` +
+  added `src/lib/portal/portal-activation.ts` helper, new
+  `"portal_magic_link"` EmailType + BrandedTemplate. Self-heals orphan
+  `has_portal_access=true` / `portal_user_id=null` rows on next login.
+- ✅ **Notification dispatcher (@deprecated no-op) — FIXED** (commit
+  `d74bc98d`). `dispatchNotification()` in
+  `src/lib/notifications/automation-aware-dispatcher.ts` was silently
+  swallowing every booking / order / invoice notification callback.
+  Now actively invokes `params.notificationFunction()`.
+- ✅ **BIL-10 Ask Chiko portal expansion — COMPLETE** (commit
+  `0b0dc6bd`). Per-client scoped AI business assistant at
+  `/portal/ask-chiko`. Supabase migration `chiko_portal_client_scope`
+  applied (adds `client_id`, `scope`, 2 indexes, 3 RLS policies). New
+  route `src/app/api/portal/chiko/route.ts` + query builder
+  `src/components/chiko/portal-chiko-query-builder.ts` (7
+  tenant-scoped queries, all via `.in("site_id", scope.siteIds)`).
+  `ChikoChat` generalized via props. Nav entry added under Dashboard.
+- ✅ Build green: `npx next build` EXIT 0 (5.2min, 148 static pages);
+  both new routes in manifest.
+- ✅ Pushed to main; Vercel `dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK` READY on
+  commit `0b0dc6bd`, live on app.dramacagency.com.
+
+---
+
 ## Route-Cap Hotfix (after Session 6)
+
 - Vercel was rejecting deploys with `Max routes 2048, received 2070`.
 - Fix: consolidated 7 invoicing report wrapper routes into one
   `dashboard/sites/[siteId]/invoicing/reports/[report]/page.tsx` that
