@@ -1,8 +1,90 @@
 # Active Context
 
-**Last Updated**: Session 7 — Portal Activation Fix + Notification Dispatcher Fix + Ask Chiko Portal — SHIPPED ✅
+**Last Updated**: Session 8 — PKCE-safe Magic Link + Floating Ask Chiko FAB — SHIPPED ✅
 
-## Current State: Session 7 — SHIPPED ✅
+## Current State: Session 8 — SHIPPED ✅
+
+Commit `6fb87cd7` on `main`, pushed. Build green locally.
+
+### 1. Magic link "Invalid or expired" — real root cause fixed
+Session 7 fixed the portal activation but clients still hit
+"Verification Failed — Invalid or expired link" on every click. Real
+root cause: `@supabase/ssr` `createBrowserClient` uses **PKCE flow by
+default**, which stores a `code_verifier` on the browser that
+initiated the flow (the agency admin). When the client opens the link
+on their own device, no verifier exists, so `exchangeCodeForSession`
+ALWAYS fails.
+
+**Canonical Supabase SSR fix** (cross-device auth must use OTP flow,
+not PKCE):
+- `src/lib/portal/portal-activation.ts::generatePortalMagicLink` now
+  builds its own URL from `data.properties.hashed_token`:
+  `${base}/portal/verify?token_hash={hashed_token}&type=magiclink&next={next}`.
+  Signature changed to `({email, next?}) => {link, generated, error?}`;
+  `next` defaults to `/portal` and must start with `/`. Falls back to
+  `action_link` only if `hashed_token` is missing.
+- `src/app/portal/verify/page.tsx` rewritten from `"use client"` +
+  `exchangeCodeForSession` (always failing under PKCE) to a **server
+  component** with `export const dynamic = "force-dynamic"`. Reads
+  `searchParams` (Promise form per Next 15+), validates
+  `token_hash` + `type`, calls `supabase.auth.verifyOtp({type, token_hash})`
+  on the SSR client — sets HTTP-only session cookies same-origin and
+  bypasses PKCE entirely. `sanitizeNext()` only allows `/portal*`
+  paths. Admin lookup of `clients` by `portal_user_id` first; if not
+  found, self-heals by looking up by email and writing
+  `portal_user_id = user.id`. Branded error card for invalid/expired
+  tokens with "Back to Login" link.
+- `inviteClientToPortal` and `sendMagicLink` callers unchanged — they
+  pass only `email`, and the new `next?` param is optional.
+
+### 2. Floating Ask Chiko FAB
+- New `src/components/portal/portal-chiko-fab.tsx` — `"use client"`,
+  uses `usePathname()`, returns `null` on `/portal/ask-chiko`,
+  `/portal/login`, `/portal/verify`, and non-portal paths. Always-on
+  floating pill (bg-primary / text-primary-foreground CSS vars from
+  `ServerBrandingStyle`, Sparkles icon + "Ask Chiko" label,
+  `bottom-24 md:bottom-6` so it sits above `MobileBottomNav`).
+- Mounted in `portal-layout-client.tsx` immediately after
+  `<MobileFAB />`, branded automatically via agency CSS vars.
+
+### 3. Notification/email/automation wiring — AUDITED HEALTHY
+Subagent audit confirmed (no changes made):
+- `dispatchNotification` in
+  `src/lib/notifications/automation-aware-dispatcher.ts` actively
+  invokes the callback (Session 7 fix holds).
+- `src/lib/services/business-notifications.ts` —
+  `notifyNewBooking/Cancelled/Confirmed/Completed/PaymentReceived/NoShow`
+  + `notifyNewOrder/OrderShipped/OrderDelivered/OrderCancelled` +
+  `notifyRefundIssued` all fire branded email + in-app notification +
+  web push. New booking/order use `dispatchBusinessEvent` for portal-wide
+  dispatch.
+- `src/modules/booking/actions/booking-actions.ts::createAppointment`
+  dispatches new-booking + chat notification; status AND payment_status
+  transitions each fire `logAutomationEvent` + `dispatchNotification` +
+  `dispatchChatNotification`. Mirror in
+  `src/modules/live-chat/actions/chat-booking-actions.ts`.
+- `src/modules/invoicing/actions/invoice-actions.ts::sendInvoice` fires
+  `autoSendInvoiceSentEmail` + `logAutomationEvent("accounting.invoice.sent")`.
+- `src/modules/automation/lib/system-templates.ts` —
+  `system-booking-{created,confirmed,cancelled,completed}` templates
+  present (email.send_branded_template + notification.in_app_targeted +
+  chat.send_system_message).
+
+### Key insights this session
+- **Cross-device auth is incompatible with PKCE**. Admin-generated
+  action_links from `@supabase/ssr` browser clients ALWAYS fail when
+  clicked on a different device because no `code_verifier` exists
+  there. Use `hashed_token` + server-side `verifyOtp` for any flow
+  where the admin generates the link on behalf of another user.
+- Never trust the Session-7-style fix alone — always walk the actual
+  browser flow. The PKCE failure was invisible in code review because
+  `exchangeCodeForSession` is the documented "default" pattern.
+- `ServerBrandingStyle` in `portal/layout.tsx` sets CSS vars
+  (`--primary`, `--primary-foreground`) server-side per agency, so any
+  client component using `bg-primary` / `text-primary-foreground`
+  inherits agency branding automatically — no prop drilling.
+
+## Previous State: Session 7 — SHIPPED ✅
 
 Three independent problem areas fixed and shipped green on
 `dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK` (commit `0b0dc6bd` on top of fix

@@ -1,7 +1,38 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Session 7 — Portal activation fix + notification dispatcher fix + Ask Chiko portal — SHIPPED ✅ (commit `0b0dc6bd`, deploy `dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK`)
+**Last Updated**: Session 8 — PKCE-safe magic link + floating Ask Chiko FAB — SHIPPED ✅ (commit `6fb87cd7`)
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+## Session 8 (completed) — SHIPPED
+
+- ✅ **Magic-link "Invalid or expired" — REAL FIX** (commit `6fb87cd7`).
+  Root cause: `@supabase/ssr` browser client uses PKCE by default; the
+  `code_verifier` only exists on the device that generated the link,
+  so clients clicking on their own device always failed
+  `exchangeCodeForSession`. Canonical SSR fix applied:
+  `generatePortalMagicLink` now builds
+  `/portal/verify?token_hash=…&type=magiclink&next=/portal` from
+  `admin.generateLink`'s `data.properties.hashed_token`; `/portal/verify`
+  is a server component that calls `verifyOtp({type, token_hash})`
+  which sets HTTP-only cookies same-origin (PKCE-free). Branded error
+  card for invalid/expired tokens. `sanitizeNext` restricts redirect to
+  `/portal*`.
+- ✅ **Floating Ask Chiko FAB** — new
+  `src/components/portal/portal-chiko-fab.tsx`, mounted in
+  `portal-layout-client.tsx`. Branded via `bg-primary` CSS vars set by
+  `ServerBrandingStyle`. Hidden on `/portal/ask-chiko`, `/portal/login`,
+  `/portal/verify`, and non-portal paths. Positioned
+  `bottom-24 md:bottom-6` to sit above `MobileBottomNav`.
+- ✅ **Notification / email / automation wiring — AUDITED HEALTHY** (no
+  changes). Booking lifecycle (create/confirm/cancel/complete/no_show/
+  payment) + Order lifecycle (new/shipped/delivered/cancelled/refund) +
+  Invoice sent ALL fire (a) branded email via `sendBrandedEmail`, (b)
+  in-app notification via `createNotification`, (c) automation event
+  via `logAutomationEvent`, (d) chat bridge where applicable. Dispatcher
+  Session-7 fix holds.
+- ✅ Build green: `npx next build` EXIT 0.
+- ✅ Pushed commit `6fb87cd7` to `main`. Vercel auto-deploy triggered
+  (monitoring unavailable this session — MCP tool loading disabled).
 
 ## Session 7 (completed) — SHIPPED
 
