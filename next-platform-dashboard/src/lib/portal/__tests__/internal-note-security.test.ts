@@ -25,8 +25,12 @@ import type { PortalUser } from "../portal-auth";
 const resolveSiteScopeMock = vi.fn<(...args: unknown[]) => unknown>();
 const resolveClientSitesMock = vi.fn<(...args: unknown[]) => unknown>();
 const checkPortalPermissionMock = vi.fn<(...args: unknown[]) => unknown>();
-const auditPortalDeniedMock = vi.fn(async () => undefined);
-const writePortalAuditMock = vi.fn(async () => undefined);
+const auditPortalDeniedMock = vi.fn<(...args: unknown[]) => Promise<undefined>>(
+  async () => undefined,
+);
+const writePortalAuditMock = vi.fn<(...args: unknown[]) => Promise<undefined>>(
+  async () => undefined,
+);
 const adminFromMock = vi.fn<(...args: unknown[]) => unknown>();
 
 vi.mock("server-only", () => ({}));
@@ -252,7 +256,7 @@ describe("Internal note security — DAL enforcement", () => {
     await dal.conversations.notes("site-1", "conv-1");
 
     expect(writePortalAuditMock).toHaveBeenCalledTimes(1);
-    const [entry] = writePortalAuditMock.mock.calls[0];
+    const [entry] = writePortalAuditMock.mock.calls[0]!;
     expect(entry).toMatchObject({
       action: "portal.conversation.notes.view",
       resourceType: "conversation",

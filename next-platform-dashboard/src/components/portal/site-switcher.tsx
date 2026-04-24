@@ -42,7 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 import { toast } from "sonner";
-import { setPortalActiveSite } from "@/lib/portal/active-site";
+import { setPortalActiveSite } from "@/lib/portal/active-site-actions";
 
 export interface PortalSiteSwitcherOption {
   id: string;

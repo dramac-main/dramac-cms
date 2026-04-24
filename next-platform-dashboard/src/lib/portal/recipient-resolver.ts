@@ -148,7 +148,7 @@ export async function resolveInterestedRecipients(
     .select(selectColumns)
     .in("id", Array.from(clientIds));
 
-  const candidateClients = (clientRows ?? []) as ClientRow[];
+  const candidateClients = (clientRows ?? []) as unknown as ClientRow[];
 
   // Pull site-level overrides in a single shot to evaluate effective permission.
   const { data: sitePermAll } = clientColumn
@@ -161,7 +161,9 @@ export async function resolveInterestedRecipients(
 
   const sitePermMap = new Map<string, boolean | null>();
   if (Array.isArray(sitePermAll) && clientColumn) {
-    for (const row of sitePermAll as Array<Record<string, unknown>>) {
+    for (const row of sitePermAll as unknown as Array<
+      Record<string, unknown>
+    >) {
       const cid = row.client_id as string | null;
       if (cid)
         sitePermMap.set(cid, (row[clientColumn] as boolean | null) ?? null);

@@ -21,13 +21,27 @@ const dedupeRecipientsMock = vi.fn<(r: unknown[]) => unknown[]>(
   (r) => r,
 );
 
-const createNotificationMock = vi.fn(async () => ({ id: "notif-1" }));
-const sendBrandedEmailMock = vi.fn(async () => ({ id: "msg-1" }));
-const writeSendLogMock = vi.fn(async () => ({ id: "log-1" }));
-const updateSendLogStateMock = vi.fn(async () => undefined);
-const sendPushToUserMock = vi.fn(async () => ({ sent: 1, failed: 0 }));
-const siteAllowsInAppMock = vi.fn(async () => true);
-const siteAllowsEmailMock = vi.fn(async () => true);
+const createNotificationMock = vi.fn<
+  (...args: unknown[]) => Promise<{ id: string }>
+>(async () => ({ id: "notif-1" }));
+const sendBrandedEmailMock = vi.fn<
+  (...args: unknown[]) => Promise<{ id: string }>
+>(async () => ({ id: "msg-1" }));
+const writeSendLogMock = vi.fn<
+  (...args: unknown[]) => Promise<{ id: string }>
+>(async () => ({ id: "log-1" }));
+const updateSendLogStateMock = vi.fn<
+  (...args: unknown[]) => Promise<undefined>
+>(async () => undefined);
+const sendPushToUserMock = vi.fn<
+  (...args: unknown[]) => Promise<{ sent: number; failed: number }>
+>(async () => ({ sent: 1, failed: 0 }));
+const siteAllowsInAppMock = vi.fn<(...args: unknown[]) => Promise<boolean>>(
+  async () => true,
+);
+const siteAllowsEmailMock = vi.fn<(...args: unknown[]) => Promise<boolean>>(
+  async () => true,
+);
 
 const adminThen = {
   select: () => adminThen,
@@ -108,7 +122,7 @@ describe("dispatchBusinessEvent", () => {
     );
 
     const result = await dispatchBusinessEvent({
-      eventType: "order_placed",
+      eventType: "new_order",
       permission: "canManageOrders",
       siteId: "site-1",
       resourceType: "order",
@@ -141,7 +155,7 @@ describe("dispatchBusinessEvent", () => {
     );
 
     const result = await dispatchBusinessEvent({
-      eventType: "order_placed",
+      eventType: "new_order",
       permission: "canManageOrders",
       siteId: "site-1",
       resourceType: "order",
@@ -171,7 +185,7 @@ describe("dispatchBusinessEvent", () => {
 
     await expect(
       dispatchBusinessEvent({
-        eventType: "order_placed",
+        eventType: "new_order",
         permission: "canManageOrders",
         siteId: "site-1",
         resourceType: "order",
