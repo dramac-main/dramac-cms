@@ -56,6 +56,11 @@ export interface SendBrandedEmailOptions {
    * HTML supported. Supports merge variables.
    */
   bodyOverride?: string;
+  /**
+   * Portal Session 2: link the email_logs row to a previously-created
+   * portal_send_log row so the delivery webhook can correlate events.
+   */
+  sendLogId?: string | null;
 }
 
 /**
@@ -158,30 +163,76 @@ export async function sendBrandedEmail(
       `[Email] Sending branded ${options.emailType} email to ${toEmails.join(", ")} (from: ${branding.from_name})`,
     );
 
-    // 6. Send via Resend
-    const { data, error } = await resend.emails.send({
-      from,
-      to: toEmails,
-      replyTo,
-      subject,
-      html,
-      text,
-    });
+    // 6. Send via Resend with bounded retry for transient failures.
+    //    Retry budget: 3 attempts total, 200ms → 800ms → 3.2s.
+    //    Non-transient errors (invalid recipient, auth, quota-exceeded) fail
+    //    fast without retry.
+    let lastError: { name?: string; message: string; statusCode?: number } | null = null;
+    let data: { id?: string } | null = null;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 3;
 
-    if (error) {
-      console.error("[Email] Resend error:", error);
-      return { success: false, error: error.message };
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      attempts = attempt;
+      const resp = await resend.emails.send({
+        from,
+        to: toEmails,
+        replyTo,
+        subject,
+        html,
+        text,
+      });
+      if (!resp.error) {
+        data = resp.data ?? null;
+        lastError = null;
+        break;
+      }
+      lastError = {
+        name: (resp.error as { name?: string }).name,
+        message: resp.error.message,
+        statusCode: (resp.error as { statusCode?: number }).statusCode,
+      };
+      if (!isTransientResendError(lastError) || attempt === MAX_ATTEMPTS) {
+        break;
+      }
+      const delayMs = 200 * Math.pow(4, attempt - 1);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+
+    if (lastError) {
+      console.error(`[Email] Resend error after ${attempts} attempt(s):`, lastError);
+      // Best-effort: log the failure to email_logs too so the outbox shows it.
+      logEmailSent({
+        agencyId: agencyId || undefined,
+        siteId: options.siteId,
+        recipientUserId: options.recipientUserId,
+        resendId: null,
+        toEmail: toArray[0]?.email || "",
+        fromEmail: from,
+        subject,
+        emailType: options.emailType,
+        status: "failed",
+        errorMessage: lastError.message,
+        attempt: attempts,
+        sendLogId: options.sendLogId ?? null,
+      }).catch(() => {});
+      return { success: false, error: lastError.message };
     }
 
     // 7. Log to email_logs (fire-and-forget)
     logEmailSent({
       agencyId: agencyId || undefined,
+      siteId: options.siteId,
       recipientUserId: options.recipientUserId,
-      resendId: data?.id,
+      resendId: data?.id ?? null,
       toEmail: toArray[0]?.email || "",
-      fromName: branding.from_name,
+      fromEmail: from,
       subject,
       emailType: options.emailType,
+      status: "sent",
+      errorMessage: null,
+      attempt: attempts,
+      sendLogId: options.sendLogId ?? null,
     }).catch((err) => console.error("[Email] Log error:", err));
 
     console.log(
@@ -215,36 +266,68 @@ function substituteMergeVarsSimple(
 
 /**
  * Log email send to email_logs table (fire-and-forget).
+ * Columns match `migrations/portal-02-communication.sql`.
  */
 async function logEmailSent(params: {
   agencyId?: string;
+  siteId?: string;
   recipientUserId?: string;
-  resendId?: string;
+  resendId?: string | null;
   toEmail: string;
-  fromName: string;
+  fromEmail: string;
   subject: string;
   emailType: string;
+  status: "sent" | "failed" | "queued" | "skipped";
+  errorMessage?: string | null;
+  attempt?: number;
+  sendLogId?: string | null;
 }): Promise<void> {
   try {
-    // Dynamic import to avoid circular deps
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const supabase = createAdminClient();
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from("email_logs").insert({
-      agency_id: params.agencyId || null,
-      recipient_user_id: params.recipientUserId || null,
-      resend_id: params.resendId || null,
+      agency_id: params.agencyId ?? null,
+      site_id: params.siteId ?? null,
+      recipient_user_id: params.recipientUserId ?? null,
+      resend_message_id: params.resendId ?? null,
       to_email: params.toEmail,
-      from_name: params.fromName,
+      from_email: params.fromEmail,
       subject: params.subject,
       email_type: params.emailType,
-      status: "sent",
-      sent_at: new Date().toISOString(),
+      status: params.status,
+      error_message: params.errorMessage ?? null,
+      attempt: params.attempt ?? 1,
+      send_log_id: params.sendLogId ?? null,
     });
   } catch {
     // Non-critical — don't let logging break email sending
   }
+}
+
+/**
+ * Classify a Resend error as transient (retry) vs permanent (fail fast).
+ * Rate limit, 5xx, network/timeout → transient. Everything else → permanent.
+ */
+function isTransientResendError(err: {
+  name?: string;
+  message: string;
+  statusCode?: number;
+}): boolean {
+  const status = err.statusCode ?? 0;
+  if (status === 429) return true;
+  if (status >= 500 && status < 600) return true;
+  const msg = (err.message || "").toLowerCase();
+  if (
+    msg.includes("timeout") ||
+    msg.includes("econnreset") ||
+    msg.includes("fetch failed") ||
+    msg.includes("network") ||
+    msg.includes("temporarily")
+  ) {
+    return true;
+  }
+  return false;
 }
 
 // ============================================================================

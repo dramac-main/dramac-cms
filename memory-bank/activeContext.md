@@ -1,10 +1,63 @@
 # Active Context
 
-**Last Updated**: April 2026
+**Last Updated**: Portal Overhaul — Session 2A complete
 
-## Current State
+## Current State: Portal Overhaul — Session 2A (Communication Foundation) — COMPLETE ✅
 
-The DRAMAC CMS platform is production-ready and deployed, but the active invoicing overhaul still requires one more corrective pass before the remaining INVFIX roadmap can be compressed further.
+Session 2A shipped the tenant-aware notification pipeline behind the portal.
+Every business-critical event now flows through a single dispatcher that
+resolves recipients, honours user × site × channel preferences, dedupes,
+and writes a row to `portal_send_log` for every outcome (sent / skipped /
+failed / deduped).
+
+**What shipped (Session 2A):**
+
+- Migration `migrations/portal-02-communication.sql` — **APPLIED ✅** via Supabase MCP. Extends `notifications` with tenancy + dedupe; creates `portal_send_log`, `portal_notification_preferences`, `portal_notification_subscriptions`, `chat_departments`, `chat_routing_rules`, and RLS.
+- Migration `migrations/portal-02b-notifications-columns.sql` — **APPLIED ✅** adds `is_read` / `is_archived` / `read_at` / `resource_type` / `resource_id` with a `read ↔ is_read` mirroring trigger.
+- New libs: `notification-dispatcher.ts`, `recipient-resolver.ts`, `send-log.ts`.
+- `business-notifications.ts` — **ALL 19 notify\* functions now call `dispatchBusinessEvent`**. Two were fully rewritten (`notifyNewBooking`, `notifyNewOrder`); 17 use the additive pattern (legacy owner paths kept, `excludeUserIds: [owner.agencyOwnerId]` prevents double-delivery).
+- `POST /api/webhooks/resend` — verifies Svix signatures, maps 7 Resend event types, updates both `email_logs` and `portal_send_log`.
+- `web-push.ts` + `ai-responder.ts` — instrumented with `writeSendLog` calls (latency, recipient class, provider metadata).
+- `data-access.ts` DAL extended with `conversations.{list, detail, messages, notes}` and `notifications.{list, unreadCount, markRead, markAllRead, archive, preferences.{get, set}}`.
+- `PORTAL-FOUNDATION.md` — new "Session 2A" section documenting the dispatcher, the Resend webhook, the 5 realtime channels, and the 5-layer internal-note security model.
+- Vitest: 7 new tests across `internal-note-security.test.ts` (4) and `notification-dispatcher.test.ts` (3). All 15 portal tests pass.
+
+**Session 2A done — ready for commit + push.** Next: Session 2B (live-chat
+portal inbox UI, canned responses / departments / routing admin UI, Chiko
+AI transparency badge + per-site toggle). Session 2C will build the
+notifications inbox + preferences UI.
+
+---
+
+## Previous: Portal Foundation (Session 1) — COMPLETE ✅
+
+The rebuilt portal shell is live. A portal user can sign in, be routed
+through a secure layout, see navigation that matches their permissions
+and installed modules, switch between sites on any viewport, view a
+DAL-backed dashboard that proves the data access layer + permission
+resolver work end to end, and produce an audit entry for every
+sensitive action.
+
+**What shipped (Session 1):**
+
+- Foundation libs (already present from prior work, re-verified): `src/lib/portal/observability.ts`, `audit-log.ts`, `permission-resolver.ts`, `data-access.ts`, `active-site.ts`.
+- New UI primitives: `components/portal/site-switcher.tsx` (mobile Sheet / desktop Popover), `components/portal/patterns/` (`PortalEmptyState`, `PortalErrorState`, `PortalPanelSkeleton`, `PortalPanelBoundary`).
+- New dashboard panels (RSC, DAL-backed): `portal-sites-panel`, `portal-orders-panel`, `portal-live-chat-panel`.
+- `src/app/portal/page.tsx` rewritten: new DAL grid at top (Sites/Orders/LiveChat), existing rich dashboard cards preserved below.
+- `src/app/portal/layout.tsx` wires `resolveClientSites` + `resolveActiveSiteId` and passes switcher props to `PortalHeader`.
+- `portal-header.tsx` renders `PortalSiteSwitcher`; impersonation banner reinforced with "Actions are being logged".
+- Unit tests: `src/lib/portal/__tests__/permission-resolver.test.ts` (4) and `data-access.test.ts` (4) — all 8 pass.
+- Seed script: `scripts/seed-portal-tenancy.ts` (2 agencies × 2 clients × 2 sites, deterministic UUIDs). **Script had 2 bugs (fixed): missing `owner_id` on agencies, `.slice(0,7)` UUID truncation → site IDs were 31 hex digits. Applied seed directly via SQL with correct UUIDs.**
+- Docs: `docs/PORTAL-FOUNDATION.md` — the canonical contract for Sessions 2-7.
+- Migration file: `migrations/portal-01-foundation.sql` — **APPLIED ✅** via Supabase MCP (2026-04-24). All 5 RLS policies + 2 SECURITY DEFINER functions confirmed present.
+- Auth users: 6 created (acmeltd/betaco/gammainc/deltacorp @example.test + elena@luxeserenity.com + chef@savannakitchen.com) via admin REST API, confirmed, password `Portal#2025!` (temp).
+- `clients.portal_user_id` linked for all 7 portal-enabled clients (4 seed + 3 real production: Elena, Chef, Lumina Wellness).
+
+**Impersonation preserved** — did not rebuild from scratch. Existing `impersonateClient` / `stopImpersonatingClient` / middleware / banner confirmed working; only added "Actions are being logged" copy polish.
+
+**Session 1 is fully DONE.** Next: Session 2 (portal Orders module) — `createPortalDAL(ctx).orders` namespace already stubbed, build the orders list/detail UI + RLS tests.
+
+---
 
 ## Latest: Notification System Overhaul III (April 2026) — COMPLETE ✅
 

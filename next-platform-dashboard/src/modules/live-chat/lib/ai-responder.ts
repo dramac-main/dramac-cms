@@ -8,6 +8,7 @@
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeSendLog } from "@/lib/portal/send-log";
 import {
   getCustomerContext,
   formatCustomerContext,
@@ -612,6 +613,7 @@ Name: ${resolvedCustomerName}
 Email: ${visitorInfo?.email || "Not provided"}
 Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? `\n\nCUSTOMER HISTORY:\n${formatCustomerContext(customerCtx)}` : ""}`;
 
+    const aiStart = Date.now();
     const result = await generateText({
       model: getModel(),
       system: systemPrompt,
@@ -624,6 +626,25 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       "usage:",
       JSON.stringify(result.usage),
     );
+
+    void writeSendLog({
+      eventType: "chat_ai_response",
+      recipientClass: "customer",
+      channel: "ai",
+      deliveryState: "sent",
+      siteId,
+      provider: "anthropic",
+      latencyMs: Date.now() - aiStart,
+      metadata: {
+        conversationId,
+        model: "claude-sonnet-4-6",
+        inputTokens: result.usage?.inputTokens ?? null,
+        outputTokens: result.usage?.outputTokens ?? null,
+        totalTokens: result.usage?.totalTokens ?? null,
+        responseLength: result.text?.length ?? 0,
+        phase: "auto_response",
+      },
+    });
 
     // Estimate confidence based on knowledge base match
     const responseText = result.text;

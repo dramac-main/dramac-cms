@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // push_subscriptions table is not yet in generated Supabase types — will be after migration
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeSendLog } from "@/lib/portal/send-log";
 
 // Table name constant for push subscriptions (not in generated types yet)
 const PUSH_TABLE = "push_subscriptions" as any;
@@ -13,6 +14,14 @@ const PUSH_TABLE = "push_subscriptions" as any;
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:support@dramac.com";
+
+function safeHost(endpoint: string): string {
+  try {
+    return new URL(endpoint).host;
+  } catch {
+    return "unknown";
+  }
+}
 
 interface PushSubscriptionRow {
   id: string;
@@ -61,6 +70,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
 
   let sent = 0;
   for (const sub of subscriptions) {
+    const t0 = Date.now();
     try {
       const success = await sendWebPush(
         {
@@ -70,8 +80,31 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
         payload,
       );
       if (success) sent++;
+      await writeSendLog({
+        eventType: payload.type === "chat" ? "chat_message" : "push",
+        recipientClass: "portal_user",
+        channel: "push",
+        deliveryState: success ? "sent" : "failed",
+        userId,
+        siteId: sub.site_id,
+        provider: "web-push",
+        latencyMs: Date.now() - t0,
+        metadata: { endpointHost: safeHost(sub.endpoint), tag: payload.tag },
+      });
     } catch (err) {
       console.error("Push send failed:", err);
+      await writeSendLog({
+        eventType: payload.type === "chat" ? "chat_message" : "push",
+        recipientClass: "portal_user",
+        channel: "push",
+        deliveryState: "failed",
+        userId,
+        siteId: sub.site_id,
+        provider: "web-push",
+        latencyMs: Date.now() - t0,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        metadata: { endpointHost: safeHost(sub.endpoint) },
+      });
       // Remove stale subscription
       await supabase.from(PUSH_TABLE).delete().eq("endpoint", sub.endpoint);
     }
@@ -103,6 +136,7 @@ export async function sendPushToConversation(
 
   let sent = 0;
   for (const sub of subscriptions) {
+    const t0 = Date.now();
     try {
       const success = await sendWebPush(
         {
@@ -112,8 +146,29 @@ export async function sendPushToConversation(
         payload,
       );
       if (success) sent++;
+      await writeSendLog({
+        eventType: "chat_message",
+        recipientClass: "customer",
+        channel: "push",
+        deliveryState: success ? "sent" : "failed",
+        siteId: sub.site_id,
+        provider: "web-push",
+        latencyMs: Date.now() - t0,
+        metadata: { conversationId, endpointHost: safeHost(sub.endpoint) },
+      });
     } catch (err) {
       console.error("Push send failed:", err);
+      await writeSendLog({
+        eventType: "chat_message",
+        recipientClass: "customer",
+        channel: "push",
+        deliveryState: "failed",
+        siteId: sub.site_id,
+        provider: "web-push",
+        latencyMs: Date.now() - t0,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        metadata: { conversationId },
+      });
       await supabase.from(PUSH_TABLE).delete().eq("endpoint", sub.endpoint);
     }
   }

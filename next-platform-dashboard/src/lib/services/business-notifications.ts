@@ -22,6 +22,11 @@ import {
   shouldSendInApp,
 } from "@/lib/services/notification-channel-resolver";
 import type { NotificationTemplateType } from "@/modules/ecommerce/types/ecommerce-types";
+// Portal Session 2A: route every business event through the dispatcher so
+// portal users (not just the agency owner) receive the notification when
+// they have the relevant permission flag. The dispatcher handles dedupe,
+// preferences, structured logging, and per-channel routing.
+import { dispatchBusinessEvent } from "@/lib/portal/notification-dispatcher";
 
 // =============================================================================
 // WEB PUSH HELPER
@@ -254,75 +259,50 @@ export async function notifyNewBooking(
         : `${data.serviceDuration}m`;
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
-    // 1. In-app notification to business owner
-    if (
-      await shouldSendInApp(
-        data.siteId,
-        "booking_confirmation_owner" as NotificationTemplateType,
-      )
-    ) {
-      await createNotification({
-        userId: owner.agencyOwnerId,
-        type: "new_booking",
-        title: `New Booking: ${data.serviceName}`,
-        message: `${data.customerName} booked ${data.serviceName} for ${dateStr} at ${timeStr} (${priceStr})`,
-        link: dashboardUrl,
-        metadata: {
-          appointmentId: data.appointmentId,
-          siteId: data.siteId,
-          customerEmail: data.customerEmail,
-        },
-      });
-
-      // Web push — so the owner gets an OS-level popup even when the dashboard tab is closed
-      pushToOwner(owner.agencyOwnerId, {
+    // Portal dispatch: agency owner + portal users with canManageBookings.
+    await dispatchBusinessEvent({
+      eventType: "new_booking",
+      siteTemplateType: "booking_confirmation_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `New Booking: ${data.serviceName}`,
+      message: `${data.customerName} booked ${data.serviceName} for ${dateStr} at ${timeStr} (${priceStr})`,
+      link: dashboardUrl,
+      metadata: {
+        appointmentId: data.appointmentId,
+        siteId: data.siteId,
+        customerEmail: data.customerEmail,
+      },
+      push: {
         title: `New Booking: ${data.serviceName}`,
         body: `${data.customerName} — ${dateStr} at ${timeStr} (${priceStr})`,
         url: dashboardUrl,
         tag: `booking-${data.appointmentId}`,
-      }).catch(() => {});
-    }
+      },
+      email: {
+        emailType: "booking_confirmation_owner",
+        data: {
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone || "",
+          serviceName: data.serviceName,
+          staffName: data.staffName || "",
+          date: dateStr,
+          time: timeStr,
+          duration: durationStr,
+          price: priceStr,
+          status: data.status,
+          paymentStatus: data.paymentStatus || "not_required",
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      },
+    });
 
-    // 2 & 3. Email to business owner + customer — sent in PARALLEL for faster delivery.
-    // Previously sequential (one after another), which doubled email latency.
-    const emailPromises: Promise<unknown>[] = [];
-
-    // Email to business owner
-    if (
-      owner.ownerEmail &&
-      (await shouldSendEmail(
-        data.siteId,
-        "booking_confirmation_owner" as NotificationTemplateType,
-      ))
-    ) {
-      emailPromises.push(
-        sendBrandedEmail(owner.agencyId, {
-          to: {
-            email: owner.ownerEmail,
-            name: owner.ownerName || undefined,
-          },
-          emailType: "booking_confirmation_owner",
-          recipientUserId: owner.agencyOwnerId,
-          data: {
-            customerName: data.customerName,
-            customerEmail: data.customerEmail,
-            customerPhone: data.customerPhone || "",
-            serviceName: data.serviceName,
-            staffName: data.staffName || "",
-            date: dateStr,
-            time: timeStr,
-            duration: durationStr,
-            price: priceStr,
-            status: data.status,
-            paymentStatus: data.paymentStatus || "not_required",
-            dashboardUrl,
-            bookingId: data.appointmentId,
-          },
-        }),
-      );
-    }
-
-    // Email to customer (uses SITE branding — customer sees the business name/colors)
+    // Customer email (site-branded) — NOT a portal dispatch; customer is not
+    // a portal recipient. Kept on the original path.
     if (
       data.customerEmail &&
       (await shouldSendEmail(
@@ -330,32 +310,25 @@ export async function notifyNewBooking(
         "booking_confirmation_customer" as NotificationTemplateType,
       ))
     ) {
-      emailPromises.push(
-        sendBrandedEmail(owner.agencyId, {
-          to: { email: data.customerEmail, name: data.customerName },
-          emailType: "booking_confirmation_customer",
-          siteId: data.siteId,
-          data: {
-            customerName: data.customerName,
-            serviceName: data.serviceName,
-            staffName: data.staffName || "",
-            date: dateStr,
-            time: timeStr,
-            duration: durationStr,
-            price: priceStr,
-            status: data.status,
-            paymentStatus: data.paymentStatus || "not_required",
-            paymentRequired: data.paymentStatus === "pending",
-            businessName,
-            bookingId: data.appointmentId,
-          },
-        }),
-      );
-    }
-
-    // Fire both emails at the same time — cuts email latency in half
-    if (emailPromises.length > 0) {
-      await Promise.all(emailPromises);
+      await sendBrandedEmail(owner.agencyId, {
+        to: { email: data.customerEmail, name: data.customerName },
+        emailType: "booking_confirmation_customer",
+        siteId: data.siteId,
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          staffName: data.staffName || "",
+          date: dateStr,
+          time: timeStr,
+          duration: durationStr,
+          price: priceStr,
+          status: data.status,
+          paymentStatus: data.paymentStatus || "not_required",
+          paymentRequired: data.paymentStatus === "pending",
+          businessName,
+          bookingId: data.appointmentId,
+        },
+      });
     }
 
     console.log(
@@ -487,6 +460,44 @@ export async function notifyBookingCancelled(
         },
       });
     }
+
+    // Portal fan-out — portal users with canManageBookings (excl. agency owner already handled above).
+    await dispatchBusinessEvent({
+      eventType: "booking_cancelled",
+      siteTemplateType: "booking_cancelled_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `Booking Cancelled: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been cancelled${data.reason ? `: ${data.reason}` : ""}.`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId, cancelledBy: data.cancelledBy },
+      push: {
+        title: `Booking Cancelled: ${data.serviceName}`,
+        body: `${data.customerName} — ${dateStr} at ${timeStr}${data.reason ? ` (${data.reason})` : ""}`,
+        url: dashboardUrl,
+        tag: `booking-${data.appointmentId}`,
+      },
+      email: {
+        emailType: "booking_cancelled_owner",
+        data: {
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          serviceName: data.serviceName,
+          staffName: data.staffName || "",
+          date: dateStr,
+          time: timeStr,
+          duration: durationStr,
+          price: priceStr,
+          cancelledBy: data.cancelledBy,
+          reason: data.reason || "",
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(
       `[BusinessNotify] Booking cancellation notifications sent for appointment ${data.appointmentId}`,
@@ -630,6 +641,40 @@ export async function notifyBookingConfirmed(
       await Promise.all(emailPromises);
     }
 
+    await dispatchBusinessEvent({
+      eventType: "booking_confirmed",
+      siteTemplateType: "booking_confirmed_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `Booking Confirmed: ${data.serviceName}`,
+      message: `${data.customerName}'s ${data.serviceName} on ${dateStr} at ${timeStr} has been confirmed.`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+      push: {
+        title: `Booking Confirmed: ${data.serviceName}`,
+        body: `${data.customerName} — ${dateStr} at ${timeStr}`,
+        url: dashboardUrl,
+        tag: `booking-${data.appointmentId}`,
+      },
+      email: {
+        emailType: "booking_confirmed_owner",
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          date: dateStr,
+          time: timeStr,
+          price: priceStr,
+          paymentStatus: data.paymentStatus || "not_required",
+          confirmedBy: data.changedBy || "System",
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Booking confirmed notifications sent for ${data.appointmentId}`,
     );
@@ -749,6 +794,38 @@ export async function notifyBookingCompleted(
       await Promise.all(emailPromises);
     }
 
+    await dispatchBusinessEvent({
+      eventType: "booking_confirmed",
+      siteTemplateType: "booking_completed_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `Booking Completed: ${data.serviceName}`,
+      message: `${data.customerName}'s ${data.serviceName} on ${dateStr} marked complete (${priceStr}).`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+      push: {
+        title: `Booking Completed: ${data.serviceName}`,
+        body: `${data.customerName} — ${dateStr}`,
+        url: dashboardUrl,
+        tag: `booking-${data.appointmentId}`,
+      },
+      email: {
+        emailType: "booking_completed_owner",
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          date: dateStr,
+          price: priceStr,
+          paymentStatus: data.paymentStatus || "not_required",
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Booking completed notifications sent for ${data.appointmentId}`,
     );
@@ -827,6 +904,26 @@ export async function notifyBookingNoShow(
         },
       });
     }
+
+    await dispatchBusinessEvent({
+      eventType: "booking_cancelled",
+      siteTemplateType: "booking_no_show_customer" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `No-Show: ${data.serviceName}`,
+      message: `${data.customerName} did not show up for ${data.serviceName} on ${dateStr} at ${timeStr}.`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+      push: {
+        title: `No-Show: ${data.serviceName}`,
+        body: `${data.customerName} — ${dateStr} at ${timeStr}`,
+        url: dashboardUrl,
+        tag: `booking-${data.appointmentId}`,
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(
       `[BusinessNotify] Booking no-show notification sent for ${data.appointmentId}`,
@@ -949,6 +1046,38 @@ export async function notifyBookingPaymentReceived(
       await Promise.all(emailPromises);
     }
 
+    await dispatchBusinessEvent({
+      eventType: "payment_received",
+      siteTemplateType: "booking_payment_received_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId: data.siteId,
+      resourceType: "appointment",
+      resourceId: data.appointmentId,
+      title: `Payment Received: ${data.serviceName}`,
+      message: `${data.customerName} paid ${priceStr} for ${data.serviceName} on ${dateStr} at ${timeStr}.`,
+      link: dashboardUrl,
+      metadata: { appointmentId: data.appointmentId, siteId: data.siteId },
+      push: {
+        title: `Payment Received: ${priceStr}`,
+        body: `${data.customerName} — ${data.serviceName}`,
+        url: dashboardUrl,
+        tag: `booking-payment-${data.appointmentId}`,
+      },
+      email: {
+        emailType: "booking_payment_received_owner",
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          date: dateStr,
+          time: timeStr,
+          price: priceStr,
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Booking payment received notifications sent for ${data.appointmentId}`,
     );
@@ -1019,52 +1148,32 @@ export async function notifyNewOrder(
       price: formatCurrency((item.unitPrice * item.quantity) / 100, currency),
     }));
 
-    // 1. In-app notification to business owner
-    if (
-      await shouldSendInApp(
-        data.siteId,
-        "order_confirmation_owner" as NotificationTemplateType,
-      )
-    ) {
-      await createNotification({
-        userId: owner.agencyOwnerId,
-        type: "new_order",
-        title: `New Order #${data.orderNumber}`,
-        message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
-        link: dashboardUrl,
-        metadata: {
-          orderId: data.orderId,
-          orderNumber: data.orderNumber,
-          siteId: data.siteId,
-          customerEmail: data.customerEmail,
-          total: data.total,
-        },
-      });
-
-      // Web push — new order is a high-priority event
-      pushToOwner(owner.agencyOwnerId, {
+    // Portal dispatch: agency owner + portal users with canManageOrders.
+    await dispatchBusinessEvent({
+      eventType: "new_order",
+      siteTemplateType: "order_confirmation_owner" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId: data.siteId,
+      resourceType: "order",
+      resourceId: data.orderId,
+      title: `New Order #${data.orderNumber}`,
+      message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
+      link: dashboardUrl,
+      metadata: {
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+        siteId: data.siteId,
+        customerEmail: data.customerEmail,
+        total: data.total,
+      },
+      push: {
         title: `New Order #${data.orderNumber}`,
         body: `${data.customerName} — ${totalStr}`,
         url: dashboardUrl,
         tag: `order-${data.orderId}`,
-      }).catch(() => {});
-    }
-
-    // 2. Email to business owner
-    if (
-      owner.ownerEmail &&
-      (await shouldSendEmail(
-        data.siteId,
-        "order_confirmation_owner" as NotificationTemplateType,
-      ))
-    ) {
-      await sendBrandedEmail(owner.agencyId, {
-        to: {
-          email: owner.ownerEmail,
-          name: owner.ownerName || undefined,
-        },
+      },
+      email: {
         emailType: "order_confirmation_owner",
-        recipientUserId: owner.agencyOwnerId,
         data: {
           customerName: data.customerName,
           customerEmail: data.customerEmail,
@@ -1074,10 +1183,10 @@ export async function notifyNewOrder(
           paymentStatus: data.paymentStatus,
           dashboardUrl,
         },
-      });
-    }
+      },
+    });
 
-    // 3. Email to customer (uses SITE branding)
+    // Customer email (site-branded) — NOT a portal dispatch.
     if (
       data.customerEmail &&
       (await shouldSendEmail(
@@ -1177,6 +1286,26 @@ export async function notifyOrderShipped(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "order_shipped",
+      siteTemplateType: "order_shipped_customer" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Order #${orderNumber} Shipped`,
+      message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ""}`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Order #${orderNumber} Shipped`,
+        body: `Shipped to ${customerName}${trackingNumber ? ` — ${trackingNumber}` : ""}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-shipped-${orderNumber}`,
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Shipping notifications sent for order ${orderNumber}`,
     );
@@ -1258,6 +1387,26 @@ export async function notifyOrderDelivered(
         },
       });
     }
+
+    await dispatchBusinessEvent({
+      eventType: "order_delivered",
+      siteTemplateType: "order_delivered_customer" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Order #${orderNumber} Delivered`,
+      message: `Order for ${customerName} has been marked as delivered`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Order #${orderNumber} Delivered`,
+        body: `Delivered to ${customerName}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `order-delivered-${orderNumber}`,
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(
       `[BusinessNotify] Delivery notifications sent for order ${orderNumber}`,
@@ -1372,6 +1521,37 @@ export async function notifyOrderCancelled(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "order_cancelled",
+      siteTemplateType: "order_cancelled_owner" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Order #${orderNumber} Cancelled`,
+      message: `Order from ${customerName} (${total}) has been cancelled${reason ? `: ${reason}` : ""}`,
+      link: dashboardUrl,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Order #${orderNumber} Cancelled`,
+        body: `${customerName} — ${total}`,
+        url: dashboardUrl,
+        tag: `order-cancelled-${orderNumber}`,
+      },
+      email: {
+        emailType: "order_cancelled_owner",
+        data: {
+          customerName,
+          customerEmail,
+          orderNumber,
+          total,
+          reason: reason || "",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Cancellation notifications sent for order ${orderNumber}`,
     );
@@ -1457,6 +1637,26 @@ export async function notifyPaymentReceived(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "payment_received",
+      siteTemplateType: "payment_received_customer" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Payment Received: Order #${orderNumber}`,
+      message: `${customerName} paid ${total} for order #${orderNumber}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Payment Received: Order #${orderNumber}`,
+        body: `${customerName} paid ${total}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `payment-${orderNumber}`,
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Payment received notification sent for order ${orderNumber}`,
     );
@@ -1540,6 +1740,38 @@ export async function notifyPaymentProofUploaded(
         },
       });
     }
+
+    await dispatchBusinessEvent({
+      eventType: "payment_received",
+      siteTemplateType: "payment_proof_uploaded_owner" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Payment Proof Uploaded: Order #${orderNumber}`,
+      message: `${customerName} has uploaded payment proof for order #${orderNumber} (${total}). Please review and verify.`,
+      link: dashboardUrl,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Payment Proof: Order #${orderNumber}`,
+        body: `${customerName} uploaded proof (${total}) — action required`,
+        url: dashboardUrl,
+        tag: `payment-proof-${orderNumber}`,
+      },
+      email: {
+        emailType: "payment_proof_uploaded_owner",
+        data: {
+          orderNumber,
+          customerName,
+          customerEmail,
+          total,
+          fileName: fileName || "Receipt",
+          businessName: owner.siteName || "Store",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(
       `[BusinessNotify] Payment proof uploaded notification sent for order ${orderNumber}`,
@@ -1627,6 +1859,26 @@ export async function notifyRefundIssued(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "refund_issued",
+      siteTemplateType: "refund_issued_customer" as NotificationTemplateType,
+      permission: "canManageOrders",
+      siteId,
+      resourceType: "order",
+      resourceId: orderNumber,
+      title: `Refund Issued: Order #${orderNumber}`,
+      message: `Refund of ${refundAmount} issued to ${customerName}${reason ? ` — ${reason}` : ""}`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+      metadata: { orderNumber, siteId },
+      push: {
+        title: `Refund Issued: Order #${orderNumber}`,
+        body: `${refundAmount} — ${customerName}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
+        tag: `refund-${orderNumber}`,
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Refund notification sent for order ${orderNumber}`,
     );
@@ -1704,6 +1956,36 @@ export async function notifyLowStock(
         },
       });
     }
+
+    await dispatchBusinessEvent({
+      eventType: "low_stock",
+      siteTemplateType: "low_stock_admin" as NotificationTemplateType,
+      permission: "canManageProducts",
+      siteId,
+      resourceType: "product",
+      resourceId: sku || productName,
+      title: `Low Stock: ${productName}`,
+      message: `${productName}${sku ? ` (${sku})` : ""} is low on stock (${currentStock} remaining, threshold: ${threshold})`,
+      link: dashboardUrl,
+      metadata: { productName, currentStock, threshold, siteId },
+      push: {
+        title: `Low Stock: ${productName}`,
+        body: `${currentStock} remaining (threshold: ${threshold})${sku ? ` — SKU: ${sku}` : ""}`,
+        url: dashboardUrl,
+        tag: `low-stock-${sku || productName}`,
+      },
+      email: {
+        emailType: "low_stock_admin",
+        data: {
+          productName,
+          currentStock,
+          threshold,
+          sku: sku || "",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(`[BusinessNotify] Low stock alert sent for ${productName}`);
   } catch (error) {
@@ -1851,6 +2133,46 @@ export async function notifyNewQuote(
       await Promise.all(emailPromises);
     }
 
+    await dispatchBusinessEvent({
+      eventType: "new_quote_request",
+      siteTemplateType: "quote_request_owner" as NotificationTemplateType,
+      permission: "canManageQuotes",
+      siteId: data.siteId,
+      resourceType: "quote",
+      resourceId: data.quoteId,
+      title: `New Quote Request #${data.quoteNumber}`,
+      message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
+      link: dashboardUrl,
+      metadata: {
+        quoteId: data.quoteId,
+        quoteNumber: data.quoteNumber,
+        siteId: data.siteId,
+        customerEmail: data.customerEmail,
+      },
+      push: {
+        title: `New Quote Request #${data.quoteNumber}`,
+        body: `${data.customerName} — ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-${data.quoteId}`,
+      },
+      email: {
+        emailType: "quote_request_owner",
+        data: {
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone || "",
+          companyName: data.companyName || "",
+          quoteNumber: data.quoteNumber,
+          itemCount: data.itemCount,
+          total: totalStr,
+          dashboardUrl,
+          items: data.items || [],
+          currency,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Quote request notifications sent for quote ${data.quoteNumber}`,
     );
@@ -1963,6 +2285,36 @@ export async function notifyQuoteAccepted(
       await Promise.all(emailPromises);
     }
 
+    await dispatchBusinessEvent({
+      eventType: "quote_accepted",
+      siteTemplateType: "quote_accepted_owner" as NotificationTemplateType,
+      permission: "canManageQuotes",
+      siteId,
+      resourceType: "quote",
+      resourceId: quoteNumber,
+      title: `Quote #${quoteNumber} Accepted`,
+      message: `${customerName} accepted quote #${quoteNumber}${total ? ` (${total})` : ""}`,
+      link: dashboardUrl,
+      metadata: { quoteNumber, siteId },
+      push: {
+        title: `Quote #${quoteNumber} Accepted`,
+        body: `${customerName}${total ? ` — ${total}` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-accepted-${quoteNumber}`,
+      },
+      email: {
+        emailType: "quote_accepted_owner",
+        data: {
+          customerName,
+          customerEmail,
+          quoteNumber,
+          total: total || "",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Quote accepted notifications sent for quote ${quoteNumber}`,
     );
@@ -2058,6 +2410,37 @@ export async function notifyQuoteRejected(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "quote_rejected",
+      siteTemplateType: "quote_rejected_owner" as NotificationTemplateType,
+      permission: "canManageQuotes",
+      siteId,
+      resourceType: "quote",
+      resourceId: quoteNumber,
+      title: `Quote #${quoteNumber} Rejected`,
+      message: `${customerName} rejected quote #${quoteNumber}${reason ? `: ${reason}` : ""}`,
+      link: dashboardUrl,
+      metadata: { quoteNumber, siteId, reason },
+      push: {
+        title: `Quote #${quoteNumber} Rejected`,
+        body: `${customerName}${reason ? ` — ${reason.substring(0, 60)}` : ""}`,
+        url: dashboardUrl,
+        tag: `quote-rejected-${quoteNumber}`,
+      },
+      email: {
+        emailType: "quote_rejected_owner",
+        data: {
+          customerName,
+          customerEmail,
+          quoteNumber,
+          totalAmount: total,
+          rejectionReason: reason || "",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Quote rejected notifications sent for quote ${quoteNumber}`,
     );
@@ -2144,6 +2527,38 @@ export async function notifyBookingPaymentProofUploaded(
       });
     }
 
+    await dispatchBusinessEvent({
+      eventType: "payment_received",
+      siteTemplateType: "payment_proof_uploaded_owner" as NotificationTemplateType,
+      permission: "canManageBookings",
+      siteId,
+      resourceType: "appointment",
+      resourceId: serviceName,
+      title: `Booking Payment Proof: ${serviceName}`,
+      message: `${customerName} has uploaded payment proof for their ${serviceName} booking (${amountFormatted}). Please review and verify.`,
+      link: dashboardUrl,
+      metadata: { serviceName, siteId },
+      push: {
+        title: `Booking Payment Proof: ${serviceName}`,
+        body: `${customerName} — ${amountFormatted} (action required)`,
+        url: dashboardUrl,
+        tag: `booking-proof-${serviceName.replace(/\s+/g, "-").toLowerCase()}`,
+      },
+      email: {
+        emailType: "payment_proof_uploaded_owner",
+        data: {
+          serviceName,
+          customerName,
+          customerEmail,
+          total: amountFormatted,
+          fileName: fileName || "Receipt",
+          businessName: owner.siteName || "Business",
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
+
     console.log(
       `[BusinessNotify] Booking payment proof notification sent for ${serviceName}`,
     );
@@ -2226,6 +2641,36 @@ export async function notifyQuoteAmendmentRequested(
         },
       });
     }
+
+    await dispatchBusinessEvent({
+      eventType: "quote_amendment_requested",
+      siteTemplateType: "quote_amendment_requested_owner" as NotificationTemplateType,
+      permission: "canManageQuotes",
+      siteId,
+      resourceType: "quote",
+      resourceId: quoteNumber,
+      title: `Quote #${quoteNumber} — Changes Requested`,
+      message: `${customerName} requested changes: "${truncatedNotes}"`,
+      link: dashboardUrl,
+      metadata: { quoteNumber, siteId, customerEmail },
+      push: {
+        title: `Quote #${quoteNumber} — Changes Requested`,
+        body: `${customerName}: "${truncatedNotes.substring(0, 60)}${truncatedNotes.length > 60 ? "..." : ""}"`,
+        url: dashboardUrl,
+        tag: `quote-amendment-${quoteNumber}`,
+      },
+      email: {
+        emailType: "quote_amendment_requested_owner",
+        data: {
+          customerName,
+          customerEmail,
+          quoteNumber,
+          amendmentNotes: truncatedNotes,
+          dashboardUrl,
+        },
+      },
+      excludeUserIds: [owner.agencyOwnerId],
+    });
 
     console.log(
       `[BusinessNotify] Quote amendment notifications sent for quote ${quoteNumber}`,

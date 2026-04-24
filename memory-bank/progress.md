@@ -1,7 +1,29 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: April 2026  
+**Last Updated**: Portal Overhaul — Session 2A complete
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+---
+
+## Client Portal Overhaul (7-session plan)
+
+| Session | Scope                                                 | Status      |
+| ------- | ----------------------------------------------------- | ----------- |
+| 1       | Shell, permission resolver, DAL, dashboard            | ✅ Complete |
+| 2A      | Communication foundation (dispatcher + send-log + UI) | ✅ Complete |
+| 2B      | Live-chat inbox + routing + Chiko transparency        | 🔜 Next     |
+| 2C      | Notifications inbox + preferences UI                  | ⬜ Pending  |
+| 3       | Live chat module (portal)                             | ⬜ Pending  |
+| 4       | Bookings / CRM (portal)                               | ⬜ Pending  |
+| 5       | Automation / marketing (portal)                       | ⬜ Pending  |
+| 6       | Playwright E2E + observability polish                 | ⬜ Pending  |
+| 7       | Launch hardening + docs                               | ⬜ Pending  |
+
+**Session 2A deliverables**: migrations `portal-02-communication.sql` + `portal-02b-notifications-columns.sql` (both applied via Supabase MCP); `notification-dispatcher.ts`, `recipient-resolver.ts`, `send-log.ts`; all 19 notify\* functions converted; `POST /api/webhooks/resend`; send-log instrumentation in `web-push.ts` + `ai-responder.ts`; DAL extensions (`conversations.*`, `notifications.*`); 7 new Vitest tests (15 portal tests total, all pass); `PORTAL-FOUNDATION.md` "Session 2A" section.
+
+**Session 1 deliverables**: `src/lib/portal/{observability,audit-log,permission-resolver,data-access,active-site}.ts`; `components/portal/{site-switcher,patterns/*,dashboard/*}.tsx`; `app/portal/{page,layout}.tsx` + `portal-header.tsx` wiring; 8 passing Vitest tests; `scripts/seed-portal-tenancy.ts`; `docs/PORTAL-FOUNDATION.md`; migration file `migrations/portal-01-foundation.sql` (applied).
+
+**Blocker for Session 2**: apply `portal-01-foundation.sql` via Supabase MCP.
 
 ---
 

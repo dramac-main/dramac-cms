@@ -13,21 +13,57 @@ interface CreateNotificationOptions {
   message: string;
   link?: string;
   metadata?: Record<string, unknown>;
+  // Portal Session 2: tenant scoping + recipient class + dedupe.
+  // All optional; legacy callers continue to work unchanged.
+  agencyId?: string | null;
+  clientId?: string | null;
+  siteId?: string | null;
+  recipientClass?:
+    | "agency_owner"
+    | "portal_user"
+    | "agent"
+    | "customer"
+    | "system";
+  /** Idempotency key. If a row with this dedupe_key already exists, the
+   *  insert is a no-op and the existing row is returned (UPSERT semantics). */
+  dedupeKey?: string | null;
 }
 
 export async function createNotification(
   options: CreateNotificationOptions,
 ): Promise<Notification | null> {
+  const payload: Record<string, unknown> = {
+    user_id: options.userId,
+    type: options.type,
+    title: options.title,
+    message: options.message,
+    link: options.link,
+    metadata: options.metadata,
+  };
+  if (options.agencyId !== undefined) payload.agency_id = options.agencyId;
+  if (options.clientId !== undefined) payload.client_id = options.clientId;
+  if (options.siteId !== undefined) payload.site_id = options.siteId;
+  if (options.recipientClass) payload.recipient_class = options.recipientClass;
+  if (options.dedupeKey !== undefined) payload.dedupe_key = options.dedupeKey;
+
+  // If a dedupe key is set, use UPSERT so a retry becomes a no-op rather
+  // than a unique-constraint violation.
+  if (options.dedupeKey) {
+    const { data, error } = await supabaseAdmin
+      .from("notifications")
+      .upsert(payload, { onConflict: "dedupe_key", ignoreDuplicates: false })
+      .select()
+      .single();
+    if (error) {
+      console.error("Error upserting notification:", error);
+      return null;
+    }
+    return data as Notification;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("notifications")
-    .insert({
-      user_id: options.userId,
-      type: options.type,
-      title: options.title,
-      message: options.message,
-      link: options.link,
-      metadata: options.metadata,
-    })
+    .insert(payload)
     .select()
     .single();
 

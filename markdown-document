@@ -1,0 +1,467 @@
+# DRAMAC Client Portal Overhaul Master-Brief Prompt
+
+You are a senior product architect, UX strategist, systems analyst, and implementation planner working inside the DRAMAC CMS codebase.
+
+Your job in this task is not to write code yet.
+
+Your job is to deeply study the real platform and then create one high-quality, word-only markdown document named:
+
+CLIENT-PORTAL-OVERHAUL-MASTER-BRIEF.md
+
+This markdown document will become the master planning brief for a full client portal overhaul.
+
+## Primary Objective
+
+Produce a markdown document that defines how to rebuild the DRAMAC client portal into an industry-standard, mobile-first, fully working, white-labeled business operations center for clients.
+
+The document you create must be strong enough that I can later use it to drive implementation session by session with fresh AI chats, without the project losing context, quality, or architectural consistency.
+
+## Critical Operating Mindset
+
+Treat the current client portal as non-authoritative.
+
+You may use the existing codebase to understand architecture, data flows, permissions, module boundaries, and current implementation surfaces, but do not assume any current portal feature is complete, correct, or production-ready unless you verify it end to end.
+
+Assume any of the following may be broken, partial, misleading, or only superficially implemented:
+
+- buttons
+- links
+- filters
+- forms
+- tables
+- status changes
+- portal auth
+- module navigation
+- permission enforcement
+- server actions
+- data loading
+- cross-module integrations
+- email sending
+- notification delivery
+- automation triggers
+- chat fallbacks
+- white-label behavior
+- mobile responsiveness
+- loading states
+- empty states
+- error handling
+
+Do not let existing UI wrappers fool you into thinking the client portal is complete.
+If the current portal mostly mounts agency/admin module dashboards inside portal routes, call that out clearly as a UX and product architecture problem.
+
+Treat “assume everything is broken” as a planning stance, not as permission to ignore the real architecture.
+You must audit first, then plan.
+
+## What You Must Understand Before Writing the Markdown
+
+You must build a real understanding of DRAMAC across all three layers:
+
+- super admin
+- agency dashboard
+- client portal
+
+You must understand how the portal should consume data and permissions from the rest of the platform, especially across installed modules.
+
+You must study:
+
+- platform structure and memory-bank documentation
+- client portal architecture and auth
+- portal permissions and site-level overrides
+- live chat module
+- booking module
+- ecommerce module
+- CRM module
+- invoicing surfaces relevant to clients
+- marketing surfaces relevant to clients
+- support tickets
+- domains and business email
+- media, blog, SEO, forms/submissions
+- automation and event pipeline
+- notification and email pipeline
+- AI assistant behavior and fallback expectations
+
+## Required Repo Study
+
+Before producing the markdown, inspect the most relevant project sources, including but not limited to:
+
+- memory-bank/projectbrief.md
+- memory-bank/productContext.md
+- memory-bank/systemPatterns.md
+- memory-bank/techContext.md
+- memory-bank/activeContext.md
+- memory-bank/progress.md
+- docs/USER-JOURNEYS.md
+- docs/BOOKING-MODULE-DEEP-STUDY.md
+- src/app/portal/
+- src/lib/portal/
+- src/modules/live-chat/
+- src/modules/booking/
+- src/modules/ecommerce/
+- src/modules/crm/
+- src/modules/invoicing/
+- src/modules/marketing/
+- src/modules/automation/
+- src/lib/services/business-notifications.ts
+
+If repo memory, audits, or internal notes exist for live chat, automation events, portal behavior, or cross-module flows, use them too.
+
+If current code and older docs disagree, trust the current code path more than stale documentation, and explicitly call out the discrepancy.
+
+## Important Platform Truths You Must Account For
+
+Your markdown must be grounded in these realities:
+
+- DRAMAC is multi-tenant.
+- The hierarchy is platform -> agency -> client -> site -> portal user/team.
+- The client portal is white-labeled and should reflect agency/site branding.
+- The client portal is module-aware and permission-aware.
+- Portal access is gated by client-level permissions plus site-level overrides.
+- Live chat, booking, ecommerce, CRM, automation, invoicing, marketing, domains/email, blog, media, SEO, and support all matter to the portal experience.
+- Live chat is not just a messaging UI. It is connected to booking, orders, quotes, payment guidance, AI assistance, agent routing, and customer context.
+- Booking and ecommerce flows create or update chat conversations and also rely on notifications and automation.
+- The notification architecture is event-driven. Do not assume a direct hardcoded notification path is the only truth.
+- Transactional email reliability matters platform-wide, not only inside one module.
+- Nothing in the portal should depend on hardcoded niche-specific content.
+- The portal must be genuinely mobile-first and production-grade, not simply desktop pages squeezed onto smaller screens.
+
+## Benchmark Standard
+
+Use industry leaders as quality references, not as copy targets.
+
+Benchmark the expected quality of workflows, resilience, UX clarity, and self-service capabilities against products in the class of:
+
+- Intercom
+- Zendesk
+- Crisp
+- Front
+- Shopify
+- Calendly
+- Stripe customer and billing portals
+- HubSpot client-facing experiences
+- modern B2B SaaS admin and client portals
+
+You are not copying their UI.
+You are matching their level of operational clarity, responsiveness, trust, fallback handling, visibility, and completeness.
+
+## Core Business Goal
+
+The output markdown must help us completely overhaul the client portal so that:
+
+- every feature shown to the client actually works
+- every action respects the correct permission model
+- every module pulls real data dynamically
+- nothing important is hardcoded
+- the client experience is clean, intuitive, responsive, and trustworthy
+- the portal can be used effectively on mobile
+- cross-module experiences feel connected, not stitched together
+- live chat is reliable and intelligent
+- email and notifications are dependable and near-instant where appropriate
+- the portal is good enough to stand beside industry-standard SaaS products
+
+## Non-Negotiable Product, UX, and Architecture Rules
+
+Your markdown must explicitly enforce these rules:
+
+- Do not assume current implementation quality.
+- Do not accept shallow wrapper pages as a finished portal strategy.
+- Do not plan around hardcoded sample content.
+- Do not design portal UX as a copy of the agency admin.
+- The client portal must be simpler, clearer, and more task-oriented than the agency dashboard.
+- All data shown in the portal must come from real system data, real module state, and real permissions.
+- All permissions granted by the agency must reflect immediately and correctly in portal UI and behavior.
+- Every module surface must define what a client can see, what a client can do, and what remains agency-only.
+- Mobile UX is mandatory, not optional.
+- Empty states, errors, loading states, slow-network states, and permission-denied states must be treated as first-class product requirements.
+- All customer-facing templates, labels, instructions, and communications must be configurable globally or per tenant/site where appropriate, with sane defaults.
+- The plan must include observability and validation, not only UX ideas.
+
+## Special Focus: Live Chat and Communication Reliability
+
+This is a high-priority area and your markdown must treat it seriously.
+
+You must require a deep audit and overhaul plan for live chat that covers:
+
+- portal-side live chat usability
+- client permissions for chat, agents, conversations, notes, routing, and related actions
+- booking-to-chat and order-to-chat conversation creation
+- per-booking and per-order conversation behavior
+- AI assistant behavior
+- human handoff behavior
+- payment guidance flow
+- conversation context from booking, ecommerce, CRM, quotes, and support data
+- file uploads and payment proof flows
+- proactive chat updates after booking, order, quote, and payment events
+- chat assignment, department routing, and agent visibility
+- what clients should be allowed to manage directly in portal versus what remains internal to agency staff
+
+Your markdown must also address resilience when AI is unavailable or credits are exhausted.
+
+Do not reduce this to “add another AI model.”
+
+Require a proper fallback strategy such as:
+
+- primary AI path
+- secondary AI or provider path if appropriate
+- deterministic transactional message fallback for critical flows
+- queued retry behavior
+- alerting and escalation to human staff
+- no silent failures for customer-facing payment or booking communications
+
+## Special Focus: Email, Notifications, Automations, and Instant Delivery
+
+You must plan a platform-wide reliability audit for customer-facing communications.
+Do not focus only on visible UI.
+
+Your markdown must require end-to-end verification for flows such as:
+
+- booking created
+- booking confirmed
+- booking completed
+- booking cancelled
+- booking payment received
+- order created
+- payment instructions sent
+- quote sent
+- quote accepted
+- support ticket created
+- support ticket replied to
+- invoice and statement communications
+- chat-triggered customer updates
+- portal invitations
+- portal team invitations
+- domain or email lifecycle notifications where relevant to clients
+
+For each communication-heavy area, require the plan to check:
+
+- triggering action
+- emitted event
+- automation workflow handling
+- notification templating
+- provider delivery
+- retry behavior
+- fallback behavior
+- logging and traceability
+- user-visible status
+- branding correctness
+- latency expectations
+
+The plan must explicitly say that “email not sending” is not a single bug category.
+It can come from trigger issues, event emission issues, workflow issues, template issues, provider issues, cron or background issues, or data and configuration problems.
+
+## Special Focus: Client Portal Feature Completeness
+
+The markdown must evaluate and plan the client portal across at least these areas:
+
+- portal auth and verification
+- dashboard and home experience
+- site switching and multi-site clarity
+- analytics
+- live chat
+- bookings
+- orders
+- products
+- quotes
+- customers
+- CRM
+- invoicing
+- marketing
+- automation visibility where appropriate
+- support tickets
+- notifications center
+- domains
+- business email
+- blog
+- media library
+- SEO
+- form submissions
+- apps and module browsing
+- team and member access within the portal if relevant
+- settings, profile, and preferences
+
+For each area, define:
+
+- what a client truly needs
+- what should be simplified from the agency view
+- what actions must work end to end
+- which data sources feed it
+- which permissions control it
+- what should be visible on mobile
+- what states and edge cases must be handled
+- what should not be exposed to clients
+
+## Special Focus: Permissions and White-Label Behavior
+
+Your markdown must force a full permissions audit for the portal.
+
+That includes:
+
+- client-level permissions
+- site-level permission overrides
+- installed-module awareness
+- page visibility
+- action-level permission checks
+- API and server action enforcement
+- UI hiding versus true access control
+- immediate reflection of changed permissions
+- correct separation between agency internal tools and client-safe tools
+
+Also require white-label consistency across:
+
+- portal branding
+- emails
+- notifications
+- login and auth pages
+- support flows
+- business email and domain language
+- module names and terminology shown to clients
+
+## What the Final Markdown Must Produce
+
+Create one word-only markdown document.
+No code.
+No pseudo-code.
+No SQL.
+No schema diffs.
+No component code.
+No patch instructions.
+No implementation snippets.
+
+Plain markdown prose is required.
+Simple lists and tables are allowed.
+Code blocks are not allowed.
+
+The document must be strategic, concrete, and DRAMAC-specific.
+
+## Required Output Structure
+
+Your markdown document must include all of the following sections:
+
+1. Executive Summary  
+   Explain the overhaul objective, the product standard being targeted, and the philosophy for treating the existing portal as untrusted until verified.
+
+2. Platform Understanding Summary  
+   Summarize how DRAMAC actually works across super admin, agency, client portal, sites, modules, permissions, automation, notifications, and white-labeling.
+
+3. Current-State Reality Check  
+   Describe the likely current portal problems based on codebase analysis.  
+   Call out where the portal appears to rely on shallow wrappers, inconsistent module UX, incomplete permissions, incomplete end-to-end flows, or fragile event-driven behavior.
+
+4. Overhaul Principles  
+   List the non-negotiable product, UX, architecture, and data principles for the rebuild.
+
+5. Module-by-Module Portal Requirements  
+   Cover every relevant client-facing area and explain what “fully working” means for each.
+
+6. Live Chat Deep Dive  
+   Create a dedicated section for live chat, cross-module context, AI behavior, fallback strategy, payment guidance, portal permissions, and operational reliability.
+
+7. Communication Reliability Plan  
+   Create a dedicated section for emails, notifications, automations, retries, delivery checks, and logging or observability.
+
+8. Data and Dependency Map  
+   Describe which parts of the platform feed the portal, how module data should surface in the portal, and which dependencies are most fragile.
+
+9. UX and Information Architecture Plan  
+   Define how the portal should feel, how navigation should work, how mobile should behave, and how clients should move through tasks without friction.
+
+10. Permissions and Access Model  
+    Explain the expected permission system and where enforcement must happen.
+
+11. Testing and Validation Strategy  
+    Define how the final implementation should be validated.  
+    This must include end-to-end business journeys, mobile checks, permission checks, event and automation checks, and communication delivery checks.
+
+12. Session Roadmap  
+    Create a 4 to 6 session roadmap.  
+    Each session must have 1 to 3 phases.  
+    Each session must be logically sequenced and safe to build in a fresh AI session.
+
+13. Session 1 Full Draft  
+    Only Session 1 should be fully drafted in detail.  
+    This section must be implementation-ready as a planning brief.  
+    It should include:
+
+- objective
+- why this session comes first
+- exact focus areas
+- module areas involved
+- key risks
+- success criteria
+- validation checklist
+- what must be proven complete before Session 2 can begin
+
+14. Sessions 2 to 6 High-Level Roadmap Only  
+    Do not fully draft Sessions 2 to 6.  
+    For each future session, provide only:
+
+- goal
+- major focus areas
+- prerequisites from prior session
+- expected exit criteria
+- risks or dependencies
+
+15. Open Questions and Risk Register  
+    List the most important unknowns or fragile areas the implementation sessions must watch closely.
+
+16. Final Acceptance Standard  
+    Define what “client portal overhaul complete” means in business, UX, technical, and operational terms.
+
+## How to Handle Existing Features
+
+If you find a current feature already exists, do not blindly trust it.
+Classify it as one of the following:
+
+- verified reusable
+- partially reusable
+- misleading or shallow
+- rebuild required
+
+Explain why.
+
+## How to Handle Future-Session Continuity
+
+Because each implementation session will happen in a fresh AI chat, your markdown must make that possible.
+
+The Session Roadmap must therefore be written so that future sessions can safely continue from prior work.
+
+That means:
+
+- Session 1 must contain strong completion gates.
+- Sessions 2 to 6 must include prerequisite checks.
+- The document should make it obvious what must be revalidated before continuing.
+- The plan must prevent later sessions from assuming earlier work is perfect without rechecking it.
+
+## Output Quality Rules
+
+Your output must be:
+
+- deeply specific to DRAMAC
+- realistic about platform complexity
+- harsh on broken assumptions
+- practical for implementation
+- strong on end-to-end flows
+- strong on permissions
+- strong on live chat and communication reliability
+- strong on mobile UX
+- strong on data integrity and white-labeling
+- written in clear professional language
+- word-only markdown
+
+Avoid:
+
+- generic filler
+- vague “improve UX” advice
+- shallow feature lists with no operational detail
+- assuming existing features work because routes or components exist
+- producing all future sessions in full detail
+- any code output
+
+## Final Instruction
+
+Study first.
+
+Think like a product architect, a senior engineer, a support operations lead, and a SaaS UX expert at the same time.
+
+Then create the markdown document.
+
+The result should feel like a serious master brief for rebuilding the DRAMAC client portal into a complete, reliable, industry-standard client experience.

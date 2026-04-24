@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   Globe,
   MessageCircle,
@@ -21,7 +22,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import {
   getClientSites,
   getPortalAnalytics,
@@ -30,6 +31,15 @@ import {
 import { getClientTickets, getTicketStats } from "@/lib/portal/support-service";
 import { getEffectivePermissions } from "@/lib/portal/portal-permissions";
 import { getPortalDashboardData } from "@/lib/portal/portal-dashboard-service";
+import { createPortalDAL } from "@/lib/portal/data-access";
+import { resolveActiveSiteId } from "@/lib/portal/active-site";
+import { PortalSitesPanel } from "@/components/portal/dashboard/portal-sites-panel";
+import { PortalOrdersPanel } from "@/components/portal/dashboard/portal-orders-panel";
+import { PortalLiveChatPanel } from "@/components/portal/dashboard/portal-live-chat-panel";
+import {
+  PortalPanelBoundary,
+  PortalPanelSkeleton,
+} from "@/components/portal/patterns";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
 import { PageHeader } from "@/components/layout/page-header";
@@ -41,6 +51,7 @@ export const metadata: Metadata = {
 
 export default async function PortalDashboard() {
   const user = await requirePortalAuth();
+  const session = await getPortalSession();
 
   const [clientInfo, sites, tickets, ticketStats] = await Promise.all([
     getClientInfo(user.clientId),
@@ -51,6 +62,16 @@ export default async function PortalDashboard() {
 
   const siteIds = sites.map((s) => s.id);
   const primarySiteId = siteIds[0];
+
+  // Active site (cookie-persisted; falls back to primary)
+  const activeSiteId = await resolveActiveSiteId(user.clientId, primarySiteId);
+
+  // Portal DAL — the single typed entry point for Session 1 reads.
+  const dal = createPortalDAL({
+    user,
+    isImpersonation: session.isImpersonating,
+    impersonatorEmail: session.impersonatorEmail,
+  });
 
   // Get effective permissions for the primary site (used for dashboard KPI visibility)
   const permissions = primarySiteId
@@ -87,6 +108,46 @@ export default async function PortalDashboard() {
             : `Here's your business operations overview`
         }
       />
+
+      {/*
+        Session 1 foundation panels. Each panel is rendered through the
+        Portal DAL so permission resolution, per-request caching, and audit
+        logging are exercised end-to-end. Panels are wrapped in a shared
+        Suspense + ErrorBoundary pair so a single failing domain never
+        takes the whole dashboard down.
+      */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <PortalPanelBoundary
+          title="Couldn't load sites"
+          description="We'll try again in a moment."
+        >
+          <Suspense fallback={<PortalPanelSkeleton />}>
+            <PortalSitesPanel dal={dal} />
+          </Suspense>
+        </PortalPanelBoundary>
+
+        {activeSiteId && user.canManageOrders ? (
+          <PortalPanelBoundary
+            title="Couldn't load orders"
+            description="Your permissions may have changed. Refresh to retry."
+          >
+            <Suspense fallback={<PortalPanelSkeleton />}>
+              <PortalOrdersPanel dal={dal} siteId={activeSiteId} />
+            </Suspense>
+          </PortalPanelBoundary>
+        ) : null}
+
+        {activeSiteId && user.canManageLiveChat ? (
+          <PortalPanelBoundary
+            title="Couldn't load conversations"
+            description="Your permissions may have changed. Refresh to retry."
+          >
+            <Suspense fallback={<PortalPanelSkeleton />}>
+              <PortalLiveChatPanel dal={dal} siteId={activeSiteId} />
+            </Suspense>
+          </PortalPanelBoundary>
+        ) : null}
+      </div>
 
       {/* Primary Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

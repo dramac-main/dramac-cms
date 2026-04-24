@@ -20,6 +20,10 @@ import { useBrandingOptional } from "@/components/providers/branding-provider";
 import { toast } from "sonner";
 import Image from "next/image";
 import type { PortalUser } from "@/lib/portal/portal-auth";
+import {
+  PortalSiteSwitcher,
+  type PortalSiteSwitcherOption,
+} from "@/components/portal/site-switcher";
 
 interface PortalHeaderProps {
   // Legacy props for backward compatibility
@@ -30,15 +34,26 @@ interface PortalHeaderProps {
   user?: PortalUser;
   agencyName?: string;
   unreadNotifications?: number;
+  // Session 1: persistent site switcher
+  sites?: PortalSiteSwitcherOption[];
+  activeSiteId?: string | null;
+  clientId?: string;
+  agencyId?: string;
+  authUserId?: string;
 }
 
-export function PortalHeader({ 
-  clientName, 
-  isImpersonating, 
+export function PortalHeader({
+  clientName,
+  isImpersonating,
   impersonatorEmail,
   user,
   agencyName,
   unreadNotifications = 0,
+  sites,
+  activeSiteId,
+  clientId,
+  agencyId,
+  authUserId,
 }: PortalHeaderProps) {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
@@ -47,7 +62,8 @@ export function PortalHeader({
   // Get display name from either legacy or new props
   const branding = useBrandingOptional();
   const displayName = user?.fullName || clientName || "Client";
-  const displayAgencyName = branding?.getDisplayName() || agencyName || "Your Agency";
+  const displayAgencyName =
+    branding?.getDisplayName() || agencyName || "Your Agency";
   const agencyLogoUrl = branding?.getLogoUrl();
 
   const initials = displayName
@@ -84,19 +100,25 @@ export function PortalHeader({
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {isImpersonating && (
         <div className="bg-primary text-primary-foreground px-4 py-2">
-          <div className="container mx-auto flex items-center justify-between">
+          <div className="container mx-auto flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4" aria-hidden />
               <span className="text-sm">
                 Viewing as <strong>{displayName}</strong>
                 {impersonatorEmail && (
-                  <span className="opacity-75"> • Logged in as {impersonatorEmail}</span>
+                  <span className="opacity-75">
+                    {" "}
+                    • Logged in as {impersonatorEmail}
+                  </span>
                 )}
+                <span className="ml-2 opacity-75">
+                  • Actions are being logged
+                </span>
               </span>
             </div>
-            <Button 
-              variant="secondary" 
-              size="sm" 
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleExitImpersonation}
               disabled={isExiting}
             >
@@ -110,28 +132,58 @@ export function PortalHeader({
           </div>
         </div>
       )}
-      
+
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <Link href="/portal" className="flex items-center gap-2 font-bold text-xl">
+          <Link
+            href="/portal"
+            className="flex items-center gap-2 font-bold text-xl"
+          >
             {agencyLogoUrl && (
-              <Image src={agencyLogoUrl} alt={displayAgencyName} width={28} height={28} className="h-7 w-7 object-contain" />
+              <Image
+                src={agencyLogoUrl}
+                alt={displayAgencyName}
+                width={28}
+                height={28}
+                className="h-7 w-7 object-contain"
+              />
             )}
             {displayAgencyName}
           </Link>
-          <Badge variant="secondary">Client Portal</Badge>
+          <Badge variant="secondary" className="hidden sm:inline-flex">
+            Client Portal
+          </Badge>
+          {sites && sites.length > 1 && clientId && agencyId && authUserId ? (
+            <PortalSiteSwitcher
+              sites={sites}
+              activeSiteId={activeSiteId ?? null}
+              clientId={clientId}
+              agencyId={agencyId}
+              authUserId={authUserId}
+              isImpersonation={isImpersonating}
+            />
+          ) : null}
         </div>
 
         <div className="flex items-center gap-4">
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/portal" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="/portal"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Dashboard
             </Link>
-            <Link href="/portal/sites" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="/portal/sites"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Sites
             </Link>
-            <Link href="/portal/support" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="/portal/support"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Support
             </Link>
           </nav>
@@ -178,8 +230,8 @@ export function PortalHeader({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
+                <DropdownMenuItem
+                  onClick={handleLogout}
                   disabled={isLoggingOut}
                   className="text-destructive cursor-pointer"
                 >

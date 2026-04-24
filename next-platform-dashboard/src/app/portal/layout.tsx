@@ -13,6 +13,8 @@ import {
   getAgencyBranding,
   getAgencyBrandingBySlug,
 } from "@/lib/queries/branding";
+import { resolveClientSites } from "@/lib/portal/permission-resolver";
+import { resolveActiveSiteId } from "@/lib/portal/active-site";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 
@@ -72,16 +74,16 @@ export default async function PortalLayout({
     return children;
   }
 
-  const [clientInfo, unreadCount, ticketStats, modulesData] = await Promise.all(
-    [
+  const [clientInfo, unreadCount, ticketStats, modulesData, switcherSites] =
+    await Promise.all([
       getClientInfo(session.user.clientId),
       session.isImpersonating
         ? Promise.resolve(0)
         : getUnreadNotificationCount(session.user.clientId),
       getTicketStats(session.user.clientId),
       getClientInstalledModules(session.user.clientId),
-    ],
-  );
+      resolveClientSites(session.user.clientId),
+    ]);
 
   const openTicketCount = ticketStats.open + ticketStats.inProgress;
   const agencyId = clientInfo?.agencyId;
@@ -89,6 +91,20 @@ export default async function PortalLayout({
   // If client has exactly one site, nav links go directly to that site
   const singleSiteId =
     modulesData.siteIds.length === 1 ? modulesData.siteIds[0] : undefined;
+
+  // Resolve active site for switcher highlighting.
+  const activeSiteId = await resolveActiveSiteId(
+    session.user.clientId,
+    switcherSites[0]?.id,
+  );
+
+  const switcherOptions = switcherSites.map((s) => ({
+    id: s.id,
+    name: s.name,
+    subdomain: s.subdomain,
+    customDomain: s.customDomain,
+    isPublished: s.isPublished,
+  }));
 
   // Server-side branding fetch — eliminates color flash on portal load
   // Same pattern as dashboard layout: SSR inject CSS vars before hydration
@@ -109,6 +125,11 @@ export default async function PortalLayout({
           impersonatorEmail={session.impersonatorEmail || undefined}
           clientName={session.user.fullName}
           unreadNotifications={unreadCount}
+          sites={switcherOptions}
+          activeSiteId={activeSiteId}
+          clientId={session.user.clientId}
+          agencyId={agencyId ?? ""}
+          authUserId={session.user.userId}
         />
       }
     >
