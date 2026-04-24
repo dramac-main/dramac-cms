@@ -62,6 +62,34 @@ import {
   createCommunicationsNamespace,
   type PortalCommunicationsNamespace,
 } from "./communications-data-access";
+import {
+  createBlogNamespace,
+  type PortalBlogNamespace,
+} from "./blog-data-access";
+import {
+  createMediaNamespace,
+  type PortalMediaNamespace,
+} from "./media-data-access";
+import {
+  createSeoNamespace,
+  type PortalSeoNamespace,
+} from "./seo-data-access";
+import {
+  createFormsNamespace,
+  type PortalFormsNamespace,
+} from "./forms-data-access";
+import {
+  createDomainsNamespace,
+  type PortalDomainsNamespace,
+} from "./domains-data-access";
+import {
+  createBusinessEmailNamespace,
+  type PortalBusinessEmailNamespace,
+} from "./business-email-data-access";
+import {
+  createAppsNamespace,
+  type PortalAppsNamespace,
+} from "./apps-data-access";
 
 // =============================================================================
 // DAL CONTEXT
@@ -79,17 +107,17 @@ export interface PortalDALContext {
 
 export class PortalAccessDeniedError extends Error {
   readonly code: "site_not_found" | "permission_denied";
-  readonly siteId: string;
+  readonly siteId: string | null;
   readonly permission: PortalPermissionKey | null;
   constructor(
     code: "site_not_found" | "permission_denied",
-    siteId: string,
+    siteId: string | null,
     permission: PortalPermissionKey | null,
   ) {
     super(
       code === "site_not_found"
-        ? `Portal: site ${siteId} not found for current client`
-        : `Portal: permission "${permission}" denied for site ${siteId}`,
+        ? `Portal: site ${siteId ?? "(client)"} not found for current client`
+        : `Portal: permission "${permission}" denied for site ${siteId ?? "(client)"}`,
     );
     this.name = "PortalAccessDeniedError";
     this.code = code;
@@ -241,6 +269,13 @@ export interface PortalDAL {
   marketing: PortalMarketingNamespace;
   support: PortalSupportNamespace;
   communications: PortalCommunicationsNamespace;
+  blog: PortalBlogNamespace;
+  media: PortalMediaNamespace;
+  seo: PortalSeoNamespace;
+  forms: PortalFormsNamespace;
+  domains: PortalDomainsNamespace;
+  businessEmail: PortalBusinessEmailNamespace;
+  apps: PortalAppsNamespace;
   conversations: {
     summaryForSite(siteId: string): Promise<PortalConversationSummary>;
     list(
@@ -304,6 +339,13 @@ export function createPortalDAL(ctx: PortalDALContext): PortalDAL {
     marketing: createMarketingNamespace(ctx),
     support: createSupportNamespace(ctx),
     communications: createCommunicationsNamespace(ctx),
+    blog: createBlogNamespace(ctx),
+    media: createMediaNamespace(ctx),
+    seo: createSeoNamespace(ctx),
+    forms: createFormsNamespace(ctx),
+    domains: createDomainsNamespace(ctx),
+    businessEmail: createBusinessEmailNamespace(ctx),
+    apps: createAppsNamespace(ctx),
     conversations: {
       summaryForSite: (siteId: string) => summaryConversations(ctx, siteId),
       list: (siteId, filter) => listConversations(ctx, siteId, filter),

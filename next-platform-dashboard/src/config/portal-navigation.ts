@@ -28,6 +28,7 @@ import {
   Receipt,
   Bot,
   Send,
+  Blocks,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -214,6 +215,14 @@ export function getPortalNavigationGroups(
       { title: "Form Submissions", href: siteUrl("submissions")!, icon: Inbox },
       { title: "SEO", href: siteUrl("seo")!, icon: Search },
     );
+
+    if (permissions.canEditContent) {
+      contentItems.push({
+        title: "Apps",
+        href: siteUrl("apps")!,
+        icon: Blocks,
+      });
+    }
   }
 
   // === Support Group ===
