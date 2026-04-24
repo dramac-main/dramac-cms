@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Loader2, KeyRound, ArrowLeft } from "lucide-react";
+import { Mail, Loader2, KeyRound, ArrowLeft, CircleX, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,24 @@ function LoginForm() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const redirectTo = searchParams.get("redirect") || "/portal";
+  const errorParam = searchParams.get("error");
+
+  const errorBanner =
+    errorParam === "invalid_link" ? (
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-4">
+        <CircleX className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>
+          That login link has expired or was already used. Request a new one below.
+        </span>
+      </div>
+    ) : errorParam === "no_access" ? (
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-4">
+        <ShieldOff className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>
+          Portal access is not enabled for this account. Please contact your agency.
+        </span>
+      </div>
+    ) : null;
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,6 +221,7 @@ function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {errorBanner}
           <Tabs defaultValue="password" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="password">

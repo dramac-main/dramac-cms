@@ -49,6 +49,7 @@ export async function updateSession(request: NextRequest) {
     "/site",     // Public client sites - /site/[domain]/[...slug]
     "/blog",     // Public blog pages - /blog/[subdomain]/[slug]
     "/preview",  // Preview pages - /preview/[siteId]/[pageId]
+    "/portal",   // Portal has its own auth gate (requirePortalAuth → /portal/login)
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
