@@ -140,9 +140,7 @@ function mapSubmission(row: any): PortalFormSubmission {
     siteId: row.site_id ?? "",
     formId: row.form_id ?? "",
     formName:
-      (row.form_name as string) ??
-      ((row.form as any)?.name as string) ??
-      null,
+      (row.form_name as string) ?? ((row.form as any)?.name as string) ?? null,
     data: (row.data as Record<string, unknown>) ?? {},
     pageUrl: row.page_url ?? null,
     status: (row.status ?? "new") as PortalFormSubmissionStatus,
@@ -216,8 +214,7 @@ export function createFormsNamespace(
             .eq("site_id", scope.siteId)
             .order("created_at", { ascending: false });
           if (filter?.status) {
-            if (Array.isArray(filter.status))
-              q = q.in("status", filter.status);
+            if (Array.isArray(filter.status)) q = q.in("status", filter.status);
             else q = q.eq("status", filter.status);
           }
           if (filter?.formId) q = q.eq("form_id", filter.formId);
@@ -225,18 +222,13 @@ export function createFormsNamespace(
           const offset = filter?.offset ?? 0;
           q = q.range(offset, offset + limit - 1);
           const { data, count, error } = await q;
-          if (error)
-            throw new Error(`[portal][forms] list: ${error.message}`);
-          finalizeAudit(
-            ctx,
-            siteId,
-            "portal.forms.submissions.list",
-            null,
-            { count: (data ?? []).length },
-          );
+          if (error) throw new Error(`[portal][forms] list: ${error.message}`);
+          finalizeAudit(ctx, siteId, "portal.forms.submissions.list", null, {
+            count: (data ?? []).length,
+          });
           return {
             submissions: (data ?? []).map(mapSubmission),
-            total: count ?? (data?.length ?? 0),
+            total: count ?? data?.length ?? 0,
           };
         },
       ),
@@ -278,9 +270,7 @@ export function createFormsNamespace(
             .select("*")
             .single();
           if (error || !data)
-            throw new Error(
-              `[portal][forms] changeStatus: ${error?.message}`,
-            );
+            throw new Error(`[portal][forms] changeStatus: ${error?.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -346,8 +336,7 @@ export function createFormsNamespace(
             .eq("site_id", scope.siteId)
             .order("created_at", { ascending: false });
           if (filter?.status) {
-            if (Array.isArray(filter.status))
-              q = q.in("status", filter.status);
+            if (Array.isArray(filter.status)) q = q.in("status", filter.status);
             else q = q.eq("status", filter.status);
           }
           if (filter?.formId) q = q.eq("form_id", filter.formId);
@@ -448,11 +437,7 @@ export function createFormsNamespace(
         },
       ),
 
-    linkContact: (
-      siteId: string,
-      submissionId: string,
-      contactId: string,
-    ) =>
+    linkContact: (siteId: string, submissionId: string, contactId: string) =>
       withPortalEvent(
         "portal.dal.forms.submissions.linkContact",
         evtCtx(ctx, siteId),
@@ -468,9 +453,7 @@ export function createFormsNamespace(
             .select("*")
             .single();
           if (error || !data)
-            throw new Error(
-              `[portal][forms] linkContact: ${error?.message}`,
-            );
+            throw new Error(`[portal][forms] linkContact: ${error?.message}`);
           finalizeAudit(
             ctx,
             siteId,

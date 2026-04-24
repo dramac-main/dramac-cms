@@ -105,7 +105,9 @@ const TEXT_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /\btwilio\b/gi, replacement: "the messaging service" },
 ];
 
-export function stripSupplierBrandText(text: string | null | undefined): string {
+export function stripSupplierBrandText(
+  text: string | null | undefined,
+): string {
   if (text === null || text === undefined) return "";
   let out = String(text);
   for (const { pattern, replacement } of TEXT_PATTERNS) {

@@ -75,11 +75,7 @@ async function requireClientScope(
       reason: "site_not_found",
       isImpersonation: ctx.isImpersonation,
     });
-    throw new PortalAccessDeniedError(
-      "site_not_found",
-      null,
-      DOMAINS_PERM,
-    );
+    throw new PortalAccessDeniedError("site_not_found", null, DOMAINS_PERM);
   }
 
   const result = await checkPortalPermission(
@@ -411,35 +407,29 @@ export function createDomainsNamespace(
 
   return {
     list: () =>
-      withPortalEvent(
-        "portal.dal.domains.list",
-        evtCtx(ctx, ""),
-        async () => {
-          const scope = await requireClientScope(ctx);
-          const admin = createAdminClient() as any;
-          const { data, error } = await admin
-            .from(T.domains)
-            .select("*")
-            .eq("client_id", ctx.user.clientId)
-            .eq("agency_id", ctx.user.agencyId)
-            .order("domain_name", { ascending: true });
-          if (error)
-            throw new Error(
-              stripSupplierBrandText(
-                `[portal][domains] list: ${error.message}`,
-              ),
-            );
-          finalizeAudit(
-            ctx,
-            scope.siteId,
-            "portal.domains.list",
-            "domain",
-            null,
-            { count: (data ?? []).length },
+      withPortalEvent("portal.dal.domains.list", evtCtx(ctx, ""), async () => {
+        const scope = await requireClientScope(ctx);
+        const admin = createAdminClient() as any;
+        const { data, error } = await admin
+          .from(T.domains)
+          .select("*")
+          .eq("client_id", ctx.user.clientId)
+          .eq("agency_id", ctx.user.agencyId)
+          .order("domain_name", { ascending: true });
+        if (error)
+          throw new Error(
+            stripSupplierBrandText(`[portal][domains] list: ${error.message}`),
           );
-          return (data ?? []).map(mapDomain);
-        },
-      ),
+        finalizeAudit(
+          ctx,
+          scope.siteId,
+          "portal.domains.list",
+          "domain",
+          null,
+          { count: (data ?? []).length },
+        );
+        return (data ?? []).map(mapDomain);
+      }),
 
     detail: (domainId: string) =>
       withPortalEvent(

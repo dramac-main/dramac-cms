@@ -153,10 +153,7 @@ function mapCatalog(m: ModuleDefinition): PortalAppDefinition {
 }
 
 function mapInstalled(row: any): PortalInstalledApp {
-  const moduleRef =
-    (row.module as any) ??
-    (row.modules_v2 as any) ??
-    null;
+  const moduleRef = (row.module as any) ?? (row.modules_v2 as any) ?? null;
   return {
     installationId: String(row.id),
     moduleId: String(row.module_id ?? moduleRef?.id ?? ""),
@@ -219,12 +216,7 @@ export function createAppsNamespace(
           const m = MODULE_CATALOG.find(
             (m) => m.id === idOrSlug || m.slug === idOrSlug,
           );
-          finalizeAudit(
-            ctx,
-            siteId,
-            "portal.apps.catalog.detail",
-            idOrSlug,
-          );
+          finalizeAudit(ctx, siteId, "portal.apps.catalog.detail", idOrSlug);
           return m ? mapCatalog(m) : null;
         },
       ),

@@ -12,6 +12,7 @@ SEO, forms, domains, business email, and module-apps — all gated behind
 `blog`, `media`, `seo`, `forms`, `domains`, `businessEmail`, `apps`.
 
 **Files created**:
+
 - `supplier-brand.ts` — `stripSupplierBrandDeep` / `stripSupplierBrandText`
   (tokens: `provider`, `provider_*`, `resellerclub`, `rc_*`, `titan`,
   `tm_*`, plus literal "ResellerClub"/"Titan" in text).
@@ -24,6 +25,7 @@ SEO, forms, domains, business email, and module-apps — all gated behind
   same permission gate and brand-strip invariants.
 
 **Files modified**:
+
 - `data-access.ts` — imports, 7 interface fields, 7 factory lines.
   **Widened `PortalAccessDeniedError.siteId` from `string` to
   `string | null`** to support client-scope denials (domains,

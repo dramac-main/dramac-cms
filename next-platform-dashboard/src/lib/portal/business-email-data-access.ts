@@ -71,11 +71,7 @@ async function requireClientScope(
     throw new PortalAccessDeniedError("site_not_found", null, EMAIL_PERM);
   }
 
-  const result = await checkPortalPermission(
-    ctx.user,
-    firstSiteId,
-    EMAIL_PERM,
-  );
+  const result = await checkPortalPermission(ctx.user, firstSiteId, EMAIL_PERM);
   if (!result.allowed) {
     await auditPortalDenied({
       authUserId: ctx.user.userId,
@@ -194,8 +190,7 @@ function mapOrder(row: any): PortalEmailOrder {
     domainName: domain?.domain_name ?? cleaned.domain_name ?? null,
     plan: cleaned.plan_id ?? cleaned.plan ?? null,
     status: cleaned.status ?? "",
-    mailboxCount:
-      cleaned.mailbox_count ?? cleaned.account_count ?? 0,
+    mailboxCount: cleaned.mailbox_count ?? cleaned.account_count ?? 0,
     expiresAt: cleaned.expires_at ?? cleaned.renewal_date ?? null,
     createdAt: cleaned.created_at ?? null,
   };
@@ -213,7 +208,7 @@ function mapMailbox(row: any): PortalMailbox {
         : ""),
     domainName:
       typeof cleaned.email_address === "string"
-        ? cleaned.email_address.split("@")[1] ?? null
+        ? (cleaned.email_address.split("@")[1] ?? null)
         : null,
     status: cleaned.status ?? "",
     createdAt: cleaned.created_at ?? null,
@@ -229,10 +224,7 @@ export interface PortalBusinessEmailNamespace {
       orderId: string,
       mailboxId: string,
     ): Promise<{ ok: true; resetAt: string }>;
-    delete(
-      orderId: string,
-      mailboxId: string,
-    ): Promise<{ deleted: true }>;
+    delete(orderId: string, mailboxId: string): Promise<{ deleted: true }>;
   };
 }
 
@@ -385,9 +377,7 @@ export function createBusinessEmailNamespace(
             .order("created_at", { ascending: false });
           if (error)
             throw new Error(
-              stripSupplierBrandText(
-                `[portal][email] list: ${error.message}`,
-              ),
+              stripSupplierBrandText(`[portal][email] list: ${error.message}`),
             );
           finalizeAudit(
             ctx,

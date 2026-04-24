@@ -281,24 +281,18 @@ export function createMediaNamespace(
             else q = q.eq("folder_id", filter.folderId);
           }
           if (filter?.fileType) q = q.eq("file_type", filter.fileType);
-          if (filter?.search)
-            q = q.ilike("file_name", `%${filter.search}%`);
+          if (filter?.search) q = q.ilike("file_name", `%${filter.search}%`);
           const limit = filter?.limit ?? 50;
           const offset = filter?.offset ?? 0;
           q = q.range(offset, offset + limit - 1);
           const { data, count, error } = await q;
           if (error) throw new Error(`[portal][media] list: ${error.message}`);
-          finalizeAudit(
-            ctx,
-            siteId,
-            "portal.media.list",
-            "asset",
-            null,
-            { count: (data ?? []).length },
-          );
+          finalizeAudit(ctx, siteId, "portal.media.list", "asset", null, {
+            count: (data ?? []).length,
+          });
           return {
             assets: (data ?? []).map(mapAsset),
-            total: count ?? (data?.length ?? 0),
+            total: count ?? data?.length ?? 0,
           };
         },
       ),
@@ -311,13 +305,7 @@ export function createMediaNamespace(
           const scope = await requireScope(ctx, siteId);
           const row = await loadAsset(scope, assetId);
           const usage = await loadUsageSummary(assetId);
-          finalizeAudit(
-            ctx,
-            siteId,
-            "portal.media.detail",
-            "asset",
-            assetId,
-          );
+          finalizeAudit(ctx, siteId, "portal.media.detail", "asset", assetId);
           return { ...mapAsset(row), usage };
         },
       ),

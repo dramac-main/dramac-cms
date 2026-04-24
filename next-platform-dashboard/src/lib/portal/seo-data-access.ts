@@ -151,8 +151,7 @@ function extractSettings(row: any): PortalSeoSettings {
     {};
   return {
     siteTitle: (raw.site_title as string) ?? (row?.name as string) ?? null,
-    defaultMetaDescription:
-      (raw.default_meta_description as string) ?? null,
+    defaultMetaDescription: (raw.default_meta_description as string) ?? null,
     defaultOgImageUrl: (raw.default_og_image_url as string) ?? null,
     defaultRobots: (raw.default_robots as string) ?? null,
   };
@@ -212,15 +211,10 @@ export function createSeoNamespace(ctx: PortalDALContext): PortalSeoNamespace {
             .eq("id", scope.siteId)
             .eq("client_id", ctx.user.clientId);
           if (error)
-            throw new Error(
-              `[portal][seo] updateSettings: ${error.message}`,
-            );
-          finalizeAudit(
-            ctx,
-            siteId,
-            "portal.seo.settings.updated",
-            { fields: Object.keys(patch) },
-          );
+            throw new Error(`[portal][seo] updateSettings: ${error.message}`);
+          finalizeAudit(ctx, siteId, "portal.seo.settings.updated", {
+            fields: Object.keys(patch),
+          });
           emit(scope.siteId, "seo.settings.updated", ctx, {
             fields: Object.keys(patch),
           });

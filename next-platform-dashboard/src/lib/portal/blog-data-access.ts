@@ -314,7 +314,9 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
-export function createBlogNamespace(ctx: PortalDALContext): PortalBlogNamespace {
+export function createBlogNamespace(
+  ctx: PortalDALContext,
+): PortalBlogNamespace {
   async function loadPost(scope: PortalSiteScope, postId: string) {
     const admin = createAdminClient() as any;
     const { data, error } = await admin
@@ -330,9 +332,7 @@ export function createBlogNamespace(ctx: PortalDALContext): PortalBlogNamespace 
     return data;
   }
 
-  async function loadCategoryIds(
-    postId: string,
-  ): Promise<string[]> {
+  async function loadCategoryIds(postId: string): Promise<string[]> {
     const admin = createAdminClient() as any;
     const { data } = await admin
       .from(T.postCategories)
@@ -378,8 +378,7 @@ export function createBlogNamespace(ctx: PortalDALContext): PortalBlogNamespace 
             .order("created_at", { ascending: false });
 
           if (filter?.status) {
-            if (Array.isArray(filter.status))
-              q = q.in("status", filter.status);
+            if (Array.isArray(filter.status)) q = q.in("status", filter.status);
             else q = q.eq("status", filter.status);
           }
           if (filter?.search) {
@@ -692,8 +691,7 @@ export function createBlogNamespace(ctx: PortalDALContext): PortalBlogNamespace 
             .delete()
             .eq("id", postId)
             .eq("site_id", scope.siteId);
-          if (error)
-            throw new Error(`[portal][blog] delete: ${error.message}`);
+          if (error) throw new Error(`[portal][blog] delete: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,

@@ -70,10 +70,7 @@ import {
   createMediaNamespace,
   type PortalMediaNamespace,
 } from "./media-data-access";
-import {
-  createSeoNamespace,
-  type PortalSeoNamespace,
-} from "./seo-data-access";
+import { createSeoNamespace, type PortalSeoNamespace } from "./seo-data-access";
 import {
   createFormsNamespace,
   type PortalFormsNamespace,

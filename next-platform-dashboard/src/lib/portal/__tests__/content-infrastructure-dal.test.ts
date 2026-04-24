@@ -20,15 +20,14 @@ import type { PortalUser } from "../portal-auth";
  * Mock strategy mirrors `support-dal.test.ts`.
  */
 
-const checkPortalPermissionMock =
-  vi.fn<(...args: unknown[]) => unknown>();
+const checkPortalPermissionMock = vi.fn<(...args: unknown[]) => unknown>();
 const resolveSiteScopeMock = vi.fn<(...args: unknown[]) => unknown>();
-const auditPortalDeniedMock = vi.fn<
-  (...args: unknown[]) => Promise<undefined>
->(async () => undefined);
-const writePortalAuditMock = vi.fn<
-  (...args: unknown[]) => Promise<undefined>
->(async () => undefined);
+const auditPortalDeniedMock = vi.fn<(...args: unknown[]) => Promise<undefined>>(
+  async () => undefined,
+);
+const writePortalAuditMock = vi.fn<(...args: unknown[]) => Promise<undefined>>(
+  async () => undefined,
+);
 const adminFromMock = vi.fn<(...args: unknown[]) => unknown>();
 const logAutomationEventMock = vi.fn<
   (...args: unknown[]) => Promise<undefined>
@@ -36,12 +35,9 @@ const logAutomationEventMock = vi.fn<
 const searchDomainsMock = vi.fn<(...args: unknown[]) => Promise<any>>();
 const installModuleMock = vi.fn<(...args: unknown[]) => Promise<any>>();
 const uninstallModuleMock = vi.fn<(...args: unknown[]) => Promise<any>>();
-const updateModuleSettingsMock = vi.fn<
-  (...args: unknown[]) => Promise<any>
->();
-const getSiteModuleInstallationsMock = vi.fn<
-  (...args: unknown[]) => Promise<any>
->();
+const updateModuleSettingsMock = vi.fn<(...args: unknown[]) => Promise<any>>();
+const getSiteModuleInstallationsMock =
+  vi.fn<(...args: unknown[]) => Promise<any>>();
 
 vi.mock("server-only", () => ({}));
 vi.mock("../permission-resolver", () => ({
@@ -66,8 +62,7 @@ vi.mock("../observability", () => ({
   ) => fn(),
 }));
 vi.mock("@/modules/automation/services/event-processor", () => ({
-  logAutomationEvent: (...args: unknown[]) =>
-    logAutomationEventMock(...args),
+  logAutomationEvent: (...args: unknown[]) => logAutomationEventMock(...args),
 }));
 vi.mock("@/lib/actions/domains", () => ({
   searchDomains: (...args: unknown[]) => searchDomainsMock(...args),
@@ -262,9 +257,7 @@ describe("portal Blog DAL", () => {
 describe("portal Media DAL", () => {
   it("list denies without canEditContent", async () => {
     checkPortalPermissionMock.mockResolvedValue(DENIED);
-    const { createMediaNamespace } = await import(
-      "../media-data-access"
-    );
+    const { createMediaNamespace } = await import("../media-data-access");
     const { PortalAccessDeniedError } = await importDALMod();
     const ns = createMediaNamespace(CTX);
     await expect(ns.list("site-1")).rejects.toBeInstanceOf(
@@ -284,9 +277,7 @@ describe("portal Media DAL", () => {
     const calls = [loadTbl, updateTbl];
     adminFromMock.mockImplementation(() => calls.shift());
 
-    const { createMediaNamespace } = await import(
-      "../media-data-access"
-    );
+    const { createMediaNamespace } = await import("../media-data-access");
     const ns = createMediaNamespace(CTX);
     await ns.updateMeta("site-1", "a-1", { altText: "new" });
     expect(updateTbl._filters.site_id).toBe("site-1");
@@ -352,9 +343,7 @@ describe("portal SEO DAL", () => {
 describe("portal Forms DAL", () => {
   it("submissions.list denies without canEditContent", async () => {
     checkPortalPermissionMock.mockResolvedValue(DENIED);
-    const { createFormsNamespace } = await import(
-      "../forms-data-access"
-    );
+    const { createFormsNamespace } = await import("../forms-data-access");
     const { PortalAccessDeniedError } = await importDALMod();
     const ns = createFormsNamespace(CTX);
     await expect(ns.submissions.list("site-1")).rejects.toBeInstanceOf(
@@ -373,9 +362,7 @@ describe("portal Forms DAL", () => {
     const calls = [loadTbl, updateTbl];
     adminFromMock.mockImplementation(() => calls.shift());
 
-    const { createFormsNamespace } = await import(
-      "../forms-data-access"
-    );
+    const { createFormsNamespace } = await import("../forms-data-access");
     const ns = createFormsNamespace(CTX);
     await ns.submissions.changeStatus("site-1", "s-1", "read");
     expect(updateTbl._filters.site_id).toBe("site-1");
@@ -396,14 +383,10 @@ describe("portal Domains DAL", () => {
   it("list denies when no sites found for client", async () => {
     const sitesTbl = makeTable({ data: [] });
     adminFromMock.mockImplementation(() => sitesTbl);
-    const { createDomainsNamespace } = await import(
-      "../domains-data-access"
-    );
+    const { createDomainsNamespace } = await import("../domains-data-access");
     const { PortalAccessDeniedError } = await importDALMod();
     const ns = createDomainsNamespace(CTX);
-    await expect(ns.list()).rejects.toBeInstanceOf(
-      PortalAccessDeniedError,
-    );
+    await expect(ns.list()).rejects.toBeInstanceOf(PortalAccessDeniedError);
     expect(auditPortalDeniedMock).toHaveBeenCalledTimes(1);
   });
 
@@ -427,9 +410,7 @@ describe("portal Domains DAL", () => {
     const calls = [sitesTbl, domainsTbl];
     adminFromMock.mockImplementation(() => calls.shift());
 
-    const { createDomainsNamespace } = await import(
-      "../domains-data-access"
-    );
+    const { createDomainsNamespace } = await import("../domains-data-access");
     const ns = createDomainsNamespace(CTX);
     const result = await ns.list();
     // Mapped surface has no branded keys by construction, but also
@@ -449,14 +430,11 @@ describe("portal Business Email DAL", () => {
     checkPortalPermissionMock.mockResolvedValue(DENIED);
     const sitesTbl = makeTable({ data: [{ id: "site-1" }] });
     adminFromMock.mockImplementation(() => sitesTbl);
-    const { createBusinessEmailNamespace } = await import(
-      "../business-email-data-access"
-    );
+    const { createBusinessEmailNamespace } =
+      await import("../business-email-data-access");
     const { PortalAccessDeniedError } = await importDALMod();
     const ns = createBusinessEmailNamespace(CTX);
-    await expect(ns.list()).rejects.toBeInstanceOf(
-      PortalAccessDeniedError,
-    );
+    await expect(ns.list()).rejects.toBeInstanceOf(PortalAccessDeniedError);
   });
 
   it("mailboxes.updatePassword emits event and strips brand from detail", async () => {
@@ -480,9 +458,8 @@ describe("portal Business Email DAL", () => {
     const calls = [sitesTbl, orderTbl, updateTbl];
     adminFromMock.mockImplementation(() => calls.shift());
 
-    const { createBusinessEmailNamespace } = await import(
-      "../business-email-data-access"
-    );
+    const { createBusinessEmailNamespace } =
+      await import("../business-email-data-access");
     const ns = createBusinessEmailNamespace(CTX);
     const result = await ns.mailboxes.updatePassword("o-1", "m-1");
     expect(result.ok).toBe(true);
@@ -505,9 +482,9 @@ describe("portal Apps DAL", () => {
     const { createAppsNamespace } = await import("../apps-data-access");
     const { PortalAccessDeniedError } = await importDALMod();
     const ns = createAppsNamespace(CTX);
-    await expect(
-      ns.install("site-1", "mod-booking-1"),
-    ).rejects.toBeInstanceOf(PortalAccessDeniedError);
+    await expect(ns.install("site-1", "mod-booking-1")).rejects.toBeInstanceOf(
+      PortalAccessDeniedError,
+    );
     expect(installModuleMock).not.toHaveBeenCalled();
   });
 
