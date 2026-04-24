@@ -24,7 +24,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { updateSendLogState } from "@/lib/portal/send-log";
+import { updateSendLogState, type DeliveryState } from "@/lib/portal/send-log";
 
 type ResendEventType =
   | "email.sent"
@@ -90,15 +90,9 @@ function verifySvixSignature(
 
 function mapEventToStatus(type: ResendEventType): {
   emailStatus: string | null;
-  deliveryState:
-    | "sent"
-    | "failed"
-    | "delivered"
-    | "bounced"
-    | "complained"
-    | "opened"
-    | "clicked"
-    | null;
+  // Only delivery-state transitions are mirrored into portal_send_log.
+  // Engagement events (opened/clicked) update email_logs.status but not delivery_state.
+  deliveryState: DeliveryState | null;
 } {
   switch (type) {
     case "email.sent":
@@ -110,9 +104,9 @@ function mapEventToStatus(type: ResendEventType): {
     case "email.complained":
       return { emailStatus: "complained", deliveryState: "complained" };
     case "email.opened":
-      return { emailStatus: "opened", deliveryState: "opened" };
+      return { emailStatus: "opened", deliveryState: null };
     case "email.clicked":
-      return { emailStatus: "clicked", deliveryState: "clicked" };
+      return { emailStatus: "clicked", deliveryState: null };
     case "email.failed":
       return { emailStatus: "failed", deliveryState: "failed" };
     default:
@@ -154,7 +148,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { emailStatus, deliveryState } = mapEventToStatus(body.type);
-  if (!emailStatus || !deliveryState) {
+  if (!emailStatus) {
     return NextResponse.json({ ok: true, ignored: body.type });
   }
 
@@ -188,7 +182,9 @@ export async function POST(request: NextRequest) {
       .eq("resend_message_id", messageId);
 
     // 2. Update portal_send_log so the portal surfaces the final state.
-    if (row?.send_log_id) {
+    //    Only mirror delivery-state transitions; engagement-only events
+    //    (opened/clicked) have deliveryState === null and are skipped.
+    if (row?.send_log_id && deliveryState) {
       await updateSendLogState(row.send_log_id, {
         deliveryState,
         providerMessageId: messageId,
