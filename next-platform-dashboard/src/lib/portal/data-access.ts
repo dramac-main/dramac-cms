@@ -45,6 +45,10 @@ import {
   type PortalProductsNamespace,
   type PortalQuotesNamespace,
 } from "./commerce-data-access";
+import {
+  createInvoicingNamespace,
+  type PortalInvoicingNamespace,
+} from "./invoicing-data-access";
 
 // =============================================================================
 // DAL CONTEXT
@@ -219,6 +223,7 @@ export interface PortalDAL {
   quotes: PortalQuotesNamespace;
   bookings: PortalBookingsNamespace;
   payments: PortalPaymentsNamespace;
+  invoicing: PortalInvoicingNamespace;
   conversations: {
     summaryForSite(siteId: string): Promise<PortalConversationSummary>;
     list(
@@ -277,6 +282,7 @@ export function createPortalDAL(ctx: PortalDALContext): PortalDAL {
     quotes: createQuotesNamespace(ctx),
     bookings: createBookingsNamespace(ctx),
     payments: createPaymentsNamespace(ctx),
+    invoicing: createInvoicingNamespace(ctx),
     conversations: {
       summaryForSite: (siteId: string) => summaryConversations(ctx, siteId),
       list: (siteId, filter) => listConversations(ctx, siteId, filter),
