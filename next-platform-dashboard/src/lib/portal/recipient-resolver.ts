@@ -49,6 +49,7 @@ const PERMISSION_TO_CLIENT_COLUMN: Record<PortalPermissionKey, string | null> =
     canManageAgents: "can_manage_agents",
     canManageCustomers: "can_manage_customers",
     canManageMarketing: "can_manage_marketing",
+    canManageSupport: null, // universal; no column gate
   };
 
 interface SiteRow {

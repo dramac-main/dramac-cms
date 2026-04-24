@@ -27,6 +27,7 @@ export interface PortalUser {
   canManageCustomers: boolean;
   canManageMarketing: boolean;
   canManageInvoices: boolean;
+  canManageSupport: boolean;
 }
 
 /**
@@ -107,6 +108,9 @@ export async function getPortalUser(): Promise<PortalUser | null> {
     canManageCustomers: client.can_manage_customers ?? false,
     canManageMarketing: client.can_manage_marketing ?? false,
     canManageInvoices: client.can_manage_invoices ?? false,
+    // Support is universal: every portal user can file and view their
+    // own tickets unless we explicitly remove it in a future column.
+    canManageSupport: true,
   };
 }
 
@@ -226,6 +230,7 @@ export async function getPortalSession(): Promise<{
           canManageCustomers: client.can_manage_customers ?? false,
           canManageMarketing: client.can_manage_marketing ?? false,
           canManageInvoices: client.can_manage_invoices ?? false,
+          canManageSupport: true,
         },
         isImpersonating: true,
         impersonatorEmail: impersonation.impersonatorEmail,

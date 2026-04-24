@@ -63,6 +63,7 @@ function defaultPermissions(overrides: Record<string, boolean> = {}) {
     canManageCustomers: false,
     canManageMarketing: false,
     canManageInvoices: false,
+    canManageSupport: false,
     ...overrides,
   };
 }

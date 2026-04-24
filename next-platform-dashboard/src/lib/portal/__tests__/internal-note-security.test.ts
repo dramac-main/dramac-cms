@@ -82,6 +82,7 @@ function makePermissionedUser(overrides: Partial<PortalUser> = {}): PortalUser {
     canManageCustomers: false,
     canManageMarketing: false,
     canManageInvoices: false,
+    canManageSupport: true,
     ...overrides,
   };
 }
@@ -109,6 +110,7 @@ const OWNED_SCOPE = {
     canManageCustomers: false,
     canManageMarketing: false,
     canManageInvoices: false,
+    canManageSupport: true,
   },
 };
 

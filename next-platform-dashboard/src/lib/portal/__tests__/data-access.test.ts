@@ -74,6 +74,7 @@ const USER: PortalUser = {
   canManageCustomers: false,
   canManageMarketing: false,
   canManageInvoices: false,
+  canManageSupport: true,
 };
 
 const CTX = {
@@ -105,6 +106,7 @@ const OWNED_SCOPE = {
     canManageCustomers: false,
     canManageMarketing: false,
     canManageInvoices: false,
+    canManageSupport: true,
   },
 };
 

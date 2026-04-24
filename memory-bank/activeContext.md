@@ -1,8 +1,67 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 3 (Commerce) COMPLETE ✅
+**Last Updated**: Portal Overhaul — Session 4 (Operations) COMPLETE ✅
 
-## Current State: Portal Overhaul — Session 3 — COMPLETE ✅
+## Current State: Portal Overhaul — Session 4 — COMPLETE ✅
+
+Session 4 delivered the operations surface of the portal DAL in four
+sub-sessions. Every DAL reuses the Session 1–3 primitives
+(`requireScope`, `withPortalEvent`, `writePortalAudit`,
+`logAutomationEvent`, `createAdminClient`) — no new primitives.
+
+**Sub-sessions shipped:**
+
+- **4A — Invoicing** (commit `debe0e00`): `invoicing-data-access.ts`
+  on `mod_bil_invoices` / `mod_bil_payments`, plus recurring-invoice
+  overrides and usage meters. Permission: `canManageInvoices` /
+  `canViewInvoices`.
+- **4B — CRM** (commit `2a00fea0`, 51/51 tests): `crm-data-access.ts`
+  on `mod_crm_*`. Permission: `canManageCrm`.
+- **4C — Marketing** (commit `eaa0e4a4`, 64/64 tests):
+  `marketing-data-access.ts` on `mod_mkt_*`. Permission:
+  `canManageMarketing`. Enforces consent-gate on audience segments.
+- **4D — Support + Communications** (this commit):
+  - `support-data-access.ts` on `support_tickets` / `ticket_messages`
+    (intentionally unprefixed). Namespaces `tickets` and `messages`.
+    Permission: `canManageSupport` — **universal default `true`, no DB
+    column**.
+  - `communications-data-access.ts` — read-only view over
+    `portal_send_log` with `stripSupplierBrand` enforcing the
+    no-supplier-leak invariant. Permission: `canViewAnalytics`.
+  - Portal page `/portal/sites/[siteId]/communications`.
+  - 85/85 vitest tests pass across 10 files.
+
+**New invariants documented in Session 4** (see
+`next-platform-dashboard/docs/PORTAL-FOUNDATION.md`):
+
+1. **Double-scope rule** (support + comms): filter on BOTH
+   `site_id = scope.siteId` AND `client_id = ctx.user.clientId`.
+2. **No-supplier-leak** (comms): strip `provider`,
+   `provider_message_id`, any `provider_*`, and any column containing
+   `resend|sendgrid|mailgun|postmark|twilio` before returning
+   `portal_send_log` rows.
+3. **Authoritative-owner rule** (invoicing): only the row whose
+   `site_id = scope.siteId` is authoritative across join paths.
+4. **Consent-gate** (marketing): audience segments filter contacts
+   whose `marketing_consent = false`; sends re-check at enqueue.
+5. **Forward-contract** (support `internal_note` column): future
+   schema additions must default `internal_note = false` for
+   client-portal replies; DAL already pins `sender_type = "client"`.
+
+**Universal permissions pattern** (first used in 4D): `canManageSupport`
+defaults `true` in both branches of `portal-auth.ts`, is propagated
+through `portal-layout-client.tsx` and `portal-sidebar.tsx`, and has
+entry `canManageSupport: null` in `recipient-resolver.ts`'s
+`PERMISSION_TO_CLIENT_COLUMN` map so the resolver skips DB lookup.
+
+**`createPortalDAL(ctx)` namespaces after Session 4**: `sites`,
+`orders`, `conversations`, `products`, `customers`, `quotes`,
+`bookings`, `payments`, `invoicing`, `crm`, `marketing`, `support`,
+`communications`.
+
+---
+
+## Previous: Portal Overhaul — Session 3 — COMPLETE ✅
 
 Session 3 shipped the commerce portion of the portal DAL described in
 `CLIENT-PORTAL-SESSION-3-COMMERCE.md`. The DAL now exposes six commerce

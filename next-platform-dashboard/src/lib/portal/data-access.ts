@@ -57,6 +57,14 @@ import {
   createMarketingNamespace,
   type PortalMarketingNamespace,
 } from "./marketing-data-access";
+import {
+  createSupportNamespace,
+  type PortalSupportNamespace,
+} from "./support-data-access";
+import {
+  createCommunicationsNamespace,
+  type PortalCommunicationsNamespace,
+} from "./communications-data-access";
 
 // =============================================================================
 // DAL CONTEXT
@@ -234,6 +242,8 @@ export interface PortalDAL {
   invoicing: PortalInvoicingNamespace;
   crm: PortalCRMNamespace;
   marketing: PortalMarketingNamespace;
+  support: PortalSupportNamespace;
+  communications: PortalCommunicationsNamespace;
   conversations: {
     summaryForSite(siteId: string): Promise<PortalConversationSummary>;
     list(
@@ -295,6 +305,8 @@ export function createPortalDAL(ctx: PortalDALContext): PortalDAL {
     invoicing: createInvoicingNamespace(ctx),
     crm: createCRMNamespace(ctx),
     marketing: createMarketingNamespace(ctx),
+    support: createSupportNamespace(ctx),
+    communications: createCommunicationsNamespace(ctx),
     conversations: {
       summaryForSite: (siteId: string) => summaryConversations(ctx, siteId),
       list: (siteId, filter) => listConversations(ctx, siteId, filter),

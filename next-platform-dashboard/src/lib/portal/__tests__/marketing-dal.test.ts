@@ -107,6 +107,7 @@ const USER: PortalUser = {
   canManageCustomers: false,
   canManageMarketing: true,
   canManageInvoices: false,
+  canManageSupport: false,
 };
 const CTX = { user: USER, isImpersonation: false, impersonatorEmail: null };
 const DENIED = {

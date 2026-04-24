@@ -53,6 +53,7 @@ export interface PortalUserPermissions {
   canManageCustomers: boolean;
   canManageMarketing: boolean;
   canManageInvoices: boolean;
+  canManageSupport: boolean;
 }
 
 /**

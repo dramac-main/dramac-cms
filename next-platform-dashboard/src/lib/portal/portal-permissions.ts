@@ -25,6 +25,7 @@ export interface EffectivePortalPermissions {
   canManageAgents: boolean;
   canManageCustomers: boolean;
   canManageMarketing: boolean;
+  canManageSupport: boolean;
 }
 
 // =============================================================================
@@ -81,6 +82,7 @@ export async function getEffectivePermissions(
       canManageAgents: false,
       canManageCustomers: false,
       canManageMarketing: false,
+      canManageSupport: false,
     };
   }
 
@@ -146,6 +148,10 @@ export async function getEffectivePermissions(
       sitePerm?.can_manage_marketing,
       client.can_manage_marketing,
     ),
+    // Support is universal for portal users — filing a ticket is how
+    // they request help. Defaults to true unless a future column
+    // explicitly revokes it.
+    canManageSupport: true,
   };
 }
 

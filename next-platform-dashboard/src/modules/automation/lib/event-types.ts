@@ -415,6 +415,20 @@ export const EVENT_REGISTRY = {
       cancelled: "accounts_payable.purchase_order.cancelled",
     },
   },
+  // =========================================================
+  // SUPPORT MODULE (Session 4D)
+  // Tables: support_tickets, ticket_messages
+  // =========================================================
+  support: {
+    ticket: {
+      created: "support.ticket.created",
+      assigned: "support.ticket.assigned",
+      status_changed: "support.ticket.status_changed",
+      replied: "support.ticket.replied",
+      closed: "support.ticket.closed",
+      reopened: "support.ticket.reopened",
+    },
+  },
 } as const;
 
 // ============================================================================

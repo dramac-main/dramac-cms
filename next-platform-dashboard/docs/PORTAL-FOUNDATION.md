@@ -363,3 +363,124 @@ and `payments.listProofs/approveProof/rejectProof`. Every test verifies that
 `auditPortalDenied` is written and that the admin Supabase client is NEVER
 invoked when the scope check fails — the same contract enforced by Session 1
 and Session 2A tests.
+
+
+---
+
+## Session 4 — Operations, Support, Communications
+
+Session 4 closes the portal's operations surface with four sub-sessions that
+each layer on the Session 3 commerce foundation and re-use every primitive
+(`requireScope`, `withPortalEvent`, `writePortalAudit`, `logAutomationEvent`,
+`createAdminClient`). Every DAL follows the same contract established in
+Sessions 1–3; no new primitives were introduced.
+
+### Sub-sessions
+
+- **4A — Invoicing** (`invoicing-data-access.ts`): read/pay surfaces on
+  `mod_bil_invoices`, `mod_bil_payments`, plus recurring-invoice overrides and
+  usage meters. Permission: `canManageInvoices` (writes) / `canViewInvoices`
+  (reads).
+- **4B — CRM** (`crm-data-access.ts`): contacts, companies, deals, activities,
+  pipelines on `mod_crm_*`. Permission: `canManageCrm`.
+- **4C — Marketing** (`marketing-data-access.ts`): campaigns, audience
+  segments, templates, send windows on `mod_mkt_*`. Permission:
+  `canManageMarketing`.
+- **4D — Support & Communications** (`support-data-access.ts`,
+  `communications-data-access.ts`):
+  - **Support**: tickets + replies on `support_tickets` / `ticket_messages`
+    (intentionally unprefixed — platform-wide support surface). Namespace
+    `tickets.{list,detail,create,reply,changeStatus,close,reopen}` and
+    `messages.list`. Permission: `canManageSupport` (universal default
+    `true` — **no DB column**; see "PortalUser universal permissions"
+    below). Emits `support.ticket.{created|assigned|status_changed|replied|closed|reopened}`.
+  - **Communications**: read-only view over `portal_send_log`. Namespace
+    `sendLog.{list,detail,stats}`. Permission: `canViewAnalytics`.
+
+### New invariants introduced in Session 4
+
+- **Double-scope rule (Session 4 support + communications)**: every query
+  filters on **both** `site_id = scope.siteId` **and**
+  `client_id = ctx.user.clientId`. Even though `requireScope` has already
+  proven the site belongs to the client, the extra `client_id` filter is a
+  defence-in-depth against future writers that might insert cross-client
+  rows into these platform-wide tables.
+- **No-supplier-leak (communications)**: `portal_send_log` rows may contain
+  provider identifiers (`provider`, `provider_message_id`, `provider_*`,
+  any column referencing `resend|sendgrid|mailgun|postmark|twilio`). The
+  DAL **must** strip these fields before returning to portal callers. The
+  `stripSupplierBrand` helper in `communications-data-access.ts` is the
+  only sanctioned path; unit tests verify every known brand column is
+  removed.
+- **Authoritative-owner rule (invoicing)**: recurring-invoice overrides
+  and usage meters may be referenced from multiple tables, but only the
+  row whose `site_id = scope.siteId` is authoritative. Joins against
+  products or customers never elevate scope.
+- **Consent-gate (marketing)**: audience segments filter out contacts
+  whose `mod_crm_contacts.marketing_consent = false`; campaign sends
+  verify consent at enqueue time.
+- **Forward-contract (support `internal_note` column)**: the current
+  `ticket_messages` schema lacks an `internal_note` boolean, but future
+  work may add it. Any future write path MUST default
+  `internal_note = false` for client-portal replies — the DAL already
+  sets `sender_type = "client"` and that invariant is load-bearing for
+  visibility decisions in the staff dashboard.
+
+### PortalUser universal permissions
+
+Some permissions are **universal** — every portal client gets them by
+default and there is no DB column to gate them (yet). In Session 4D,
+`canManageSupport` became the first such flag: every client can open
+support tickets against their own site. To register a universal flag:
+
+1. Add the boolean to `EffectivePortalPermissions`
+   (`portal-permissions.ts`).
+2. Default it to `true` in both `getPortalUser()` and the impersonation
+   branch of `portal-auth.ts`.
+3. Propagate it through `portal-layout-client.tsx` and
+   `portal-sidebar.tsx` permission objects.
+4. Add `<permKey>: null` to `PERMISSION_TO_CLIENT_COLUMN` in
+   `recipient-resolver.ts` so the resolver knows this flag has no
+   underlying column and skips the DB lookup.
+
+### DAL namespaces after Session 4
+
+The `createPortalDAL(ctx)` object now exposes the following namespaces:
+
+| Namespace          | Source module                         | Session |
+|--------------------|---------------------------------------|---------|
+| `sites`            | `data-access.ts`                      | 1       |
+| `orders`           | `data-access.ts` + commerce extension | 1/3     |
+| `conversations`    | `communication-data-access.ts`        | 2       |
+| `products`         | `commerce-data-access.ts`             | 3       |
+| `customers`        | `commerce-data-access.ts`             | 3       |
+| `quotes`           | `commerce-data-access.ts`             | 3       |
+| `bookings`         | `commerce-data-access.ts`             | 3       |
+| `payments`         | `commerce-data-access.ts`             | 3       |
+| `invoicing`        | `invoicing-data-access.ts`            | 4A      |
+| `crm`              | `crm-data-access.ts`                  | 4B      |
+| `marketing`        | `marketing-data-access.ts`            | 4C      |
+| `support`          | `support-data-access.ts`              | 4D      |
+| `communications`   | `communications-data-access.ts`       | 4D      |
+
+### Pages delivered in Session 4
+
+- `/portal/sites/[siteId]/invoicing` (4A)
+- `/portal/sites/[siteId]/crm` (4B)
+- `/portal/sites/[siteId]/marketing` (4C)
+- `/portal/sites/[siteId]/communications` (4D — read-only send-log
+  surface using the simpler payment-proofs-style RSC pattern)
+
+### Test coverage after Session 4
+
+All sub-sessions use the vitest mock scaffolding established in Session
+2A: `checkPortalPermissionMock`, `auditPortalDeniedMock`,
+`writePortalAuditMock`, `adminFromMock`, `logAutomationEventMock`, plus a
+`makeTable` helper that snapshots `.eq()` calls into `_filters` so
+double-scope assertions can verify both `site_id` and `client_id`
+filters were applied. Every DAL ships deny-tests that verify
+`auditPortalDenied` was written **and** the admin Supabase client was
+never invoked on denial — the same contract as Sessions 1–3.
+Session 4 adds 85 portal DAL tests across 10 files.
+
+
