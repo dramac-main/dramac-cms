@@ -17,7 +17,6 @@ import {
   CircleCheck,
   AlertCircle,
   Code,
-  FlaskConical,
   Upload,
   Package,
   Route,
@@ -878,13 +877,6 @@ export default function EditModulePage({
               }
             />
             
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/admin/modules/studio/${moduleId}/test`}>
-                <FlaskConical className="h-4 w-4 mr-2" />
-                Test Module
-              </Link>
-            </Button>
-
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm">
