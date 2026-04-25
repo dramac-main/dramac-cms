@@ -263,6 +263,37 @@ async function proxyCore(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Legacy alias redirects (pages removed to reduce Vercel route count)
+  if (pathname === "/dashboard/settings/branding") {
+    return NextResponse.redirect(new URL("/settings/branding", request.url), 301);
+  }
+  if (pathname === "/dashboard/billing") {
+    const qs = request.nextUrl.search || "";
+    return NextResponse.redirect(new URL("/settings/billing" + qs, request.url), 301);
+  }
+  if (pathname === "/dashboard/clients/new") {
+    return NextResponse.redirect(new URL("/dashboard/clients?create=true", request.url), 301);
+  }
+  if (pathname === "/marketplace/installed") {
+    return NextResponse.redirect(new URL("/dashboard/modules/subscriptions", request.url), 301);
+  }
+  if (pathname === "/settings") {
+    return NextResponse.redirect(new URL("/settings/profile", request.url), 301);
+  }
+  {
+    const m1 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/builder$/);
+    if (m1) {
+      return NextResponse.redirect(new URL("/dashboard/sites/" + m1[1] + "/ai-designer", request.url), 301);
+    }
+    const m2 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/pages$/);
+    if (m2) {
+      return NextResponse.redirect(new URL("/dashboard/sites/" + m2[1] + "?tab=pages", request.url), 301);
+    }
+    const m3 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/pages\/([^/]+)$/);
+    if (m3) {
+      return NextResponse.redirect(new URL("/studio/" + m3[1] + "/" + m3[2], request.url), 301);
+    }
+  }
   // Legacy domain settings redirects (pages removed to reduce Vercel route count)
   if (pathname.startsWith("/dashboard/settings/domains")) {
     const newPath = pathname.replace(
