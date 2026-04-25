@@ -1558,6 +1558,26 @@ export async function updatePublicOrderPaymentStatus(
     },
   ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
 
+  // Defensive direct notify when payment lands — guarantees email/in-app/push
+  // even if no automation subscription exists for this site.
+  if (paymentStatus === "paid") {
+    const order = data as Order;
+    import("@/lib/services/business-notifications")
+      .then(({ notifyPaymentReceived }) =>
+        notifyPaymentReceived(
+          siteId,
+          order.order_number,
+          order.customer_email || "",
+          order.customer_name || "",
+          `${order.currency || "USD"} ${Number(order.total ?? 0).toFixed(2)}`,
+          order.payment_provider || undefined,
+        ),
+      )
+      .catch((err) =>
+        console.error("[Ecom Public] Direct payment notify error:", err),
+      );
+  }
+
   return data as Order;
 }
 

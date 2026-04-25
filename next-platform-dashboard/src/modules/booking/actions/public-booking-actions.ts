@@ -693,6 +693,35 @@ export async function createPublicAppointment(
       console.error("[Booking Public] Automation event error:", err),
     );
 
+    // Defensive direct dispatch — guarantees emails/in-app/push fire even
+    // when no automation subscription exists for this site.
+    // Mirrors what authenticated booking-actions.ts does for portal-side
+    // mutations. Idempotent at the dispatcher level (deduped by resourceId).
+    if (appointment?.id) {
+      import("@/lib/services/business-notifications")
+        .then(({ notifyNewBooking }) =>
+          notifyNewBooking({
+            siteId,
+            appointmentId: appointment.id,
+            serviceName: service.name || "Appointment",
+            servicePrice: service.price ?? 0,
+            serviceDuration: service.duration_minutes ?? 30,
+            currency: service.currency || "USD",
+            startTime: new Date(input.startTime),
+            endTime: new Date(input.endTime),
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            staffName,
+            status: status === "confirmed" ? "confirmed" : "pending",
+            paymentStatus,
+          }),
+        )
+        .catch((err) =>
+          console.error("[Booking Public] Direct notify error:", err),
+        );
+    }
+
     // Bridge to CRM: create contact if auto_create_crm_contact enabled (non-blocking)
     if (settings?.auto_create_crm_contact !== false) {
       import("@/modules/crm/actions/crm-bridge")
