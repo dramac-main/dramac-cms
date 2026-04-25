@@ -24,6 +24,7 @@ import {
   PortalSiteSwitcher,
   type PortalSiteSwitcherOption,
 } from "@/components/portal/site-switcher";
+import { WhatsNewButton } from "@/components/portal/whats-new-button";
 
 interface PortalHeaderProps {
   // Legacy props for backward compatibility
@@ -187,6 +188,9 @@ export function PortalHeader({
               Support
             </Link>
           </nav>
+
+          {/* What's New */}
+          {!isImpersonating && <WhatsNewButton />}
 
           {/* Notifications */}
           {!isImpersonating && (

@@ -43,6 +43,8 @@ import {
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
 import { PageHeader } from "@/components/layout/page-header";
+import { OnboardingChecklist } from "@/components/portal/onboarding-checklist";
+import { loadOnboardingState } from "@/lib/portal/onboarding-actions";
 
 export const metadata: Metadata = {
   title: "Dashboard | Client Portal",
@@ -79,11 +81,12 @@ export default async function PortalDashboard() {
     : null;
 
   // Fetch module KPIs and analytics in parallel
-  const [dashboardData, analytics] = await Promise.all([
+  const [dashboardData, analytics, onboarding] = await Promise.all([
     permissions
       ? getPortalDashboardData(siteIds, permissions, user.agencyId)
       : Promise.resolve(null),
     user.canViewAnalytics ? getPortalAnalytics(user.clientId) : null,
+    loadOnboardingState(),
   ]);
 
   const openTickets = ticketStats.open + ticketStats.inProgress;
@@ -107,6 +110,13 @@ export default async function PortalDashboard() {
             ? `Here's an overview of ${clientInfo.companyName}'s operations`
             : `Here's your business operations overview`
         }
+      />
+
+      {/* First-run onboarding checklist (auto-hides when dismissed) */}
+      <OnboardingChecklist
+        initialState={onboarding.state}
+        totalSteps={onboarding.totalSteps}
+        completedSteps={onboarding.completedSteps}
       />
 
       {/*

@@ -1,0 +1,18 @@
+{
+  "$schema": "What's New entries — newest first. version is a free-form semver-ish string used for localStorage tracking of last-seen.",
+  "entries": [
+    {
+      "version": "2026.02.1",
+      "date": "2026-02-17",
+      "title": "Customer portal overhaul — Section 1–7",
+      "highlights": [
+        "Send a real test email from Settings → Notifications and review the last 20 sends.",
+        "Filter your communications log by channel, delivery state, and event type.",
+        "Operational events (order placed, shipped, booking confirmed and paid) are now idempotent — duplicate webhooks no longer email you twice.",
+        "Every action taken on your account by an agency admin while impersonating you is recorded in a tamper-evident ledger.",
+        "Manage scripted chat flows that run when Chiko AI is unavailable — set triggers, priority, and steps.",
+        "Onboarding checklist on your portal home guides you through the first-run setup."
+      ]
+    }
+  ]
+}
