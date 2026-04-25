@@ -293,6 +293,24 @@ async function proxyCore(request: NextRequest) {
     if (m3) {
       return NextResponse.redirect(new URL("/studio/" + m3[1] + "/" + m3[2], request.url), 301);
     }
+    // Legacy editor URL → site detail pages tab (page deleted to reduce route count)
+    const m4 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/editor$/);
+    if (m4) {
+      return NextResponse.redirect(new URL("/dashboard/sites/" + m4[1] + "?tab=pages", request.url), 301);
+    }
+  }
+  // Legacy public blog redirects (subdomain) — pages deleted to reduce Vercel route count.
+  // Old URL: app.dramacagency.com/blog/{subdomain}[/{slug}]
+  // New URL: {subdomain}.{baseDomain}/blog[/{slug}]
+  {
+    const b1 = pathname.match(/^\/blog\/([^/]+)$/);
+    if (b1) {
+      return NextResponse.redirect(`https://${b1[1]}.${baseDomain}/blog`, 301);
+    }
+    const b2 = pathname.match(/^\/blog\/([^/]+)\/([^/]+)$/);
+    if (b2) {
+      return NextResponse.redirect(`https://${b2[1]}.${baseDomain}/blog/${b2[2]}`, 301);
+    }
   }
   // Legacy domain settings redirects (pages removed to reduce Vercel route count)
   if (pathname.startsWith("/dashboard/settings/domains")) {
