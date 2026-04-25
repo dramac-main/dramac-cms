@@ -38,7 +38,7 @@ import {
   hasNativePortalSurface,
   resolvePortalAppRoute,
 } from "@/lib/portal/app-routes";
-import { uninstallAppAction } from "@/app/portal/sites/[siteId]/apps/_actions";
+import { uninstallAppAction } from "@/lib/portal/actions/apps-actions";
 
 export interface InstalledAppItem {
   id: string; // module id

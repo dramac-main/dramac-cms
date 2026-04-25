@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import {
   clearSendLogByStateAction,
   clearSendLogOlderThanAction,
-} from "./_actions";
+} from "@/lib/portal/actions/communications-actions";
 
 interface CommunicationsToolbarProps {
   siteId: string;

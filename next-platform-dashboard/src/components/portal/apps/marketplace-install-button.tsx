@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { installAppAction } from "@/app/portal/sites/[siteId]/apps/_actions";
+import { installAppAction } from "@/lib/portal/actions/apps-actions";
 
 interface MarketplaceInstallButtonProps {
   siteId: string;

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { deleteSendLogEntryAction } from "./_actions";
+import { deleteSendLogEntryAction } from "@/lib/portal/actions/communications-actions";
 
 interface CommunicationsRowDeleteProps {
   siteId: string;
