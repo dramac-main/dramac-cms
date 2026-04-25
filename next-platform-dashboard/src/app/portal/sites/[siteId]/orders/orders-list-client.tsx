@@ -37,7 +37,7 @@ import {
   formatPortalCurrency,
   formatPortalRelative,
 } from "@/lib/portal/format";
-import { exportOrdersCsvAction } from "./_actions";
+import { exportOrdersCsvAction } from "@/lib/portal/actions/orders-actions";
 import { toast } from "sonner";
 
 const ORDER_STATUSES = [

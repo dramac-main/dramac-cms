@@ -44,7 +44,7 @@ import {
   recordShipmentAction,
   issueOrderRefundAction,
   addOrderInternalNoteAction,
-} from "../_actions";
+} from "@/lib/portal/actions/orders-actions";
 
 const ORDER_TRANSITIONS: Record<string, readonly PortalOrderStatus[]> = {
   pending: ["confirmed", "processing", "cancelled"],
