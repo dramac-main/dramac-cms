@@ -63,7 +63,10 @@ export interface CreateTeamMemberInput {
   notes?: string;
 }
 
-export interface UpdateTeamMemberInput extends Omit<Partial<CreateTeamMemberInput>, 'status'> {
+export interface UpdateTeamMemberInput extends Omit<
+  Partial<CreateTeamMemberInput>,
+  "status"
+> {
   status?: "active" | "invited" | "inactive";
 }
 
@@ -251,9 +254,8 @@ export async function createPortalTeamMember(
     const memberEmail = input.email.toLowerCase().trim();
 
     // 1. Ensure a Supabase auth user exists for this team member.
-    const { ensurePortalAuthUser, generatePortalMagicLink } = await import(
-      "@/lib/portal/portal-activation"
-    );
+    const { ensurePortalAuthUser, generatePortalMagicLink } =
+      await import("@/lib/portal/portal-activation");
     const ensured = await ensurePortalAuthUser({
       email: memberEmail,
       clientId,
@@ -489,9 +491,8 @@ export async function resendPortalTeamInvitation(
 
   try {
     // Ensure auth user + magic link so they can log in.
-    const { ensurePortalAuthUser, generatePortalMagicLink } = await import(
-      "@/lib/portal/portal-activation"
-    );
+    const { ensurePortalAuthUser, generatePortalMagicLink } =
+      await import("@/lib/portal/portal-activation");
     const ensured = await ensurePortalAuthUser({
       email: memberEmail,
       clientId,

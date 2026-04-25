@@ -79,7 +79,9 @@ export async function getPortalUser(): Promise<PortalUser | null> {
     // Maybe a team member rather than a primary client.
     const { data: teamMember } = await admin
       .from("portal_team_members" as any)
-      .select("id, name, email, client_id, status, portal_user_id, can_view_analytics, can_edit_content, can_view_invoices, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers, can_manage_marketing")
+      .select(
+        "id, name, email, client_id, status, portal_user_id, can_view_analytics, can_edit_content, can_view_invoices, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers, can_manage_marketing",
+      )
       .eq("portal_user_id", user.id)
       .neq("status", "inactive")
       .maybeSingle();
@@ -379,9 +381,8 @@ export async function sendMagicLink(
     const tm = teamMember as Record<string, any>;
     // Ensure auth user exists for this team member if missing.
     if (!tm.portal_user_id) {
-      const { ensurePortalAuthUser } = await import(
-        "@/lib/portal/portal-activation"
-      );
+      const { ensurePortalAuthUser } =
+        await import("@/lib/portal/portal-activation");
       const ensured = await ensurePortalAuthUser({
         email: normalizedEmail,
         clientId: tm.client_id,
@@ -401,9 +402,8 @@ export async function sendMagicLink(
       }
     }
     // Generate magic link and send via plain Supabase (no agency branding lookup).
-    const { generatePortalMagicLink } = await import(
-      "@/lib/portal/portal-activation"
-    );
+    const { generatePortalMagicLink } =
+      await import("@/lib/portal/portal-activation");
     const linkResult = await generatePortalMagicLink({
       email: normalizedEmail,
     });
@@ -414,9 +414,8 @@ export async function sendMagicLink(
       };
     }
     try {
-      const { sendBrandedEmail } = await import(
-        "@/lib/email/send-branded-email"
-      );
+      const { sendBrandedEmail } =
+        await import("@/lib/email/send-branded-email");
       // Look up parent client to get agency branding.
       const { data: parent } = await admin
         .from("clients")

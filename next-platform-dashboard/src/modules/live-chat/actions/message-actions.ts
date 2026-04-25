@@ -351,7 +351,8 @@ export async function approveProactiveMessage(
   editedContent?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { db: supabase, error: authErr } = await getAdminClientForSite(siteId);
+    const { db: supabase, error: authErr } =
+      await getAdminClientForSite(siteId);
     if (!supabase) return { success: false, error: authErr };
 
     // Fetch current message to validate ownership and state
@@ -381,7 +382,9 @@ export async function approveProactiveMessage(
     delete updatedMetadata.pending_agent_approval;
 
     const finalContent =
-      editedContent !== undefined ? editedContent.trim() : (msg.content as string);
+      editedContent !== undefined
+        ? editedContent.trim()
+        : (msg.content as string);
 
     const { error: updateErr } = await supabase
       .from("mod_chat_messages")
@@ -426,7 +429,8 @@ export async function discardProactiveMessage(
   siteId: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { db: supabase, error: authErr } = await getAdminClientForSite(siteId);
+    const { db: supabase, error: authErr } =
+      await getAdminClientForSite(siteId);
     if (!supabase) return { success: false, error: authErr };
 
     const { data: msg, error: fetchErr } = await supabase

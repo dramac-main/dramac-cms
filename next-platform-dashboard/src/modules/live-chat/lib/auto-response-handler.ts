@@ -82,7 +82,7 @@ export async function handleNewVisitorMessage(
   const { data: aiSettings } = await supabase
     .from("mod_chat_widget_settings")
     .select(
-      "ai_auto_response_enabled, ai_payment_guidance_enabled, scripted_flows_enabled, scripted_flows_require_approval",
+      "ai_auto_response_enabled, ai_payment_guidance_enabled, scripted_flows_enabled, scripted_flows_require_approval, ai_responses_require_approval",
     )
     .eq("site_id", siteId)
     .single();
@@ -91,7 +91,14 @@ export async function handleNewVisitorMessage(
   const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false; // default true
   const flowsEnabled = aiSettings?.scripted_flows_enabled !== false; // default true
   // When true, scripted-flow messages are staged for agent approval before the customer sees them
-  const flowsRequireApproval = aiSettings?.scripted_flows_require_approval === true; // default false
+  const flowsRequireApproval =
+    aiSettings?.scripted_flows_require_approval !== false; // default TRUE (safe-by-default)
+  // GLOBAL APPROVAL GATE — every AI-generated message (free-form AI replies AND
+  // payment-guidance messages such as the `payment_method_select` button card)
+  // must be reviewed by a human agent before reaching the customer, unless the
+  // site explicitly opts out by setting `ai_responses_require_approval = false`.
+  const aiRequireApproval =
+    aiSettings?.ai_responses_require_approval !== false; // default TRUE
 
   // ── PRIORITY 1: Continue an in-flight scripted flow ───────────────────────
   // Once a scripted flow is mid-step, we MUST finish it deterministically.
@@ -187,7 +194,10 @@ export async function handleNewVisitorMessage(
         aiResult.response.length,
       );
 
-      // Save AI response — use actual DB columns (no metadata column on this table)
+      // Save AI response — when the global approval gate is active, the
+      // message is staged as `pending_approval` (hidden from customer until
+      // an agent approves it from the dashboard). Otherwise it is sent
+      // straight to the visitor as before.
       // PHASE LC-12: content_type may be 'payment_method_select' for button messages
       const { error: insertError } = await supabase
         .from("mod_chat_messages")
@@ -198,10 +208,13 @@ export async function handleNewVisitorMessage(
           sender_name: aiResult.assistantName || "Chiko",
           content: aiResult.response,
           content_type: aiResult.contentType || "text",
-          status: "sent",
+          status: aiRequireApproval ? "pending_approval" : "sent",
           is_ai_generated: true,
           ai_confidence: aiResult.confidence,
-          is_internal_note: false,
+          is_internal_note: aiRequireApproval,
+          metadata: aiRequireApproval
+            ? { pending_agent_approval: true }
+            : {},
         });
 
       if (insertError) {
@@ -353,7 +366,7 @@ export async function handleNewVisitorMessage(
     return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
-  // 4. Save AI response as a message — use actual DB columns
+  // 4. Save AI response as a message — gate behind the global approval setting.
   const { error: stdInsertError } = await supabase
     .from("mod_chat_messages")
     .insert({
@@ -363,10 +376,13 @@ export async function handleNewVisitorMessage(
       sender_name: aiResult.assistantName || "Chiko",
       content: aiResult.response,
       content_type: "text",
-      status: "sent",
+      status: aiRequireApproval ? "pending_approval" : "sent",
       is_ai_generated: true,
       ai_confidence: aiResult.confidence,
-      is_internal_note: false,
+      is_internal_note: aiRequireApproval,
+      metadata: aiRequireApproval
+        ? { pending_agent_approval: true }
+        : {},
     });
 
   if (stdInsertError) {

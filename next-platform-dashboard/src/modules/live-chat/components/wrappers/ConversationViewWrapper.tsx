@@ -143,9 +143,11 @@ function ApprovalMessagePreview({
   contentType: string | null | undefined;
 }) {
   const text = content || "";
-  const structured = ["flow_choice", "payment_method_select", "buttons"].includes(
-    String(contentType || ""),
-  );
+  const structured = [
+    "flow_choice",
+    "payment_method_select",
+    "buttons",
+  ].includes(String(contentType || ""));
   // Heuristic: even without contentType, attempt to parse JSON if it starts with "{"
   const looksLikeJson = text.trim().startsWith("{") && text.includes('"text"');
 
@@ -215,7 +217,9 @@ export function ConversationViewWrapper({
 }: ConversationViewWrapperProps) {
   const router = useRouter();
   const isPortal = useIsPortalView();
-  const base = isPortal ? `/portal/sites/${siteId}` : `/dashboard/sites/${siteId}`;
+  const base = isPortal
+    ? `/portal/sites/${siteId}`
+    : `/dashboard/sites/${siteId}`;
   const [isPending, startTransition] = useTransition();
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -231,14 +235,22 @@ export function ConversationViewWrapper({
   const [aiGlowing, setAiGlowing] = useState(false);
 
   // Approval editing state: messageId -> draft content (undefined means not editing)
-  const [approvalEdits, setApprovalEdits] = useState<Record<string, string>>({});
-  const [approvalPending, setApprovalPending] = useState<Record<string, boolean>>({});
+  const [approvalEdits, setApprovalEdits] = useState<Record<string, string>>(
+    {},
+  );
+  const [approvalPending, setApprovalPending] = useState<
+    Record<string, boolean>
+  >({});
 
   const handleApproveMessage = useCallback(
     async (messageId: string) => {
       setApprovalPending((p) => ({ ...p, [messageId]: true }));
       const editedContent = approvalEdits[messageId];
-      const result = await approveProactiveMessage(messageId, siteId, editedContent);
+      const result = await approveProactiveMessage(
+        messageId,
+        siteId,
+        editedContent,
+      );
       if (result.success) {
         setMessages((prev) =>
           prev.map((m) =>
@@ -247,18 +259,30 @@ export function ConversationViewWrapper({
                   ...m,
                   status: "sent",
                   isInternalNote: false,
-                  content: editedContent !== undefined ? editedContent : m.content,
-                  metadata: { ...(m.metadata || {}), pending_agent_approval: false },
+                  content:
+                    editedContent !== undefined ? editedContent : m.content,
+                  metadata: {
+                    ...(m.metadata || {}),
+                    pending_agent_approval: false,
+                  },
                 }
               : m,
           ),
         );
-        setApprovalEdits((prev) => { const n = { ...prev }; delete n[messageId]; return n; });
+        setApprovalEdits((prev) => {
+          const n = { ...prev };
+          delete n[messageId];
+          return n;
+        });
         toast.success("Message approved and sent to customer");
       } else {
         toast.error(result.error || "Failed to approve message");
       }
-      setApprovalPending((p) => { const n = { ...p }; delete n[messageId]; return n; });
+      setApprovalPending((p) => {
+        const n = { ...p };
+        delete n[messageId];
+        return n;
+      });
     },
     [approvalEdits, siteId],
   );
@@ -273,7 +297,11 @@ export function ConversationViewWrapper({
       } else {
         toast.error(result.error || "Failed to discard message");
       }
-      setApprovalPending((p) => { const n = { ...p }; delete n[messageId]; return n; });
+      setApprovalPending((p) => {
+        const n = { ...p };
+        delete n[messageId];
+        return n;
+      });
     },
     [siteId],
   );
@@ -696,11 +724,7 @@ export function ConversationViewWrapper({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() =>
-                router.push(
-                  `${base}/live-chat/conversations`,
-                )
-              }
+              onClick={() => router.push(`${base}/live-chat/conversations`)}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -919,10 +943,7 @@ export function ConversationViewWrapper({
               const isEditing = approvalEdits[msg.id] !== undefined;
               const isActing = approvalPending[msg.id] === true;
               return (
-                <div
-                  key={msg.id}
-                  className="flex justify-end px-2 py-1"
-                >
+                <div key={msg.id} className="flex justify-end px-2 py-1">
                   <div className="max-w-[80%] rounded-xl border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 shadow-sm">
                     {/* Header */}
                     <div className="flex items-center gap-1.5 mb-2 text-amber-700 dark:text-amber-400">

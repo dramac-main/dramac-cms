@@ -335,8 +335,7 @@ export async function createConversationForEntity(
       await supabase
         .from("mod_chat_visitors")
         .update({
-          total_conversations:
-            (existingVisitor?.total_conversations || 0) + 1,
+          total_conversations: (existingVisitor?.total_conversations || 0) + 1,
           last_seen_at: new Date().toISOString(),
         })
         .eq("id", visitorId);
@@ -386,53 +385,68 @@ export async function createConversationForEntity(
     const companyName = settings?.company_name || "our team";
 
     let greeting: string;
-    if (ctx.entityType === "order") {
-      const isManualPayment =
-        !ctx.paymentProvider ||
+    // When payment is required AND pending, we DELIBERATELY skip the verbose
+    // "Thank you for booking / placing your order" greeting. The AI responder
+    // (or scripted payment-methods flow) will send a concise
+    // `payment_method_select` message — with friendly preface "Great! …" — as
+    // soon as the visitor opens the conversation. Sending both creates a
+    // duplicate / noisy first impression and the greeting bypasses agent
+    // approval. Returning the conversation id without a greeting is the
+    // correct behaviour: the AI's payment_method_select IS the first message,
+    // and it goes through the same approval gate as every other AI message.
+    const orderManualPaymentPending =
+      ctx.entityType === "order" &&
+      ctx.paymentStatus === "pending" &&
+      (!ctx.paymentProvider ||
         ctx.paymentProvider === "manual" ||
-        ctx.paymentProvider === "bank_transfer";
-      greeting =
-        ctx.paymentStatus === "pending" && isManualPayment
-          ? `Hi ${ctx.customerName}! 👋 Thank you for your order ${ctx.orderNumber} (${ctx.orderTotal}). ` +
-            `I'm here to help you complete your payment. Let me show you the available payment options!`
-          : `Hi ${ctx.customerName}! 👋 Thank you for placing your order ${ctx.orderNumber} with ${companyName}. ` +
-            `I'm here if you have any questions about your order!`;
+        ctx.paymentProvider === "bank_transfer");
+    const bookingPaymentPending =
+      ctx.entityType === "booking" &&
+      ctx.paymentStatus === "pending" &&
+      !!ctx.paymentAmount &&
+      parseFloat(ctx.paymentAmount) > 0;
+    const skipGreeting = orderManualPaymentPending || bookingPaymentPending;
+
+    if (ctx.entityType === "order") {
+      greeting = `Hi ${ctx.customerName}! 👋 Thank you for placing your order ${ctx.orderNumber} with ${companyName}. I'm here if you have any questions about your order!`;
     } else {
-      const paymentRequired =
-        ctx.paymentAmount && parseFloat(ctx.paymentAmount) > 0;
       greeting =
-        paymentRequired && ctx.paymentStatus === "pending"
-          ? `Hi ${ctx.customerName}! 👋 Thank you for booking ${ctx.serviceName}` +
-            `${ctx.bookingDate ? ` on ${ctx.bookingDate}` : ""}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ""}. ` +
-            `A payment of ${ctx.currency || ""} ${ctx.paymentAmount} is required to confirm your booking. ` +
-            `I'll help you complete the payment — let me show you the available options!`
-          : `Hi ${ctx.customerName}! 👋 Your booking for ${ctx.serviceName}` +
-            `${ctx.bookingDate ? ` on ${ctx.bookingDate}` : ""}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ""} ` +
-            `has been received! I'm here if you have any questions. 😊`;
+        `Hi ${ctx.customerName}! 👋 Your booking for ${ctx.serviceName}` +
+        `${ctx.bookingDate ? ` on ${ctx.bookingDate}` : ""}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ""} ` +
+        `has been received! I'm here if you have any questions. 😊`;
     }
 
-    await supabase.from("mod_chat_messages").insert({
-      conversation_id: conversation.id,
-      site_id: siteId,
-      sender_type: "ai",
-      sender_name: assistantName,
-      content: greeting,
-      content_type: "text",
-      status: "sent",
-      is_ai_generated: true,
-      ai_confidence: 1.0,
-      is_internal_note: false,
-    });
+    if (!skipGreeting) {
+      // Stage greeting as pending_approval so a human agent reviews the AI's
+      // first proactive message before the customer sees it. This matches the
+      // approval gate used by every other proactive AI notification on this
+      // platform — no AI text should reach the customer un-reviewed.
+      await supabase.from("mod_chat_messages").insert({
+        conversation_id: conversation.id,
+        site_id: siteId,
+        sender_type: "ai",
+        sender_name: assistantName,
+        content: greeting,
+        content_type: "text",
+        status: "pending_approval",
+        is_ai_generated: true,
+        ai_confidence: 1.0,
+        is_internal_note: true,
+        metadata: { pending_agent_approval: true },
+      });
+    }
 
     // Update last message
-    await supabase
-      .from("mod_chat_conversations")
-      .update({
-        last_message_text: greeting.substring(0, 255),
-        last_message_at: new Date().toISOString(),
-        last_message_by: "ai",
-      })
-      .eq("id", conversation.id);
+    if (!skipGreeting) {
+      await supabase
+        .from("mod_chat_conversations")
+        .update({
+          last_message_text: greeting.substring(0, 255),
+          last_message_at: new Date().toISOString(),
+          last_message_by: "ai",
+        })
+        .eq("id", conversation.id);
+    }
 
     // 8. Notify agent(s) / owner — previously this was SILENT.
     // A chat conversation was auto-created but no one was told. Now we fire:
@@ -440,13 +454,18 @@ export async function createConversationForEntity(
     //   b) web push (OS/browser popup) so agents are alerted even when the tab is closed
     // Fire-and-forget so we never block the booking/order flow.
     (async () => {
+      const notifyText = skipGreeting
+        ? ctx.entityType === "order"
+          ? `New order ${ctx.orderNumber} — awaiting payment`
+          : `New booking for ${ctx.serviceName || "Appointment"} — awaiting payment`
+        : greeting;
       try {
         const { notifyNewChatMessage } = await import("./chat-notifications");
         await notifyNewChatMessage({
           siteId,
           conversationId: conversation.id,
           visitorName: ctx.customerName,
-          messageText: greeting,
+          messageText: notifyText,
           agentUserId: availableAgent?.user_id || undefined,
         });
       } catch (err) {

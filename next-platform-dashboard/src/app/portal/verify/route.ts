@@ -103,7 +103,10 @@ export async function GET(request: NextRequest) {
         if ((teamMember as any).status === "invited") {
           await admin
             .from("portal_team_members" as any)
-            .update({ status: "active", last_active_at: new Date().toISOString() })
+            .update({
+              status: "active",
+              last_active_at: new Date().toISOString(),
+            })
             .eq("id", (teamMember as any).id);
         }
       } else if (user.email) {
@@ -139,20 +142,20 @@ export async function GET(request: NextRequest) {
               .eq("id", (tmByEmail as any).id);
           } else {
             // No portal access — sign out and redirect.
-          await supabase.auth.signOut();
-          const noAccessUrl = new URL(
-            "/portal/login?error=no_access",
-            request.url,
-          );
-          const noAccessResponse = NextResponse.redirect(noAccessUrl);
-          cookieMap.forEach(({ value, options }, name) =>
-            noAccessResponse.cookies.set(
-              name,
-              value,
-              options as Parameters<typeof noAccessResponse.cookies.set>[2],
-            ),
-          );
-          return noAccessResponse;
+            await supabase.auth.signOut();
+            const noAccessUrl = new URL(
+              "/portal/login?error=no_access",
+              request.url,
+            );
+            const noAccessResponse = NextResponse.redirect(noAccessUrl);
+            cookieMap.forEach(({ value, options }, name) =>
+              noAccessResponse.cookies.set(
+                name,
+                value,
+                options as Parameters<typeof noAccessResponse.cookies.set>[2],
+              ),
+            );
+            return noAccessResponse;
           }
         }
       }
@@ -177,7 +180,9 @@ export async function GET(request: NextRequest) {
       finalNext = setPwdUrl.pathname + setPwdUrl.search;
     }
   }
-  const redirectResponse = NextResponse.redirect(new URL(finalNext, request.url));
+  const redirectResponse = NextResponse.redirect(
+    new URL(finalNext, request.url),
+  );
   cookieMap.forEach(({ value, options }, name) =>
     redirectResponse.cookies.set(
       name,

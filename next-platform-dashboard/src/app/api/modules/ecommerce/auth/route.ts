@@ -1046,16 +1046,39 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Lookup the customer's email so we can also surface guest orders that
+      // were placed with the same email before the customer signed in.
+      const { data: customerForOrders } = await (supabase as any)
+        .from(TABLE)
+        .select("email")
+        .eq("id", session.customer_id)
+        .eq("site_id", siteId)
+        .single();
+      const customerEmailForOrders = (
+        customerForOrders?.email || ""
+      ).toLowerCase();
+
       const TABLE_PREFIX = "mod_ecommod01";
-      const { data: orders } = await (supabase as any)
+      let ordersQuery = (supabase as any)
         .from(`${TABLE_PREFIX}_orders`)
         .select(
           "id, order_number, status, payment_status, fulfillment_status, total, currency, created_at, shipping_address, tracking_number, tracking_url",
         )
-        .eq("customer_id", session.customer_id)
         .eq("site_id", siteId)
         .order("created_at", { ascending: false })
         .limit(50);
+
+      if (customerEmailForOrders) {
+        // Match either by linked customer_id OR by email (covers historical
+        // guest orders placed before the customer registered).
+        ordersQuery = ordersQuery.or(
+          `customer_id.eq.${session.customer_id},customer_email.eq.${customerEmailForOrders}`,
+        );
+      } else {
+        ordersQuery = ordersQuery.eq("customer_id", session.customer_id);
+      }
+
+      const { data: orders } = await ordersQuery;
 
       // Count items per order
       const orderIds = (orders || []).map((o: { id: string }) => o.id);
@@ -1583,18 +1606,64 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: bookings } = await (supabase as any)
+      // Booking columns: NO `service_name` or `date` columns exist on the
+      // table — service name comes from the related service row, and the
+      // date is derived from `start_time`. Use a left join + map the result.
+      const customerEmailLower = (customer.email || "").toLowerCase();
+      const { data: bookings, error: bookingsError } = await (supabase as any)
         .from("mod_bookmod01_appointments")
         .select(
-          "id, service_name, customer_name, customer_email, date, start_time, end_time, status, notes, created_at",
+          `id, customer_name, customer_email, customer_phone, customer_notes,
+           start_time, end_time, status, payment_status, payment_amount,
+           created_at, metadata,
+           service:mod_bookmod01_services(name, price, currency, duration)`,
         )
         .eq("site_id", siteId)
-        .eq("customer_email", customer.email)
-        .order("date", { ascending: false })
+        .ilike("customer_email", customerEmailLower)
+        .order("start_time", { ascending: false })
         .limit(50);
 
+      if (bookingsError) {
+        console.error("[get-bookings] Query error:", bookingsError.message);
+      }
+
+      const mappedBookings = (bookings || []).map(
+        (b: Record<string, unknown>) => {
+          const startIso = b.start_time as string | null;
+          const endIso = b.end_time as string | null;
+          const startDate = startIso ? new Date(startIso) : null;
+          const endDate = endIso ? new Date(endIso) : null;
+          const service = b.service as
+            | { name?: string; price?: number; currency?: string; duration?: number }
+            | null;
+          const fmtTime = (d: Date | null) =>
+            d
+              ? d.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+              : "";
+          return {
+            id: b.id,
+            service_name: service?.name || "Appointment",
+            customer_name: b.customer_name,
+            customer_email: b.customer_email,
+            date: startDate ? startDate.toISOString().slice(0, 10) : "",
+            start_time: fmtTime(startDate),
+            end_time: fmtTime(endDate),
+            status: b.status || "pending",
+            notes: (b.customer_notes as string | null) || null,
+            payment_status: b.payment_status,
+            payment_amount: b.payment_amount,
+            currency: service?.currency || "ZMW",
+            created_at: b.created_at,
+          };
+        },
+      );
+
       return NextResponse.json(
-        { bookings: bookings || [] },
+        { bookings: mappedBookings },
         { status: 200, headers: corsHeaders },
       );
     }

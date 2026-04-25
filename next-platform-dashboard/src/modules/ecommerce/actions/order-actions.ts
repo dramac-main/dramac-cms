@@ -756,6 +756,7 @@ export async function updatePaymentProofStatus(
                       `Your payment proof for order ${orderData.order_number} could not be verified. ` +
                         `Please upload a new proof of payment on your order page, or contact us for help.`,
                       conv.assistantName,
+                      { pendingApproval: true },
                     );
                   },
                 ),
