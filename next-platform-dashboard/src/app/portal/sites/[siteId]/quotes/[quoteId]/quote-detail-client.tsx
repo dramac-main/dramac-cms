@@ -45,7 +45,7 @@ import { formatPortalCurrency, formatPortalDate } from "@/lib/portal/format";
 import {
   convertQuoteToOrderAction,
   updateQuoteStatusAction,
-} from "../_actions";
+} from "@/lib/portal/actions/quotes-actions";
 
 const QUOTE_TRANSITIONS: Record<string, readonly PortalQuoteStatus[]> = {
   draft: ["sent", "cancelled"],

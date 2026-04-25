@@ -32,7 +32,7 @@ import {
   rejectPaymentProofAction,
   bulkReviewPaymentProofsAction,
   signPaymentProofUrlAction,
-} from "./_actions";
+} from "@/lib/portal/actions/payment-proofs-actions";
 import { fromCents } from "@/lib/money";
 
 type StatusFilter = "pending" | "approved" | "rejected" | "all";

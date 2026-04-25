@@ -29,7 +29,7 @@ import {
   updateScriptedFlow,
   toggleScriptedFlow,
   deleteScriptedFlow,
-} from "@/app/portal/sites/[siteId]/live-chat/scripted-flows/actions";
+} from "@/lib/portal/actions/live-chat-scripted-flows-actions";
 
 export interface ScriptedFlowRow {
   id: string;

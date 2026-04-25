@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import {
   updateChikoAiSettings,
   type ChikoAiSettingsUpdate,
-} from "@/app/portal/sites/[siteId]/live-chat/ai-settings/actions";
+} from "@/lib/portal/actions/live-chat-ai-settings-actions";
 
 interface Props {
   siteId: string;

@@ -35,7 +35,7 @@ import type {
   PortalBookingDetail,
 } from "@/lib/portal/commerce-data-access";
 import { formatPortalCurrency, formatPortalDate } from "@/lib/portal/format";
-import { updateBookingStatusAction } from "../_actions";
+import { updateBookingStatusAction } from "@/lib/portal/actions/bookings-actions";
 
 const BOOKING_TRANSITIONS: Record<string, readonly PortalAppointmentStatus[]> =
   {

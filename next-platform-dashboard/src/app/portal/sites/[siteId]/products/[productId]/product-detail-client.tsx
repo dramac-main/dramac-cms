@@ -34,7 +34,7 @@ import { ArrowLeft, Boxes, AlertTriangle } from "lucide-react";
 import { PortalStatusPill } from "@/components/portal/patterns/portal-status-pill";
 import type { PortalProductDetail } from "@/lib/portal/commerce-data-access";
 import { formatPortalCurrency } from "@/lib/portal/format";
-import { adjustInventoryAction } from "../_actions";
+import { adjustInventoryAction } from "@/lib/portal/actions/products-actions";
 
 export function ProductDetailClient({
   siteId,
