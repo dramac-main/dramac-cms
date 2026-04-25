@@ -167,16 +167,25 @@ export function CreateAppointmentDialog({
       // Determine status based on service require_confirmation setting
       // LOGIC:
       // 1. If service requires confirmation → always 'pending' (needs manual approval)
-      // 2. If service does NOT require confirmation:
+      // 2. If site requires payment → always 'pending' until paid
+      // 3. If service does NOT require confirmation:
       //    - Default to 'confirmed' (auto-confirm by default)
       //    - Unless settings.auto_confirm is explicitly false
       let appointmentStatus: "pending" | "confirmed" = "confirmed"; // Default to confirmed
+
+      const requirePayment = settings?.require_payment === true;
+      const paymentStatus: "pending" | "not_required" = requirePayment
+        ? "pending"
+        : "not_required";
 
       if (selectedService?.require_confirmation) {
         // Service explicitly requires confirmation
         appointmentStatus = "pending";
       } else if (settings && settings.auto_confirm === false) {
         // Settings explicitly disable auto-confirm
+        appointmentStatus = "pending";
+      } else if (paymentStatus === "pending") {
+        // Site requires payment but it hasn't been received yet
         appointmentStatus = "pending";
       }
       // Otherwise stays 'confirmed' (the default)
@@ -192,7 +201,11 @@ export function CreateAppointmentDialog({
         end_time: endDateTime.toISOString(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         status: appointmentStatus,
-        payment_status: "not_required",
+        payment_status: paymentStatus,
+        payment_amount:
+          requirePayment && selectedService?.price
+            ? selectedService.price
+            : undefined,
         metadata: {},
         custom_fields: {},
       });

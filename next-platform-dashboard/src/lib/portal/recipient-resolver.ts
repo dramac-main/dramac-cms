@@ -208,9 +208,7 @@ interface AdminAuthHandle {
   // its internal types here.
   auth: {
     admin: {
-      getUserById: (
-        id: string,
-      ) => Promise<{
+      getUserById: (id: string) => Promise<{
         data: { user: { id: string } | null } | null;
         error: unknown;
       }>;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Eye, Loader2, Bell, Settings, User } from "lucide-react";
+import { LogOut, Eye, Loader2, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,6 +25,7 @@ import {
   type PortalSiteSwitcherOption,
 } from "@/components/portal/site-switcher";
 import { WhatsNewButton } from "@/components/portal/whats-new-button";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface PortalHeaderProps {
   // Legacy props for backward compatibility
@@ -192,19 +193,8 @@ export function PortalHeader({
           {/* What's New */}
           {!isImpersonating && <WhatsNewButton />}
 
-          {/* Notifications */}
-          {!isImpersonating && (
-            <Button variant="ghost" size="icon" className="relative" asChild>
-              <Link href="/portal/notifications">
-                <Bell className="h-5 w-5" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
-                  </span>
-                )}
-              </Link>
-            </Button>
-          )}
+          {/* Notifications — realtime bell with sound, popover, mark-read */}
+          {!isImpersonating && <NotificationBell />}
 
           {/* User Menu */}
           {!isImpersonating && user && (

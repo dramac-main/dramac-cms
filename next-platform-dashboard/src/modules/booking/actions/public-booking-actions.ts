@@ -540,14 +540,24 @@ export async function createPublicAppointment(
     // Create the appointment
     // auto_confirm setting overrides per-service require_confirmation
     const autoConfirm = settings?.auto_confirm ?? false;
-    const status =
-      autoConfirm || !service.require_confirmation ? "confirmed" : "pending";
+    const requirePayment = settings?.require_payment === true;
 
     // Wire require_payment setting to payment_status
-    const paymentStatus = settings?.require_payment
-      ? "pending"
-      : "not_required";
-    const paymentAmount = settings?.require_payment ? service.price : null;
+    const paymentStatus = requirePayment ? "pending" : "not_required";
+    const paymentAmount = requirePayment ? service.price : null;
+
+    // Booking can only be auto-confirmed when:
+    //  - service does not require manual confirmation, AND
+    //  - either auto_confirm is on OR confirmation is not required, AND
+    //  - payment is not pending (i.e. either not required or already paid).
+    // Otherwise the booking must stay 'pending' until staff approves OR the
+    // payment is captured/marked paid.
+    const canAutoConfirm =
+      (autoConfirm || !service.require_confirmation) &&
+      paymentStatus !== "pending";
+    const status: "pending" | "confirmed" = canAutoConfirm
+      ? "confirmed"
+      : "pending";
 
     const { data: appointment, error } = await supabase
       .from(`${TABLE_PREFIX}_appointments`)
