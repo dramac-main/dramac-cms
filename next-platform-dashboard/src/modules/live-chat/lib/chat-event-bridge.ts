@@ -323,25 +323,24 @@ export async function createConversationForEntity(
     }
 
     // 5. Update visitor conversation count
-    await supabase
-      .rpc("increment_field", {
+    try {
+      await supabase.rpc("increment_field", {
         table_name: "mod_chat_visitors",
         field_name: "total_conversations",
         row_id: visitorId,
         increment_by: 1,
-      })
-      .catch(() => {
-        // RPC may not exist — try direct update
-        supabase
-          .from("mod_chat_visitors")
-          .update({
-            total_conversations:
-              (existingVisitor?.total_conversations || 0) + 1,
-            last_seen_at: new Date().toISOString(),
-          })
-          .eq("id", visitorId)
-          .then(() => {});
       });
+    } catch {
+      // RPC may not exist — fall back to direct update
+      await supabase
+        .from("mod_chat_visitors")
+        .update({
+          total_conversations:
+            (existingVisitor?.total_conversations || 0) + 1,
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq("id", visitorId);
+    }
 
     // 6. Auto-assign to available agent
     const { data: agents } = await supabase

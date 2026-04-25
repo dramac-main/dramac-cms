@@ -82,7 +82,7 @@ export async function handleNewVisitorMessage(
   const { data: aiSettings } = await supabase
     .from("mod_chat_widget_settings")
     .select(
-      "ai_auto_response_enabled, ai_payment_guidance_enabled, scripted_flows_enabled",
+      "ai_auto_response_enabled, ai_payment_guidance_enabled, scripted_flows_enabled, scripted_flows_require_approval",
     )
     .eq("site_id", siteId)
     .single();
@@ -90,6 +90,8 @@ export async function handleNewVisitorMessage(
   const aiAutoEnabled = aiSettings?.ai_auto_response_enabled !== false; // default true
   const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false; // default true
   const flowsEnabled = aiSettings?.scripted_flows_enabled !== false; // default true
+  // When true, scripted-flow messages are staged for agent approval before the customer sees them
+  const flowsRequireApproval = aiSettings?.scripted_flows_require_approval === true; // default false
 
   // ── PRIORITY 1: Continue an in-flight scripted flow ───────────────────────
   // Once a scripted flow is mid-step, we MUST finish it deterministically.
@@ -117,6 +119,7 @@ export async function handleNewVisitorMessage(
           conversationId,
           next,
           convForFlow?.metadata,
+          flowsRequireApproval,
         );
         return {
           handled: true,
@@ -144,6 +147,7 @@ export async function handleNewVisitorMessage(
         siteId,
         conversationId,
         visitorMessage,
+        flowsRequireApproval,
       );
       if (started) {
         return {
@@ -252,12 +256,14 @@ export async function handleNewVisitorMessage(
           siteId,
           conversationId,
           visitorMessage,
+          flowsRequireApproval,
         )) ??
         (await tryStartScriptedFlowBySlug(
           supabase,
           siteId,
           conversationId,
           "payment_methods",
+          flowsRequireApproval,
         ));
       if (backup) {
         console.warn(
@@ -325,6 +331,7 @@ export async function handleNewVisitorMessage(
           siteId,
           conversationId,
           visitorMessage,
+          flowsRequireApproval,
         )) ??
         // No keyword matched — still give the visitor a deterministic exit
         // (talk-to-human handoff) so the conversation never dies silently.
@@ -333,6 +340,7 @@ export async function handleNewVisitorMessage(
           siteId,
           conversationId,
           "talk_to_human",
+          flowsRequireApproval,
         ));
       if (started) {
         return {
@@ -416,8 +424,11 @@ async function persistScriptedStep(
   conversationId: string,
   result: ScriptedFlowResult,
   existingMetadata: Record<string, unknown> | null | undefined,
+  requireApproval = false,
 ): Promise<void> {
-  // Insert the message bubble
+  // When requireApproval is true, stage the message as an internal note pending
+  // agent review — the customer won't see it until an agent approves it.
+  const pendingApproval = requireApproval;
   const { error: insertError } = await supabase
     .from("mod_chat_messages")
     .insert({
@@ -427,10 +438,13 @@ async function persistScriptedStep(
       sender_name: "Assistant",
       content: result.response,
       content_type: result.contentType,
-      status: "sent",
+      status: pendingApproval ? "pending_approval" : "sent",
       is_ai_generated: false, // scripted, not AI
       ai_confidence: 1,
-      is_internal_note: false,
+      is_internal_note: pendingApproval,
+      ...(pendingApproval
+        ? { metadata: { pending_agent_approval: true } }
+        : {}),
     });
 
   if (insertError) {
@@ -469,6 +483,7 @@ async function tryStartScriptedFlow(
   siteId: string,
   conversationId: string,
   visitorMessage: string,
+  requireApproval = false,
 ): Promise<ScriptedFlowResult | null> {
   const result = await runScriptedFlow(siteId, visitorMessage, null);
   if (!result) return null;
@@ -485,6 +500,7 @@ async function tryStartScriptedFlow(
     conversationId,
     result,
     conv?.metadata,
+    requireApproval,
   );
   void bumpFlowAnalytics(result.flowId, "usage");
   return result;
@@ -500,6 +516,7 @@ async function tryStartScriptedFlowBySlug(
   siteId: string,
   conversationId: string,
   slug: string,
+  requireApproval = false,
 ): Promise<ScriptedFlowResult | null> {
   const result = await startFlowBySlug(siteId, slug);
   if (!result) return null;
@@ -516,6 +533,7 @@ async function tryStartScriptedFlowBySlug(
     conversationId,
     result,
     conv?.metadata,
+    requireApproval,
   );
   void bumpFlowAnalytics(result.flowId, "usage");
   return result;

@@ -150,6 +150,10 @@ export interface ChatWidgetSettings {
   aiAssistantName: string;
   aiHandoffKeywords: string[];
   aiHandoffMessage: string | null;
+  // Scripted flows
+  scriptedFlowsEnabled: boolean;
+  scriptedFlowsRequireApproval: boolean;
+  scriptedFlowsFallbackPriority: number;
   // Language
   language: string;
   customTranslations: Record<string, string>;

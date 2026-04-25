@@ -1314,6 +1314,28 @@ export function SettingsPageWrapper({
                 />
               </div>
 
+              {/* ── Toggle: AI & Scripted Flow Approval Gate ─────── */}
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">
+                    Require Agent Approval for AI Messages
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, AI-generated messages and scripted flow
+                    responses are held as internal notes. Agents must approve,
+                    edit, or discard each message before the customer sees it.
+                    Includes fallback messages sent when AI credits are
+                    exhausted.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.scriptedFlowsRequireApproval === true}
+                  onCheckedChange={(v) =>
+                    update("scriptedFlowsRequireApproval", v)
+                  }
+                />
+              </div>
+
               {/* ── Assistant Name ───────────────────────────────── */}
               <div className="space-y-2">
                 <Label>Assistant Name</Label>
@@ -1491,6 +1513,8 @@ export function SettingsPageWrapper({
                         ? settings.aiHandoffKeywords
                         : [],
                     aiHandoffMessage: settings.aiHandoffMessage || null,
+                    scriptedFlowsRequireApproval:
+                      settings.scriptedFlowsRequireApproval === true,
                   })
                 }
                 disabled={isPending}

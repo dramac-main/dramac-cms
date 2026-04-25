@@ -11,6 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyUserSiteAccess } from "@/lib/multi-tenant/tenant-context";
 import {
   notifyBookingConfirmed,
@@ -191,8 +192,11 @@ export async function updateBookingStatusFromChat(
   const hasAccess = await verifyUserSiteAccess(user.id, siteId);
   if (!hasAccess) return { error: "Access denied" };
 
+  // Use admin client for DB operations — the UPDATE RLS policy's agency_members
+  // JOIN excludes super-admins who pass can_access_site() but aren't in agency_members.
+  // Access is already verified above via verifyUserSiteAccess.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
+  const db = createAdminClient() as any;
 
   const validStatuses = [
     "pending",
@@ -555,8 +559,9 @@ export async function updateBookingPaymentFromChat(
   const hasAccess = await verifyUserSiteAccess(user.id, siteId);
   if (!hasAccess) return { error: "Access denied" };
 
+  // Use admin client for DB operations — same reason as updateBookingStatusFromChat.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
+  const db = createAdminClient() as any;
 
   const validStatuses = ["pending", "paid", "refunded", "not_required"];
   if (!validStatuses.includes(paymentStatus)) {
