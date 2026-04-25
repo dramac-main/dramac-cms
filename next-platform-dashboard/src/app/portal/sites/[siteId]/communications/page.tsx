@@ -32,6 +32,17 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ siteId: string }>;
+  searchParams?: Promise<{
+    channel?: string;
+    state?: string;
+    event?: string;
+  }>;
+}
+
+interface CommsFilter {
+  channel?: string;
+  state?: string;
+  event?: string;
 }
 
 function stateVariant(
@@ -63,8 +74,17 @@ function formatDate(iso: string | null): string {
   }
 }
 
-export default async function PortalCommunicationsPage({ params }: PageProps) {
+export default async function PortalCommunicationsPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { siteId } = await params;
+  const sp = (await searchParams) ?? {};
+  const filter: CommsFilter = {
+    channel: sp.channel,
+    state: sp.state,
+    event: sp.event,
+  };
 
   return (
     <div className="space-y-6">
@@ -73,13 +93,19 @@ export default async function PortalCommunicationsPage({ params }: PageProps) {
         description="Delivery log for automated and manual messages sent on this site"
       />
       <Suspense fallback={<LogSkeleton />}>
-        <LogLoader siteId={siteId} />
+        <LogLoader siteId={siteId} filter={filter} />
       </Suspense>
     </div>
   );
 }
 
-async function LogLoader({ siteId }: { siteId: string }) {
+async function LogLoader({
+  siteId,
+  filter,
+}: {
+  siteId: string;
+  filter: CommsFilter;
+}) {
   const user = await requirePortalAuth();
   const session = await getPortalSession();
   const dal = createPortalDAL({
@@ -89,7 +115,12 @@ async function LogLoader({ siteId }: { siteId: string }) {
   });
 
   const [entries, stats] = await Promise.all([
-    dal.communications.sendLog.list(siteId, { limit: 100 }),
+    dal.communications.sendLog.list(siteId, {
+      limit: 100,
+      channel: (filter.channel as any) || undefined,
+      deliveryState: (filter.state as any) || undefined,
+      eventType: filter.event || undefined,
+    }),
     dal.communications.sendLog.stats(siteId),
   ]);
 
@@ -160,6 +191,7 @@ async function LogLoader({ siteId }: { siteId: string }) {
           <CardTitle>Recent sends</CardTitle>
         </CardHeader>
         <CardContent>
+          <CommsFilterBar siteId={siteId} filter={filter} stats={stats} />
           {entries.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               No messages have been sent on this site yet.
@@ -185,7 +217,16 @@ async function LogLoader({ siteId }: { siteId: string }) {
                         {formatDate(e.createdAt)}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {e.eventType || "—"}
+                        {e.eventType ? (
+                          <a
+                            href={`/portal/sites/${siteId}/communications?event=${encodeURIComponent(e.eventType)}`}
+                            className="underline-offset-2 hover:underline"
+                          >
+                            {e.eventType}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell className="capitalize">
                         {e.channel.replace(/_/g, " ")}
@@ -245,6 +286,102 @@ function LogSkeleton() {
           ))}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+/**
+ * Filter bar for the communications log. Renders a row of small links —
+ * an "all" reset link plus one chip per known channel and per known state,
+ * each with its current count from the stats roll-up. Click a chip to
+ * filter; click "All" to reset.
+ */
+function CommsFilterBar({
+  siteId,
+  filter,
+  stats,
+}: {
+  siteId: string;
+  filter: CommsFilter;
+  stats: { byChannel: Record<string, number>; byState: Record<string, number> };
+}) {
+  const base = `/portal/sites/${siteId}/communications`;
+  const params = (next: Partial<CommsFilter>) => {
+    const merged = { ...filter, ...next };
+    const sp = new URLSearchParams();
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) sp.set(k, v);
+    }
+    const qs = sp.toString();
+    return qs ? `${base}?${qs}` : base;
+  };
+  const channels = Object.entries(stats.byChannel).sort((a, b) => b[1] - a[1]);
+  const states = Object.entries(stats.byState).sort((a, b) => b[1] - a[1]);
+
+  const hasFilter = !!(filter.channel || filter.state || filter.event);
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 border-b pb-3 text-xs">
+      <span className="font-medium text-muted-foreground">Filter:</span>
+      <a
+        href={base}
+        className={`rounded-full border px-2 py-0.5 ${
+          !hasFilter
+            ? "bg-foreground text-background"
+            : "hover:bg-muted"
+        }`}
+      >
+        All
+      </a>
+      {channels.length > 0 && (
+        <>
+          <span className="ml-2 text-muted-foreground">Channel:</span>
+          {channels.map(([ch, n]) => {
+            const active = filter.channel === ch;
+            return (
+              <a
+                key={ch}
+                href={params({ channel: active ? undefined : ch })}
+                className={`rounded-full border px-2 py-0.5 capitalize ${
+                  active ? "bg-foreground text-background" : "hover:bg-muted"
+                }`}
+              >
+                {ch.replace(/_/g, " ")}{" "}
+                <span className="tabular-nums opacity-70">({n})</span>
+              </a>
+            );
+          })}
+        </>
+      )}
+      {states.length > 0 && (
+        <>
+          <span className="ml-2 text-muted-foreground">State:</span>
+          {states.map(([st, n]) => {
+            const active = filter.state === st;
+            return (
+              <a
+                key={st}
+                href={params({ state: active ? undefined : st })}
+                className={`rounded-full border px-2 py-0.5 capitalize ${
+                  active ? "bg-foreground text-background" : "hover:bg-muted"
+                }`}
+              >
+                {st.replace(/_/g, " ")}{" "}
+                <span className="tabular-nums opacity-70">({n})</span>
+              </a>
+            );
+          })}
+        </>
+      )}
+      {filter.event && (
+        <a
+          href={params({ event: undefined })}
+          className="rounded-full border bg-foreground px-2 py-0.5 text-background"
+          title="Clear event filter"
+        >
+          event: <span className="font-mono">{filter.event}</span> ✕
+        </a>
+      )}
     </div>
   );
 }
