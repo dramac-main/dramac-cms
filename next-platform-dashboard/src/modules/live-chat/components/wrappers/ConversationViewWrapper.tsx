@@ -944,7 +944,7 @@ export function ConversationViewWrapper({
               const isActing = approvalPending[msg.id] === true;
               return (
                 <div key={msg.id} className="flex justify-end px-2 py-1">
-                  <div className="max-w-[80%] rounded-xl border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 shadow-sm">
+                  <div className="max-w-[80%] rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-600/40 p-3 shadow-sm">
                     {/* Header */}
                     <div className="flex items-center gap-1.5 mb-2 text-amber-700 dark:text-amber-400">
                       <Clock className="h-3.5 w-3.5" />

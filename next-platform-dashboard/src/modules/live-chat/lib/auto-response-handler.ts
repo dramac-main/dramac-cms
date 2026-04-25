@@ -23,6 +23,7 @@ import {
   type ScriptedFlowState,
   type ScriptedFlowResult,
 } from "./scripted-flows";
+import { parsePaymentMethods } from "./payment-method-parser";
 
 // =============================================================================
 // PAYMENT / ORDER MESSAGE DETECTION
@@ -44,6 +45,10 @@ const PAYMENT_ORDER_PATTERNS = [
   /\bmy\s+quot(?:e|ation)\b/i,
   /\baccept(?:ed)?\s+(?:the\s+)?quot(?:e|ation)\b/i,
   /\bquot(?:e|ation)\s+(?:status|update|converted)\b/i,
+  // Payment method selection — visitor clicked a payment method button
+  /\bI(?:'d like| would like| will|'ll)?\s+(?:to\s+)?pay\s+(?:using|with|via|by|through)\b/i,
+  /\bpay(?:ing)?\s+(?:using|with|via|by|through)\b/i,
+  /\b(?:use|using|choose|choosing|select(?:ing)?|go(?:ing)?\s+with)\s+(?:airtel|mtn|momo|zanaco|mobile\s+money|bank\s+transfer|card)\b/i,
 ];
 
 /** Returns true if the message is about orders/payment and should trigger AI payment guidance */
@@ -97,8 +102,23 @@ export async function handleNewVisitorMessage(
   // payment-guidance messages such as the `payment_method_select` button card)
   // must be reviewed by a human agent before reaching the customer, unless the
   // site explicitly opts out by setting `ai_responses_require_approval = false`.
-  const aiRequireApproval =
-    aiSettings?.ai_responses_require_approval !== false; // default TRUE
+  const aiRequireApproval = aiSettings?.ai_responses_require_approval !== false; // default TRUE
+
+  // ── PRIORITY 0: Payment method selection from a prior payment_method_select ──
+  // When the visitor clicked one of the payment method buttons (e.g. "Airtel Money")
+  // we immediately resolve their selection with the exact site-configured payment
+  // details — no AI call, no scripted flow re-prompt. This runs unconditionally so
+  // it works whether or not the Anthropic API key is configured.
+  const paymentSelectionHandled = await resolvePaymentMethodSelection(
+    supabase,
+    siteId,
+    conversationId,
+    visitorMessage,
+    aiRequireApproval,
+  );
+  if (paymentSelectionHandled) {
+    return { handled: true, aiResponded: false, routedToAgent: false };
+  }
 
   // ── PRIORITY 1: Continue an in-flight scripted flow ───────────────────────
   // Once a scripted flow is mid-step, we MUST finish it deterministically.
@@ -212,9 +232,7 @@ export async function handleNewVisitorMessage(
           is_ai_generated: true,
           ai_confidence: aiResult.confidence,
           is_internal_note: aiRequireApproval,
-          metadata: aiRequireApproval
-            ? { pending_agent_approval: true }
-            : {},
+          metadata: aiRequireApproval ? { pending_agent_approval: true } : {},
         });
 
       if (insertError) {
@@ -380,9 +398,7 @@ export async function handleNewVisitorMessage(
       is_ai_generated: true,
       ai_confidence: aiResult.confidence,
       is_internal_note: aiRequireApproval,
-      metadata: aiRequireApproval
-        ? { pending_agent_approval: true }
-        : {},
+      metadata: aiRequireApproval ? { pending_agent_approval: true } : {},
     });
 
   if (stdInsertError) {
@@ -553,4 +569,165 @@ async function tryStartScriptedFlowBySlug(
   );
   void bumpFlowAnalytics(result.flowId, "usage");
   return result;
+}
+
+// =============================================================================
+// PAYMENT METHOD SELECTION RESOLVER
+// =============================================================================
+
+/**
+ * When a visitor clicks a payment method button from a `payment_method_select`
+ * message, their reply (e.g. "I'd like to pay using Airtel Money") should
+ * produce the exact payment instructions for that method — no re-prompting,
+ * no hardcoded fallbacks, no AI call required.
+ *
+ * Returns true if a payment method was matched and a details message was
+ * inserted; false otherwise (caller should continue normal routing).
+ */
+async function resolvePaymentMethodSelection(
+  supabase: any,
+  siteId: string,
+  conversationId: string,
+  visitorMessage: string,
+  requireApproval: boolean,
+): Promise<boolean> {
+  // 1. Look for a prior payment_method_select in this conversation
+  const { data: priorSelects } = await supabase
+    .from("mod_chat_messages")
+    .select("content, content_type, status, metadata")
+    .eq("conversation_id", conversationId)
+    .eq("content_type", "payment_method_select")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (!priorSelects?.length) return false;
+
+  // Accept both approved (status = 'sent') and still-pending selects
+  const selectMsg =
+    priorSelects.find(
+      (m: { status: string }) =>
+        m.status === "sent" || m.status === "pending_approval",
+    ) ?? null;
+  if (!selectMsg) return false;
+
+  // 2. Parse the buttons from the prior select message
+  let parsed: { text?: string; buttons?: { id: string; label: string }[] } =
+    {};
+  try {
+    parsed = JSON.parse(selectMsg.content as string);
+  } catch {
+    return false;
+  }
+
+  const buttons = parsed.buttons;
+  if (!buttons?.length) return false;
+
+  // 3. Check if the visitor message contains a button label (e.g. "Airtel Money")
+  const lower = visitorMessage.toLowerCase();
+  const matched = buttons.find((btn: { id: string; label: string }) =>
+    lower.includes(btn.label.toLowerCase()),
+  );
+  if (!matched) return false;
+
+  console.log(
+    `[AutoResponse] Payment method selection detected: "${matched.label}" for conversation ${conversationId}`,
+  );
+
+  // 4. Fetch the site's payment instructions (ecommerce takes priority, then bookings)
+  const [{ data: ecomSettings }, { data: bookSettings }] = await Promise.all([
+    supabase
+      .from("mod_ecommod01_settings")
+      .select("manual_payment_instructions")
+      .eq("site_id", siteId)
+      .maybeSingle(),
+    supabase
+      .from("mod_bookmod01_settings")
+      .select("manual_payment_instructions")
+      .eq("site_id", siteId)
+      .maybeSingle(),
+  ]);
+
+  const instructions: string =
+    ecomSettings?.manual_payment_instructions ||
+    bookSettings?.manual_payment_instructions ||
+    "";
+
+  // 5. Parse the instructions into individual methods and find the match
+  let methodDetails: string | null = null;
+  if (instructions) {
+    const methods = parsePaymentMethods(instructions);
+    if (methods) {
+      const matchedMethod = methods.find(
+        (m) =>
+          m.label.toLowerCase().includes(matched.label.toLowerCase()) ||
+          matched.label.toLowerCase().includes(m.label.toLowerCase()),
+      );
+      if (matchedMethod) {
+        methodDetails = matchedMethod.details;
+      }
+    }
+    // If parsePaymentMethods couldn't split the instructions, use them in full
+    if (!methodDetails) {
+      methodDetails = instructions;
+    }
+  }
+
+  if (!methodDetails) {
+    // No payment instructions configured — can't generate a meaningful response
+    return false;
+  }
+
+  // 6. Build the details message
+  const content =
+    `Here are the **${matched.label}** payment details:\n\n${methodDetails}\n\n` +
+    `Please use your order/booking number as the payment reference when sending.`;
+
+  // 7. Insert the details message (staged for approval if required)
+  const { error: insertError } = await supabase
+    .from("mod_chat_messages")
+    .insert({
+      conversation_id: conversationId,
+      site_id: siteId,
+      sender_type: "ai",
+      sender_name: "Chiko",
+      content,
+      content_type: "text",
+      status: requireApproval ? "pending_approval" : "sent",
+      is_ai_generated: false,
+      ai_confidence: 1.0,
+      is_internal_note: requireApproval,
+      metadata: requireApproval ? { pending_agent_approval: true } : {},
+    });
+
+  if (insertError) {
+    console.error(
+      "[AutoResponse] Failed to insert payment method details:",
+      insertError,
+    );
+    return false;
+  }
+
+  // 8. Record the selected method in conversation metadata
+  const { data: convMeta } = await supabase
+    .from("mod_chat_conversations")
+    .select("metadata")
+    .eq("id", conversationId)
+    .single();
+
+  await supabase
+    .from("mod_chat_conversations")
+    .update({
+      metadata: {
+        ...(convMeta?.metadata || {}),
+        selected_payment_method: matched.id,
+        payment_guidance_active: true,
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId);
+
+  console.log(
+    `[AutoResponse] Payment method details sent for "${matched.label}" in conversation ${conversationId}`,
+  );
+  return true;
 }
