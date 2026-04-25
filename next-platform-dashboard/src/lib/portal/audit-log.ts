@@ -106,6 +106,55 @@ export async function writePortalAudit(entry: PortalAuditEntry): Promise<void> {
       metadata: { action: entry.action, result: entry.result ?? "ok" },
     });
   }
+
+  // Section 7 — when this audit row represents a successful WRITE performed
+  // during an active impersonation session, mirror it into the dedicated
+  // `impersonation_actions` ledger so agency owners have a single,
+  // tamper-evident view of every staff-as-customer write. Pure read actions
+  // (action ends in `.view` / `.list` / `.read`) are skipped.
+  if (
+    (entry.result ?? "ok") === "ok" &&
+    entry.isImpersonation === true &&
+    !/\.(view|list|read|search|count)$/i.test(entry.action)
+  ) {
+    try {
+      await admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from("impersonation_actions" as any)
+        .insert({
+          impersonator_user_id: entry.authUserId,
+          impersonated_user_id: null,
+          impersonated_client_id: entry.clientId,
+          agency_id: entry.agencyId,
+          site_id: entry.siteId ?? null,
+          action_type: entry.action,
+          resource_type: entry.resourceType ?? null,
+          resource_id: entry.resourceId ?? null,
+          http_method: null,
+          request_path: null,
+          metadata: {
+            ...(entry.metadata ?? {}),
+            impersonatorEmail: entry.impersonatorEmail ?? null,
+            ipAddress,
+            userAgent,
+          },
+        });
+    } catch (auditErr) {
+      logPortalEvent({
+        event: "portal.impersonation.audit.failed",
+        level: "error",
+        ok: false,
+        agencyId: entry.agencyId,
+        clientId: entry.clientId,
+        siteId: entry.siteId ?? null,
+        authUserId: entry.authUserId,
+        isImpersonation: true,
+        error:
+          auditErr instanceof Error ? auditErr.message : String(auditErr),
+        metadata: { action: entry.action },
+      });
+    }
+  }
 }
 
 /**
