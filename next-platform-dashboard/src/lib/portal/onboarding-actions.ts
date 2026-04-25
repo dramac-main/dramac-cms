@@ -60,7 +60,8 @@ export async function loadOnboardingState(): Promise<{
   // Derived signal: any subscribed channel via portal_notification_preferences?
   if (!state.notifications_enabled) {
     const { data: prefs } = await admin
-      .from("portal_notification_preferences")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("portal_notification_preferences" as any)
       .select("category")
       .eq("user_id" as never, user.userId)
       .limit(1);
@@ -76,7 +77,8 @@ export async function loadOnboardingState(): Promise<{
       .maybeSingle();
     if (client) {
       const { data: orders } = await admin
-        .from("mod_ecom_orders")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from("mod_ecom_orders" as any)
         .select("id")
         .limit(1);
       if (orders && orders.length > 0) state.first_order_seen = true;

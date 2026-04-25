@@ -1064,7 +1064,7 @@ export async function notifyBookingPaymentReceived(
       // Must fire exactly once per (appointment × payment amount) so a
       // partial payment + final payment each fire, but a webhook retry
       // for the same payment is suppressed.
-      stateHash: `booking_payment:${data.price ?? 0}`,
+      stateHash: `booking_payment:${data.servicePrice ?? 0}`,
       title: `Payment Received: ${data.serviceName}`,
       message: `${data.customerName} paid ${priceStr} for ${data.serviceName} on ${dateStr} at ${timeStr}.`,
       link: dashboardUrl,
