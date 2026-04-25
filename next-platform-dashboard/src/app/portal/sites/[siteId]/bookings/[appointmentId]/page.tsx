@@ -25,7 +25,7 @@ export default async function PortalBookingDetailPage({ params }: PageProps) {
   await verifyPortalModuleAccess(
     user,
     siteId,
-    "ecommerce",
+    "booking",
     "canManageBookings",
   );
 

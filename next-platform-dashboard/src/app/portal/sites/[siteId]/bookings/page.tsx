@@ -59,7 +59,7 @@ export default async function PortalBookingsPage({
   await verifyPortalModuleAccess(
     user,
     siteId,
-    "ecommerce",
+    "booking",
     "canManageBookings",
   );
 
