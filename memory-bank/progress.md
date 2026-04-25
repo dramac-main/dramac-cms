@@ -1,35 +1,83 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Session 8 — PKCE-safe magic link + floating Ask Chiko FAB — SHIPPED ✅ (commit `6fb87cd7`)
+**Last Updated**: Session 10 Part A — Live Chat portal RLS — SHIPPED ✅
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+## Session 10 Part A (completed) — SHIPPED
+
+- ✅ **Live Chat portal empty-list RLS fix**. Added `<table>_portal_select`
+  SELECT-only RLS policies on every `mod_chat_*` table
+  (`migrations/portal-live-chat-rls.sql`), each
+  `USING (public.is_portal_user_for_site(site_id))`. Applied to prod via
+  Supabase MCP (`portal_live_chat_rls`). Verified as authenticated portal
+  JWT: 3 conversations / 1 visitor / 9 messages visible for Lumina. The
+  Session 9B `can_access_site()` update had NOT reached `mod_chat_*` because
+  those tables' RLS was hand-rolled with inline `agency_members` joins
+  instead of the helper. Many other modules likely have the same gap
+  (ecom-40 inventory, ecom-41 analytics, ecom-42 marketing, ecom-43
+  integrations, em-30 embed tokens, em-41 versioning, etc.) — audit each
+  affected portal page in next pass.
+
+## Portal Perfection Prompt — remaining scope (OPEN)
+
+Driven by `CLIENT-PORTAL-PERFECTION-PROMPT.md`. User directive: three full
+passes with commit+push after each. Still outstanding after Part A:
+
+- §2 (continued): audit other `mod_*` tables whose RLS bypasses
+  `can_access_site()` and add portal-select policies where portal pages are
+  reading (ecom-40/41/42/43, em-30, em-41 already flagged).
+- §3 Scripted flows: `mod_chat_scripted_flows` migration, AI-credit
+  exhaustion fallback in `src/modules/live-chat/lib/ai-responder.ts`, 10
+  default flows, portal admin tab.
+- §4 PWA: create `public/manifest.json`, flesh out `public/sw.js` (precache,
+  network-first API, cache-first static, SWR fonts/images, per-user push
+  tag scoping, actions, requireInteraction for critical events), link
+  manifest from `src/app/portal/layout.tsx`, notification permission
+  banner + 30-day dismissal.
+- §4 Dispatcher: audit `src/lib/portal/notification-dispatcher.ts` for full
+  event coverage (orders, bookings, invoices, quotes, chat, forms, CRM,
+  push-subscription-expired, ai-credits-low, plan-usage, support tickets).
+- §5 Email: "Send test email" on `/portal/settings/notifications`, email
+  log viewer at `/portal/sites/[siteId]/communications`, `email_failures`
+  dead-letter + retry + agency alert at 5 failures/hour.
+- §6 Automation: verify `system-templates.ts` coverage; audit every
+  resource action for `logAutomationEvent` + `dispatchBusinessEvent` +
+  branded email; add idempotency key `(resource_type, resource_id,
+  event_type, state_hash)`.
+- §7 Impersonation: `impersonation_actions` audit table + log all writes
+  with both impersonator + impersonated IDs.
+- §8 Page-by-page audit (Playwright, since browser testing unavailable).
+- §9 UX polish: Cmd+K global command palette (highest leverage),
+  onboarding checklist, "What's new" feed, skeletons, empty states, error
+  recovery, mobile cards, a11y.
+- §10 Testing: `npx tsc --noEmit`, `npx next build`, tests for
+  empty-list path, scripted-flow trigger, credit-exhaustion fallback,
+  dispatcher dedupe, impersonation audit, two Playwright journeys.
+
+## Session 9 (completed) — SHIPPED
+
+- ✅ **Portal magic link cookie-persistence fix** (commit `466e75d2`).
+  Root cause: Server Components cannot set cookies; the `try/catch` in
+  `createClient::setAll` silently swallowed every session cookie from
+  `verifyOtp`. OTP was consumed on Supabase's side but browser never
+  received a session → redirect to `/portal` hit `updateSession` with no
+  session → bounced to main `/login`.
+  Fix: replaced `portal/verify/page.tsx` (Server Component) with
+  `portal/verify/route.ts` (GET Route Handler — can set cookies); manually
+  collect cookies from Supabase's `setAll` and attach to redirect response.
+  Also added `/portal` to `updateSession` publicRoutes so portal pages aren't
+  redirected to platform `/login`. Login page now shows error banners for
+  `?error=invalid_link` / `?error=no_access`.
 
 ## Session 8 (completed) — SHIPPED
 
-- ✅ **Magic-link "Invalid or expired" — REAL FIX** (commit `6fb87cd7`).
-  Root cause: `@supabase/ssr` browser client uses PKCE by default; the
-  `code_verifier` only exists on the device that generated the link,
-  so clients clicking on their own device always failed
-  `exchangeCodeForSession`. Canonical SSR fix applied:
-  `generatePortalMagicLink` now builds
-  `/portal/verify?token_hash=…&type=magiclink&next=/portal` from
-  `admin.generateLink`'s `data.properties.hashed_token`; `/portal/verify`
-  is a server component that calls `verifyOtp({type, token_hash})`
-  which sets HTTP-only cookies same-origin (PKCE-free). Branded error
-  card for invalid/expired tokens. `sanitizeNext` restricts redirect to
-  `/portal*`.
-- ✅ **Floating Ask Chiko FAB** — new
-  `src/components/portal/portal-chiko-fab.tsx`, mounted in
-  `portal-layout-client.tsx`. Branded via `bg-primary` CSS vars set by
-  `ServerBrandingStyle`. Hidden on `/portal/ask-chiko`, `/portal/login`,
-  `/portal/verify`, and non-portal paths. Positioned
-  `bottom-24 md:bottom-6` to sit above `MobileBottomNav`.
-- ✅ **Notification / email / automation wiring — AUDITED HEALTHY** (no
-  changes). Booking lifecycle (create/confirm/cancel/complete/no_show/
-  payment) + Order lifecycle (new/shipped/delivered/cancelled/refund) +
-  Invoice sent ALL fire (a) branded email via `sendBrandedEmail`, (b)
-  in-app notification via `createNotification`, (c) automation event
+- ✅ **Magic-link PKCE fix** (commit `6fb87cd7`). Switched from PKCE
+  `action_link` to `hashed_token` + `verifyOtp`. Correct OTP flow; cookie
+  persistence was still broken (fixed in Session 9).
+
   via `logAutomationEvent`, (d) chat bridge where applicable. Dispatcher
   Session-7 fix holds.
+
 - ✅ Build green: `npx next build` EXIT 0.
 - ✅ Pushed commit `6fb87cd7` to `main`. Vercel auto-deploy triggered
   (monitoring unavailable this session — MCP tool loading disabled).

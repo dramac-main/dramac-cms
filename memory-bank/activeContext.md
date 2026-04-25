@@ -1,8 +1,52 @@
 # Active Context
 
-**Last Updated**: Session 9 Part B — Portal RLS Fix — SHIPPED ✅
+**Last Updated**: Session 10 Part A — Live Chat Portal RLS — SHIPPED ✅
 
-## Current State: Session 9 Parts A + B — SHIPPED ✅
+## Current State: Session 10 Part A — Live Chat Portal RLS — SHIPPED ✅
+
+**Context:** User submitted `CLIENT-PORTAL-PERFECTION-PROMPT.md` (12 sections,
+three-pass directive covering scripted flows, PWA push, email logging,
+automation idempotency, impersonation audit, UX polish, etc.). Only the
+highest-priority bug from Section 2 has been addressed in this slice. The
+broader scope remains OPEN and is tracked in `progress.md` under
+"Portal Perfection Prompt — remaining scope".
+
+### Live Chat empty list bug — root cause + fix
+
+**Symptom:** Portal Live Chat → Conversations showed "0 conversations" even
+though the same site's dashboard count widget read 3 and the DB had 3. The
+Session 9B `can_access_site()` portal-user branch did NOT unblock chat like
+it unblocked CRM/Marketing/Automation.
+
+**Root cause:** `lc-01-chat-schema.sql` defined the `mod_chat_*` RLS policies
+with an INLINE `agency_members` sub-select (`site_id IN (SELECT s.id FROM
+sites s JOIN agency_members am ON am.agency_id = s.agency_id WHERE
+am.user_id = auth.uid())`) — they never called `can_access_site()`, so the
+Session 9B helper-function fix did not reach them. `getConversations()` in
+`src/modules/live-chat/actions/conversation-actions.ts` uses
+`mod_chat_visitors!inner(...)` via the SSR client; the inner join failed
+silently for portal users and returned zero rows, hence the empty list.
+The dashboard count widget reads through an admin-client DAL path and was
+unaffected (explaining the count/list divergence).
+
+**Fix:** `migrations/portal-live-chat-rls.sql` adds parallel SELECT-only
+policies named `<table>_portal_select` to every `mod_chat_*` table (departments,
+agents, widget_settings, visitors, conversations, messages, canned_responses,
+knowledge_base, analytics), each `USING (public.is_portal_user_for_site(site_id))`.
+The existing `site_isolation` FOR ALL policies remain untouched and continue
+to gate writes to agency members. Applied to production via Supabase MCP
+(`mcp_supabase_apply_migration` name=`portal_live_chat_rls`). Verified: with
+`SET LOCAL ROLE authenticated` and JWT `sub = 4be3ebeb-...`, the portal user
+now reads 3 conversations, 1 visitor, 9 messages for Lumina Wellness.
+
+**Follow-up: do NOT assume the Session 9B `can_access_site()` fix covers all
+module RLS.** Many other module migrations (ecommerce inventory/marketing/
+analytics/integrations, em-41 versioning, em-30 embed tokens, etc.) also use
+inline `agency_members` joins instead of `can_access_site()`. They probably
+have the same blind spot for portal reads; re-test each affected portal page
+and add parallel portal-select policies where needed.
+
+## Previous State: Session 9 Parts A + B — SHIPPED ✅
 
 Part A (magic link cookies): commit `466e75d2`. Part B (RLS): migration
 `portal-user-can-access-site` applied directly via Supabase MCP on production
