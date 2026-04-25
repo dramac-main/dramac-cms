@@ -20,10 +20,8 @@ import {
   type PreferenceGroup,
 } from "@/components/portal/notifications/notification-preferences-form";
 import { SendTestEmailCard } from "@/components/portal/notifications/send-test-email-card";
-import {
-  TEST_EMAIL_TEMPLATES,
-  listPortalTestEmailHistory,
-} from "./test-email-actions";
+import { TEST_EMAIL_TEMPLATES } from "./test-email-templates";
+import { listPortalTestEmailHistory } from "./test-email-actions";
 
 export const metadata: Metadata = {
   title: "Notification Preferences | Portal",

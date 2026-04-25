@@ -14,67 +14,7 @@ import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { EmailType } from "@/lib/email/email-types";
 import { revalidatePath } from "next/cache";
-
-/**
- * Curated list of templates a portal user is allowed to fire test sends
- * for. We deliberately exclude internal-only types (e.g. owner alerts that
- * leak supplier brand) and keep the menu to representative end-customer
- * templates so the user gets a meaningful preview.
- */
-export const TEST_EMAIL_TEMPLATES: ReadonlyArray<{
-  type: EmailType;
-  label: string;
-  category: string;
-}> = [
-  { type: "welcome", label: "Welcome", category: "Account" },
-  { type: "password_reset", label: "Password reset", category: "Account" },
-  {
-    type: "order_confirmation_customer",
-    label: "Order confirmation",
-    category: "E-commerce",
-  },
-  {
-    type: "order_shipped_customer",
-    label: "Order shipped",
-    category: "E-commerce",
-  },
-  {
-    type: "payment_received_customer",
-    label: "Payment received",
-    category: "E-commerce",
-  },
-  {
-    type: "booking_confirmation_customer",
-    label: "Booking confirmation",
-    category: "Bookings",
-  },
-  {
-    type: "booking_confirmed_customer",
-    label: "Booking confirmed",
-    category: "Bookings",
-  },
-  {
-    type: "invoice_sent_customer",
-    label: "Invoice sent",
-    category: "Invoicing",
-  },
-  {
-    type: "invoice_payment_received_customer",
-    label: "Invoice payment received",
-    category: "Invoicing",
-  },
-  {
-    type: "quote_sent_customer",
-    label: "Quote sent",
-    category: "Quotes",
-  },
-  {
-    type: "quote_accepted_customer",
-    label: "Quote accepted",
-    category: "Quotes",
-  },
-  { type: "form_submission_owner", label: "Form submission", category: "Forms" },
-];
+import { TEST_EMAIL_TEMPLATES } from "./test-email-templates";
 
 /**
  * Build a credible sample data envelope per emailType. The data is
