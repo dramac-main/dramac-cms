@@ -3,9 +3,9 @@
 /**
  * Portal onboarding state — server actions.
  *
- * Tracks per-user progress through the first-run portal checklist.
- * Auto-detects external signals (notifications-enabled, first order
- * seen) where possible so the user doesn't have to tick every box.
+ * All 6 checklist steps are auto-derived from real system data.
+ * Users cannot manually tick steps — each step completes only when
+ * the actual underlying action has been taken.
  */
 
 import { revalidatePath } from "next/cache";
@@ -22,21 +22,12 @@ export interface OnboardingState {
   dismissed: boolean;
 }
 
-const DEFAULT_STATE: OnboardingState = {
-  profile_confirmed: false,
-  notifications_enabled: false,
-  app_installed: false,
-  team_invited: false,
-  first_order_seen: false,
-  payments_setup: false,
-  dismissed: false,
-};
-
 export type OnboardingFlag = keyof Omit<OnboardingState, "dismissed">;
 
 /**
- * Load the user's onboarding row, auto-detecting derived signals from
- * other tables when they aren't explicitly set yet.
+ * Load the user's onboarding state. Every step is derived from real
+ * data — no stored booleans are used for completion tracking (except
+ * app_installed, which requires a client-side PWA signal, and dismissed).
  */
 export async function loadOnboardingState(): Promise<{
   state: OnboardingState;
@@ -46,44 +37,100 @@ export async function loadOnboardingState(): Promise<{
   const user = await requirePortalAuth();
   const admin = createAdminClient();
 
+  // Fetch the stored row only for `app_installed` (client-side signal) and `dismissed`.
   const { data: row } = await admin
     .from("portal_onboarding_state" as never)
-    .select(
-      "profile_confirmed, notifications_enabled, app_installed, team_invited, first_order_seen, payments_setup, dismissed",
-    )
+    .select("app_installed, dismissed")
     .eq("user_id" as never, user.userId)
     .maybeSingle();
 
-  const stored = (row as Partial<OnboardingState> | null) ?? {};
-  const state: OnboardingState = { ...DEFAULT_STATE, ...stored };
+  const stored = (row as { app_installed?: boolean; dismissed?: boolean } | null) ?? {};
 
-  // Derived signal: any subscribed channel via portal_notification_preferences?
-  if (!state.notifications_enabled) {
-    const { data: prefs } = await admin
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from("portal_notification_preferences" as any)
-      .select("category")
-      .eq("user_id" as never, user.userId)
-      .limit(1);
-    if (prefs && prefs.length > 0) state.notifications_enabled = true;
-  }
+  const state: OnboardingState = {
+    profile_confirmed: false,
+    notifications_enabled: false,
+    app_installed: stored.app_installed ?? false,
+    team_invited: false,
+    first_order_seen: false,
+    payments_setup: false,
+    dismissed: stored.dismissed ?? false,
+  };
 
-  // Derived signal: any order at all on a site this user can access?
-  if (!state.first_order_seen && user.clientId) {
-    const { data: client } = await admin
-      .from("clients")
-      .select("id")
-      .eq("id", user.clientId)
-      .maybeSingle();
-    if (client) {
-      const { data: orders } = await admin
+  // Run all derivations in parallel.
+  await Promise.all([
+    // 1. profile_confirmed — has the user set their full name?
+    (async () => {
+      const { data } = await admin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.userId)
+        .maybeSingle();
+      if (data && typeof data.full_name === "string" && data.full_name.trim().length > 0) {
+        state.profile_confirmed = true;
+      }
+    })(),
+
+    // 2. notifications_enabled — has the user configured any notification channel?
+    (async () => {
+      const { data } = await admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from("portal_notification_preferences" as any)
+        .select("category")
+        .eq("user_id" as never, user.userId)
+        .limit(1);
+      if (data && data.length > 0) state.notifications_enabled = true;
+    })(),
+
+    // 3. team_invited — does at least one other portal team member exist for this client?
+    (async () => {
+      if (!user.clientId) return;
+      const { data } = await admin
+        .from("portal_team_members" as never)
+        .select("id")
+        .eq("client_id" as never, user.clientId)
+        .neq("user_id" as never, user.userId)
+        .limit(1);
+      if (data && data.length > 0) state.team_invited = true;
+    })(),
+
+    // 4. first_order_seen — any order on a site belonging to this client?
+    (async () => {
+      if (!user.clientId) return;
+      const { data } = await admin
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from("mod_ecom_orders" as any)
         .select("id")
+        .in(
+          "site_id",
+          // sub-select: site ids that belong to this client
+          admin
+            .from("sites")
+            .select("id")
+            .eq("client_id", user.clientId) as never,
+        )
         .limit(1);
-      if (orders && orders.length > 0) state.first_order_seen = true;
-    }
-  }
+      if (data && data.length > 0) state.first_order_seen = true;
+    })(),
+
+    // 5. payments_setup — has the client configured any ecommerce payment provider?
+    (async () => {
+      if (!user.clientId) return;
+      const { data } = await admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from("mod_ecom_settings" as any)
+        .select("id")
+        .in(
+          "site_id",
+          admin
+            .from("sites")
+            .select("id")
+            .eq("client_id", user.clientId) as never,
+        )
+        .not("payment_provider" as never, "is", null)
+        .limit(1);
+      if (data && data.length > 0) state.payments_setup = true;
+    })(),
+  ]);
 
   const flags: OnboardingFlag[] = [
     "profile_confirmed",
@@ -98,20 +145,21 @@ export async function loadOnboardingState(): Promise<{
   return { state, totalSteps: flags.length, completedSteps };
 }
 
-export async function setOnboardingFlag(
-  flag: OnboardingFlag,
-  value: boolean,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+/**
+ * Called by the client-side PWA install detector when the portal app
+ * is installed to the home screen. Only the `app_installed` flag may
+ * be set this way — all other steps are derived from real system data.
+ */
+export async function markAppInstalled(): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
   const user = await requirePortalAuth();
   const admin = createAdminClient();
 
   const { error } = await admin
     .from("portal_onboarding_state" as never)
     .upsert(
-      {
-        user_id: user.userId,
-        [flag]: value,
-      } as never,
+      { user_id: user.userId, app_installed: true } as never,
       { onConflict: "user_id" },
     );
 

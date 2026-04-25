@@ -3,9 +3,9 @@
 /**
  * Onboarding checklist card — shown on the portal landing page.
  *
- * Steps with deep-links to the relevant settings page. User can
- * mark items done, or dismiss the entire checklist (it stays
- * dismissed until manually re-opened from settings).
+ * Steps are read-only and auto-complete when the underlying action is
+ * actually taken. Users can dismiss the checklist but cannot manually
+ * tick individual steps.
  */
 
 import { useState, useTransition } from "react";
@@ -21,9 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  setOnboardingFlag,
   dismissOnboarding,
-  type OnboardingFlag,
   type OnboardingState,
 } from "@/lib/portal/onboarding-actions";
 
@@ -34,7 +32,7 @@ interface ChecklistProps {
 }
 
 interface Step {
-  flag: OnboardingFlag;
+  flag: keyof Omit<OnboardingState, "dismissed">;
   title: string;
   description: string;
   href: string;
@@ -46,7 +44,7 @@ const STEPS: Step[] = [
     flag: "profile_confirmed",
     title: "Confirm your profile",
     description: "Add your name and contact details so the team can reach you.",
-    href: "/portal/settings/profile",
+    href: "/portal/settings",
     cta: "Open profile",
   },
   {
@@ -60,14 +58,14 @@ const STEPS: Step[] = [
     flag: "app_installed",
     title: "Install the portal app",
     description: "Add the portal to your phone or desktop for instant access.",
-    href: "/portal/settings/app",
+    href: "/portal/notifications",
     cta: "Install",
   },
   {
     flag: "team_invited",
     title: "Invite your team",
     description: "Give colleagues their own portal accounts with the right permissions.",
-    href: "/portal/settings/team",
+    href: "/portal/team",
     cta: "Invite",
   },
   {
@@ -80,9 +78,9 @@ const STEPS: Step[] = [
   {
     flag: "payments_setup",
     title: "Set up payment methods",
-    description: "Add a card or bank to make checkouts smooth.",
-    href: "/portal/settings/payments",
-    cta: "Add method",
+    description: "Configure a payment provider on your ecommerce store.",
+    href: "/portal/sites",
+    cta: "Configure store",
   },
 ];
 
@@ -91,29 +89,11 @@ export function OnboardingChecklist({
   totalSteps,
   completedSteps,
 }: ChecklistProps) {
-  const [state, setState] = useState<OnboardingState>(initialState);
-  const [done, setDone] = useState(completedSteps);
   const [dismissed, setDismissed] = useState(initialState.dismissed);
   const [isPending, startTransition] = useTransition();
 
   if (dismissed) return null;
-  // If everything is complete, show a small completed banner once — but
-  // the user can dismiss it.
-  const allDone = done >= totalSteps;
-
-  const toggle = (flag: OnboardingFlag, current: boolean) => {
-    const next = !current;
-    setState({ ...state, [flag]: next });
-    setDone((prev) => prev + (next ? 1 : -1));
-    startTransition(async () => {
-      const res = await setOnboardingFlag(flag, next);
-      if (!res.ok) {
-        toast.error(res.error);
-        setState({ ...state, [flag]: current });
-        setDone((prev) => prev + (next ? -1 : 1));
-      }
-    });
-  };
+  const allDone = completedSteps >= totalSteps;
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -136,7 +116,7 @@ export function OnboardingChecklist({
               : "Get the most out of your portal"}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            {done} of {totalSteps} steps complete
+            {completedSteps} of {totalSteps} steps complete
           </p>
         </div>
         <Button
@@ -150,32 +130,22 @@ export function OnboardingChecklist({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Progress value={(done / totalSteps) * 100} />
+        <Progress value={(completedSteps / totalSteps) * 100} />
         <div className="space-y-2">
           {STEPS.map((step) => {
-            const isDone = state[step.flag];
+            const isDone = initialState[step.flag];
             return (
               <div
                 key={step.flag}
                 className="flex items-start gap-3 rounded-md border p-3"
               >
-                <button
-                  type="button"
-                  onClick={() => toggle(step.flag, isDone)}
-                  disabled={isPending}
-                  className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
-                  aria-label={
-                    isDone
-                      ? `Mark "${step.title}" as not done`
-                      : `Mark "${step.title}" as done`
-                  }
-                >
+                <span className="mt-0.5 shrink-0 text-muted-foreground">
                   {isDone ? (
                     <CheckCircle2Icon className="size-5 text-primary" />
                   ) : (
                     <CircleIcon className="size-5" />
                   )}
-                </button>
+                </span>
                 <div className="flex-1 space-y-0.5">
                   <p
                     className={`text-sm font-medium ${

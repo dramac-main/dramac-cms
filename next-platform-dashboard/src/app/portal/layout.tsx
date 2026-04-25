@@ -9,6 +9,7 @@ import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
 import { PortalPushBanner } from "@/components/portal/portal-push-banner";
 import { PortalCommandPalette } from "@/components/portal/portal-command-palette";
+import { PwaInstallDetector } from "@/components/portal/pwa-install-detector";
 import { BrandingProvider } from "@/components/providers/branding-provider";
 import { ServerBrandingStyle } from "@/components/providers/server-branding-style";
 import {
@@ -136,6 +137,7 @@ export default async function PortalLayout({
       }
     >
       <PortalPushBanner />
+      <PwaInstallDetector />
       {children}
       <PortalCommandPalette />
     </PortalLayoutClient>
