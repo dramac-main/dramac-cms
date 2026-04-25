@@ -1,8 +1,31 @@
 # Active Context
 
-**Last Updated**: Session 10 Part A — Live Chat Portal RLS — SHIPPED ✅
+**Last Updated**: Session 10 Part B — Portal Perfection: PWA + Scripted Flows + Cmd+K — SHIPPED ✅
 
-## Current State: Session 10 Part A — Live Chat Portal RLS — SHIPPED ✅
+## Current State: Session 10 Part B — Portal Perfection (Sections 3, 4, partial 9) — SHIPPED ✅
+
+**Context:** Continuing `CLIENT-PORTAL-PERFECTION-PROMPT.md` (12 sections).
+Three production-shipped commits this session:
+
+1. **`feat(portal): PWA + push banner (Sec 4) + scripted-flow fallback engine (Sec 3)`**
+   - Section 4 — PWA: `/manifest.webmanifest` + 6 SVG icons + sw.js v3 (per-user notification tags, action handlers, fetch caching, message-driven skipWaiting). Wired into root layout. `PortalPushBanner` rendered above portal content. `/api/push/subscribe` + `push-client.ts` accept `context='portal'`.
+   - Section 3 — Scripted Flows: New `mod_chat_scripted_flows` table + RLS (agency / portal / public-read-when-enabled). `mod_chat_messages.content_type` CHECK extended with `flow_choice` + `flow_handoff`. New `scripted-flows.ts` runtime: `loadEnabledFlows`, `matchFlow`, `runScriptedFlow`, `bumpFlowAnalytics`. Wired into `auto-response-handler.ts` as PRIORITY 1 (mid-flow) + fallback (after AI null / when AI off). Mid-flow state persisted in `mod_chat_conversations.metadata.scripted_flow`. Widget renders `flow_choice` (FlowChoice button group) + `flow_handoff` (amber pill). Six default flows seeded for every site: business_hours, order_status, payment_methods, refund_request, talk_to_human, contact_business.
+
+2. **`feat(portal): add command palette (Cmd+K) for cross-portal navigation`**
+   - New `PortalCommandPalette` mounted in portal layout. Cmd+K / Ctrl+K (or `/` when not focused on a form) opens. Filters across Navigate, Actions, Settings groups. Arrow-key navigation + Enter to open.
+
+### Remaining scope of CLIENT-PORTAL-PERFECTION-PROMPT.md (NOT done this session)
+
+- Section 3 — Agency editor at `/dashboard/sites/[siteId]/live-chat/scripted-flows` (CRUD UI for flows). The runtime works without it; admins can edit via SQL today.
+- Section 5 — Send-test-email button at `/portal/settings/notifications` + email log viewer at `/portal/sites/[siteId]/communications`.
+- Section 6 — Automation events audit: every must-fire event routed through dispatcher with email + in-app + push fan-out and idempotency key `(resource_type, resource_id, event_type, state_hash)`.
+- Section 7 — Impersonation audit (banner + audit-log entries on every state change).
+- Section 8 — UX polish (empty / loading / error states across portal pages).
+- Section 10 — Tests.
+- Section 11 — Typecheck + build clean (full `tsc --noEmit` last attempted timed out at 120s; needs incremental approach).
+- Section 12 — Three verification passes after final ship.
+
+### Prior session (Part A) — Live Chat Portal RLS — SHIPPED ✅
 
 **Context:** User submitted `CLIENT-PORTAL-PERFECTION-PROMPT.md` (12 sections,
 three-pass directive covering scripted flows, PWA push, email logging,
