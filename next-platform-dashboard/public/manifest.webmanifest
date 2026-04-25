@@ -1,0 +1,79 @@
+{
+  "name": "DRAMAC Client Portal",
+  "short_name": "DRAMAC",
+  "description": "Manage your sites, orders, bookings, and live chat in one place.",
+  "start_url": "/portal",
+  "scope": "/portal/",
+  "id": "/portal",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Chat",
+      "short_name": "Chat",
+      "description": "Open conversations across your sites",
+      "url": "/portal?goto=chat",
+      "icons": [{ "src": "/icons/shortcut-chat.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "Recent orders across all sites",
+      "url": "/portal?goto=orders",
+      "icons": [{ "src": "/icons/shortcut-orders.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Bookings",
+      "short_name": "Bookings",
+      "description": "Upcoming bookings across all sites",
+      "url": "/portal?goto=bookings",
+      "icons": [{ "src": "/icons/shortcut-bookings.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Inbox",
+      "description": "Your notification inbox",
+      "url": "/portal/notifications",
+      "icons": [{ "src": "/icons/shortcut-bell.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

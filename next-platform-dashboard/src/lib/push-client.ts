@@ -29,7 +29,7 @@ export function getPushPermission(): NotificationPermission | "unsupported" {
  * Register service worker and subscribe to push notifications
  */
 export async function subscribeToPush(
-  context: "agent" | "customer",
+  context: "agent" | "customer" | "portal",
   options?: { siteId?: string; conversationId?: string }
 ): Promise<{ success: boolean; error?: string }> {
   if (!isPushSupported()) {

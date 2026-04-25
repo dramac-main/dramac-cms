@@ -7,6 +7,7 @@ import { getUnreadNotificationCount } from "@/lib/portal/notification-service";
 import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
+import { PortalPushBanner } from "@/components/portal/portal-push-banner";
 import { BrandingProvider } from "@/components/providers/branding-provider";
 import { ServerBrandingStyle } from "@/components/providers/server-branding-style";
 import {
@@ -133,6 +134,7 @@ export default async function PortalLayout({
         />
       }
     >
+      <PortalPushBanner />
       {children}
     </PortalLayoutClient>
   );

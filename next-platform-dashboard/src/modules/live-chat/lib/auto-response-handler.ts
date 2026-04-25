@@ -16,6 +16,12 @@ import {
   analyzeSentiment,
 } from "./ai-responder";
 import { routeConversation } from "./routing-engine";
+import {
+  runScriptedFlow,
+  bumpFlowAnalytics,
+  type ScriptedFlowState,
+  type ScriptedFlowResult,
+} from "./scripted-flows";
 
 // =============================================================================
 // PAYMENT / ORDER MESSAGE DETECTION
@@ -74,15 +80,70 @@ export async function handleNewVisitorMessage(
   // ── Check site AI settings ────────────────────────────────────────────────
   const { data: aiSettings } = await supabase
     .from("mod_chat_widget_settings")
-    .select("ai_auto_response_enabled, ai_payment_guidance_enabled")
+    .select(
+      "ai_auto_response_enabled, ai_payment_guidance_enabled, scripted_flows_enabled",
+    )
     .eq("site_id", siteId)
     .single();
 
   const aiAutoEnabled = aiSettings?.ai_auto_response_enabled !== false; // default true
   const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false; // default true
+  const flowsEnabled = aiSettings?.scripted_flows_enabled !== false; // default true
+
+  // ── PRIORITY 1: Continue an in-flight scripted flow ───────────────────────
+  // Once a scripted flow is mid-step, we MUST finish it deterministically.
+  // Never silently switch back to AI mid-tree.
+  if (flowsEnabled) {
+    const { data: convForFlow } = await supabase
+      .from("mod_chat_conversations")
+      .select("metadata")
+      .eq("id", conversationId)
+      .single();
+
+    const activeFlowState: ScriptedFlowState | null =
+      convForFlow?.metadata?.scripted_flow ?? null;
+
+    if (activeFlowState) {
+      const next = await runScriptedFlow(siteId, visitorMessage, activeFlowState);
+      if (next) {
+        await persistScriptedStep(
+          supabase,
+          siteId,
+          conversationId,
+          next,
+          convForFlow?.metadata,
+        );
+        return {
+          handled: true,
+          aiResponded: false,
+          routedToAgent: next.shouldHandoff,
+        };
+      }
+      // Flow ran out of steps — clear state, fall through.
+      await supabase
+        .from("mod_chat_conversations")
+        .update({
+          metadata: { ...(convForFlow?.metadata || {}), scripted_flow: null },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", conversationId);
+    }
+  }
 
   // If site owner disabled ALL AI, exit early
   if (!aiAutoEnabled && !paymentGuidance) {
+    // Last-chance: try to start a scripted flow before giving up
+    if (flowsEnabled) {
+      const started = await tryStartScriptedFlow(
+        supabase,
+        siteId,
+        conversationId,
+        visitorMessage,
+      );
+      if (started) {
+        return { handled: true, aiResponded: false, routedToAgent: started.shouldHandoff };
+      }
+    }
     return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
@@ -217,6 +278,22 @@ export async function handleNewVisitorMessage(
   );
 
   if (!aiResult) {
+    // AI returned no usable response — fall back to scripted flows.
+    if (flowsEnabled) {
+      const started = await tryStartScriptedFlow(
+        supabase,
+        siteId,
+        conversationId,
+        visitorMessage,
+      );
+      if (started) {
+        return {
+          handled: true,
+          aiResponded: false,
+          routedToAgent: started.shouldHandoff,
+        };
+      }
+    }
     return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
@@ -276,3 +353,83 @@ export async function handleNewVisitorMessage(
     routedToAgent: false,
   };
 }
+
+// =============================================================================
+// SCRIPTED FLOW HELPERS
+// =============================================================================
+
+/**
+ * Insert the scripted-flow step's payload as a chat message AND persist the
+ * updated flow state on the conversation. Bumps analytics counters.
+ */
+async function persistScriptedStep(
+  supabase: any,
+  siteId: string,
+  conversationId: string,
+  result: ScriptedFlowResult,
+  existingMetadata: Record<string, unknown> | null | undefined,
+): Promise<void> {
+  // Insert the message bubble
+  const { error: insertError } = await supabase
+    .from("mod_chat_messages")
+    .insert({
+      conversation_id: conversationId,
+      site_id: siteId,
+      sender_type: "ai",
+      sender_name: "Assistant",
+      content: result.response,
+      content_type: result.contentType,
+      status: "sent",
+      is_ai_generated: false, // scripted, not AI
+      ai_confidence: 1,
+      is_internal_note: false,
+    });
+
+  if (insertError) {
+    console.error("[ScriptedFlow] Failed to insert step message:", insertError);
+    return;
+  }
+
+  // Persist updated flow state
+  await supabase
+    .from("mod_chat_conversations")
+    .update({
+      metadata: {
+        ...(existingMetadata || {}),
+        scripted_flow: result.state,
+      },
+      ...(result.shouldHandoff ? { status: "waiting" } : {}),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId);
+
+  // Analytics
+  if (!result.state) {
+    void bumpFlowAnalytics(result.flowId, result.shouldHandoff ? "handoff" : "completion");
+  }
+}
+
+/**
+ * Attempt to start a brand new scripted flow based on the visitor's message.
+ * Returns the result if a flow matched and a step was persisted; otherwise null.
+ */
+async function tryStartScriptedFlow(
+  supabase: any,
+  siteId: string,
+  conversationId: string,
+  visitorMessage: string,
+): Promise<ScriptedFlowResult | null> {
+  const result = await runScriptedFlow(siteId, visitorMessage, null);
+  if (!result) return null;
+
+  const { data: conv } = await supabase
+    .from("mod_chat_conversations")
+    .select("metadata")
+    .eq("id", conversationId)
+    .single();
+
+  await persistScriptedStep(supabase, siteId, conversationId, result, conv?.metadata);
+  void bumpFlowAnalytics(result.flowId, "usage");
+  return result;
+}
+

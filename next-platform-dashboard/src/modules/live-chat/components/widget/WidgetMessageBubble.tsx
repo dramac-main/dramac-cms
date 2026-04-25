@@ -106,6 +106,28 @@ export function WidgetMessageBubble({
     );
   }
 
+  // ── Scripted-flow choice buttons ─────────────────────────────────────────
+  if (message.contentType === "flow_choice") {
+    return (
+      <FlowChoice
+        message={message}
+        primaryColor={primaryColor}
+        onSendMessage={onSendMessage}
+      />
+    );
+  }
+
+  // ── Scripted-flow handoff banner ─────────────────────────────────────────
+  if (message.contentType === "flow_handoff") {
+    return (
+      <div className="flex justify-center my-2">
+        <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
+          {message.text}
+        </span>
+      </div>
+    );
+  }
+
   const formattedTime = formatTime(message.createdAt);
 
   return (
@@ -438,6 +460,82 @@ function PaymentMethodSelect({
           <span className="text-[10px] text-gray-400">
             {formatTime(message.createdAt)}
           </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Scripted Flow Choice Buttons ------------------------------------------
+
+interface FlowChoiceData {
+  text: string;
+  stepId: string;
+  buttons: { id: string; label: string }[];
+}
+
+function FlowChoice({
+  message,
+  primaryColor,
+  onSendMessage,
+}: {
+  message: WidgetMessage;
+  primaryColor: string;
+  onSendMessage?: (text: string) => void;
+}) {
+  let data: FlowChoiceData | null = null;
+  try {
+    data = JSON.parse(message.text) as FlowChoiceData;
+  } catch {
+    return (
+      <div className="flex justify-start mb-1">
+        <div className="max-w-[80%]">
+          <div className="px-3 py-2 text-sm leading-relaxed rounded-2xl rounded-bl-md bg-[#f1f5f9] text-[#1e293b]">
+            {message.text}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-start mb-1">
+      <div className="max-w-[85%]">
+        {message.senderName && (
+          <div className="flex items-center gap-1.5 mb-0.5 px-1">
+            <span className="text-[11px] font-medium text-gray-600">
+              {message.senderName}
+            </span>
+          </div>
+        )}
+        <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
+          <div className="px-3 pt-2.5 pb-1.5">
+            <p className="text-sm text-[#1e293b] leading-relaxed">{data.text}</p>
+          </div>
+          <div className="px-3 pb-2.5 flex flex-col gap-1.5">
+            {data.buttons.map((btn) => (
+              <button
+                key={btn.id}
+                type="button"
+                onClick={() => onSendMessage?.(btn.label)}
+                className="w-full text-left px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
+                style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: "white" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = primaryColor;
+                  e.currentTarget.style.color = "white";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                  e.currentTarget.style.color = primaryColor;
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center mt-0.5 px-1">
+          <span className="text-[10px] text-gray-400">{formatTime(message.createdAt)}</span>
         </div>
       </div>
     </div>

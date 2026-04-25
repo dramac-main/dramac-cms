@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     let userId: string | null = null;
     let supabase;
 
-    if (context === "agent") {
+    if (context === "agent" || context === "portal") {
       supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

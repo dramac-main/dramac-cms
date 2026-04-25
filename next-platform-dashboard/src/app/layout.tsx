@@ -34,9 +34,20 @@ export const metadata: Metadata = {
     images: seo.ogImage ? [seo.ogImage] : [],
   },
   robots: seo.robots,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "DRAMAC",
+    statusBarStyle: "default",
+  },
+  applicationName: identity.name,
   icons: {
-    icon: "/favicon.ico",
-    apple: "/images/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/icons/icon.svg" }],
+    shortcut: ["/favicon.ico"],
   },
 };
 
