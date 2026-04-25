@@ -18,6 +18,7 @@ import {
 import { routeConversation } from "./routing-engine";
 import {
   runScriptedFlow,
+  startFlowBySlug,
   bumpFlowAnalytics,
   type ScriptedFlowState,
   type ScriptedFlowResult,
@@ -104,7 +105,11 @@ export async function handleNewVisitorMessage(
       convForFlow?.metadata?.scripted_flow ?? null;
 
     if (activeFlowState) {
-      const next = await runScriptedFlow(siteId, visitorMessage, activeFlowState);
+      const next = await runScriptedFlow(
+        siteId,
+        visitorMessage,
+        activeFlowState,
+      );
       if (next) {
         await persistScriptedStep(
           supabase,
@@ -141,7 +146,11 @@ export async function handleNewVisitorMessage(
         visitorMessage,
       );
       if (started) {
-        return { handled: true, aiResponded: false, routedToAgent: started.shouldHandoff };
+        return {
+          handled: true,
+          aiResponded: false,
+          routedToAgent: started.shouldHandoff,
+        };
       }
     }
     return { handled: false, aiResponded: false, routedToAgent: false };
@@ -231,7 +240,37 @@ export async function handleNewVisitorMessage(
       };
     }
 
-    // AI failed (no API key, error, etc.) — fall through to normal routing
+    // AI failed (credits exhausted, rate-limit, no API key, etc.) — try the
+    // deterministic payment_methods scripted flow first so the visitor still
+    // gets immediate, accurate payment guidance with the actual configured
+    // bank/mobile-money/etc. options. Only if that flow is unavailable do we
+    // fall through to standard routing.
+    if (flowsEnabled) {
+      const backup =
+        (await tryStartScriptedFlow(
+          supabase,
+          siteId,
+          conversationId,
+          visitorMessage,
+        )) ??
+        (await tryStartScriptedFlowBySlug(
+          supabase,
+          siteId,
+          conversationId,
+          "payment_methods",
+        ));
+      if (backup) {
+        console.warn(
+          "[AutoResponse] Payment-guidance AI unavailable — served scripted flow:",
+          backup.flowId,
+        );
+        return {
+          handled: true,
+          aiResponded: false,
+          routedToAgent: backup.shouldHandoff,
+        };
+      }
+    }
     console.warn(
       "[AutoResponse] Payment guidance AI failed — falling back to normal routing",
     );
@@ -280,12 +319,21 @@ export async function handleNewVisitorMessage(
   if (!aiResult) {
     // AI returned no usable response — fall back to scripted flows.
     if (flowsEnabled) {
-      const started = await tryStartScriptedFlow(
-        supabase,
-        siteId,
-        conversationId,
-        visitorMessage,
-      );
+      const started =
+        (await tryStartScriptedFlow(
+          supabase,
+          siteId,
+          conversationId,
+          visitorMessage,
+        )) ??
+        // No keyword matched — still give the visitor a deterministic exit
+        // (talk-to-human handoff) so the conversation never dies silently.
+        (await tryStartScriptedFlowBySlug(
+          supabase,
+          siteId,
+          conversationId,
+          "talk_to_human",
+        ));
       if (started) {
         return {
           handled: true,
@@ -405,7 +453,10 @@ async function persistScriptedStep(
 
   // Analytics
   if (!result.state) {
-    void bumpFlowAnalytics(result.flowId, result.shouldHandoff ? "handoff" : "completion");
+    void bumpFlowAnalytics(
+      result.flowId,
+      result.shouldHandoff ? "handoff" : "completion",
+    );
   }
 }
 
@@ -428,8 +479,44 @@ async function tryStartScriptedFlow(
     .eq("id", conversationId)
     .single();
 
-  await persistScriptedStep(supabase, siteId, conversationId, result, conv?.metadata);
+  await persistScriptedStep(
+    supabase,
+    siteId,
+    conversationId,
+    result,
+    conv?.metadata,
+  );
   void bumpFlowAnalytics(result.flowId, "usage");
   return result;
 }
 
+/**
+ * Force-start a scripted flow by slug (e.g. payment_methods) regardless of
+ * whether the visitor's message matched any keywords. Used as the deterministic
+ * backup when AI generation fails.
+ */
+async function tryStartScriptedFlowBySlug(
+  supabase: any,
+  siteId: string,
+  conversationId: string,
+  slug: string,
+): Promise<ScriptedFlowResult | null> {
+  const result = await startFlowBySlug(siteId, slug);
+  if (!result) return null;
+
+  const { data: conv } = await supabase
+    .from("mod_chat_conversations")
+    .select("metadata")
+    .eq("id", conversationId)
+    .single();
+
+  await persistScriptedStep(
+    supabase,
+    siteId,
+    conversationId,
+    result,
+    conv?.metadata,
+  );
+  void bumpFlowAnalytics(result.flowId, "usage");
+  return result;
+}

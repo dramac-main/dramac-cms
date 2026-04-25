@@ -96,7 +96,9 @@ export interface ScriptedFlowResult {
 
 // ─── Loaders ────────────────────────────────────────────────────────────────
 
-export async function loadEnabledFlows(siteId: string): Promise<ScriptedFlow[]> {
+export async function loadEnabledFlows(
+  siteId: string,
+): Promise<ScriptedFlow[]> {
   const supabase = createAdminClient() as any;
 
   const { data, error } = await supabase
@@ -152,7 +154,11 @@ function resolveStepContent(step: ScriptedStep): {
       stepId: step.id,
       buttons: (step.buttons || []).map((b) => ({ id: b.id, label: b.label })),
     });
-    return { response: payload, contentType: "flow_choice", shouldHandoff: false };
+    return {
+      response: payload,
+      contentType: "flow_choice",
+      shouldHandoff: false,
+    };
   }
   if (step.type === "handoff") {
     return {
@@ -228,9 +234,15 @@ export async function runScriptedFlow(
       flowId: flow.id,
       stepId: nextStep.id,
       state:
-        nextStep.type === "handoff" || (!nextStep.next && nextStep.type !== "choice")
+        nextStep.type === "handoff" ||
+        (!nextStep.next && nextStep.type !== "choice")
           ? null
-          : { flowId: flow.id, stepId: nextStep.id, startedAt: currentState.startedAt, collected },
+          : {
+              flowId: flow.id,
+              stepId: nextStep.id,
+              startedAt: currentState.startedAt,
+              collected,
+            },
     };
   }
 
@@ -246,7 +258,43 @@ export async function runScriptedFlow(
     flowId: matched.id,
     stepId: firstStep.id,
     state:
-      firstStep.type === "handoff" || (!firstStep.next && firstStep.type !== "choice")
+      firstStep.type === "handoff" ||
+      (!firstStep.next && firstStep.type !== "choice")
+        ? null
+        : {
+            flowId: matched.id,
+            stepId: firstStep.id,
+            startedAt: new Date().toISOString(),
+            collected: {},
+          },
+  };
+}
+
+/**
+ * Force-start a specific flow by slug, regardless of whether the visitor's
+ * message matched any keywords. Used as the deterministic backup when AI
+ * generation fails (e.g. Anthropic credits exhausted, rate-limited, etc.).
+ *
+ * Returns null only if no enabled flow with that slug exists for the site.
+ */
+export async function startFlowBySlug(
+  siteId: string,
+  slug: string,
+): Promise<ScriptedFlowResult | null> {
+  const flows = await loadEnabledFlows(siteId);
+  const matched = flows.find((f) => f.slug === slug);
+  if (!matched) return null;
+  const firstStep = matched.steps[0];
+  if (!firstStep) return null;
+
+  const out = resolveStepContent(firstStep);
+  return {
+    ...out,
+    flowId: matched.id,
+    stepId: firstStep.id,
+    state:
+      firstStep.type === "handoff" ||
+      (!firstStep.next && firstStep.type !== "choice")
         ? null
         : {
             flowId: matched.id,
