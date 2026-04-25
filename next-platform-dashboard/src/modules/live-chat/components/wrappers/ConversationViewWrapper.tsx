@@ -129,6 +129,78 @@ function formatDate(dateStr: string): string {
   });
 }
 
+/**
+ * Render the visible "what the customer will see" preview for a message
+ * pending agent approval. Detects structured scripted-flow payloads
+ * (flow_choice / payment_method_select) and renders them as a friendly
+ * preview instead of raw JSON.
+ */
+function ApprovalMessagePreview({
+  content,
+  contentType,
+}: {
+  content: string | null | undefined;
+  contentType: string | null | undefined;
+}) {
+  const text = content || "";
+  const structured = ["flow_choice", "payment_method_select", "buttons"].includes(
+    String(contentType || ""),
+  );
+  // Heuristic: even without contentType, attempt to parse JSON if it starts with "{"
+  const looksLikeJson = text.trim().startsWith("{") && text.includes('"text"');
+
+  if (structured || looksLikeJson) {
+    try {
+      const data = JSON.parse(text) as {
+        text?: string;
+        stepId?: string;
+        buttons?: { id: string; label: string }[];
+        methods?: { id?: string; name?: string; label?: string }[];
+      };
+      const buttons =
+        Array.isArray(data.buttons) && data.buttons.length > 0
+          ? data.buttons.map((b) => ({ id: b.id, label: b.label }))
+          : Array.isArray(data.methods) && data.methods.length > 0
+            ? data.methods.map((m, i) => ({
+                id: m.id || String(i),
+                label: m.label || m.name || "Option",
+              }))
+            : [];
+      return (
+        <div className="space-y-2">
+          {data.text && (
+            <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+              {data.text}
+            </p>
+          )}
+          {buttons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {buttons.map((btn) => (
+                <span
+                  key={btn.id}
+                  className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border border-amber-300 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
+                >
+                  {btn.label}
+                </span>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            Interactive choice the visitor will see
+          </p>
+        </div>
+      );
+    } catch {
+      /* fall through to plain text */
+    }
+  }
+  return (
+    <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+      {text}
+    </p>
+  );
+}
+
 export function ConversationViewWrapper({
   conversation: initialConversation,
   initialMessages,
@@ -874,9 +946,10 @@ export function ConversationViewWrapper({
                         }
                       />
                     ) : (
-                      <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
+                      <ApprovalMessagePreview
+                        content={msg.content}
+                        contentType={msg.contentType}
+                      />
                     )}
 
                     {/* Action buttons */}

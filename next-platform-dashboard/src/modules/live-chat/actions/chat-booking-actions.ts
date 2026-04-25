@@ -209,6 +209,49 @@ export async function updateBookingStatusFromChat(
     return { error: `Invalid status: ${newStatus}` };
   }
 
+  // ── State-machine guard: prevent illegal transitions ─────────────
+  // Industry standard: a booking can only move forward (or to cancelled).
+  // Going backwards (e.g. confirmed → pending) corrupts customer trust and
+  // confuses calendars/notifications. To revert, the booking must be cancelled
+  // and a new one created.
+  const { data: existingForGuard } = await db
+    .from(`${BOOKING_PREFIX}_appointments`)
+    .select("status, payment_status")
+    .eq("site_id", siteId)
+    .eq("id", bookingId)
+    .single();
+
+  const currentStatus = existingForGuard?.status as string | undefined;
+  const currentPayment = existingForGuard?.payment_status as string | undefined;
+
+  if (currentStatus && currentStatus !== newStatus) {
+    const allowed: Record<string, string[]> = {
+      pending: ["confirmed", "cancelled", "no_show"],
+      confirmed: ["completed", "cancelled", "no_show"],
+      completed: [], // terminal
+      cancelled: [], // terminal
+      no_show: ["cancelled"], // limited recovery
+    };
+    const allowedNext = allowed[currentStatus] ?? [];
+    if (!allowedNext.includes(newStatus)) {
+      return {
+        error: `Cannot change booking from "${currentStatus}" to "${newStatus}". This transition is not allowed. To make this change, cancel the booking and create a new one.`,
+      };
+    }
+
+    // Extra guard: if payment is already paid, do not silently revert to
+    // pending/no_show — agent must explicitly cancel + refund.
+    if (
+      currentPayment === "paid" &&
+      (newStatus === "pending" || newStatus === "no_show")
+    ) {
+      return {
+        error:
+          "Cannot revert a paid booking to pending. Cancel the booking and refund the payment instead.",
+      };
+    }
+  }
+
   // ── Payment enforcement: block confirmation of unpaid bookings ──
   // Same rule as booking-actions.ts:updateAppointment. If require_payment=true
   // and payment_status is pending, confirmation must be refused — otherwise
@@ -566,6 +609,35 @@ export async function updateBookingPaymentFromChat(
   const validStatuses = ["pending", "paid", "refunded", "not_required"];
   if (!validStatuses.includes(paymentStatus)) {
     return { error: `Invalid payment status: ${paymentStatus}` };
+  }
+
+  // ── Payment state-machine guard ─────────────────────────────────
+  // Once payment is "paid", it cannot be silently reverted to "pending".
+  // The only legitimate next-states are "refunded" (full refund). Reverting
+  // to "pending" would let an agent re-confirm a refund as still-owed and is
+  // not how industry-standard PoS / booking systems behave.
+  const { data: currentRow } = await db
+    .from(`${BOOKING_PREFIX}_appointments`)
+    .select("payment_status")
+    .eq("site_id", siteId)
+    .eq("id", bookingId)
+    .single();
+
+  const currentPayment = currentRow?.payment_status as string | undefined;
+
+  if (currentPayment && currentPayment !== paymentStatus) {
+    const allowed: Record<string, string[]> = {
+      pending: ["paid", "refunded", "not_required"],
+      paid: ["refunded"], // once paid, only path is refund
+      refunded: [], // terminal
+      not_required: ["pending", "paid"],
+    };
+    const allowedNext = allowed[currentPayment] ?? [];
+    if (!allowedNext.includes(paymentStatus)) {
+      return {
+        error: `Cannot change payment from "${currentPayment}" to "${paymentStatus}". This transition is not allowed.`,
+      };
+    }
   }
 
   // Update and return full appointment with service/staff for notifications

@@ -234,7 +234,9 @@ export async function createPortalTeamMember(
     return { success: false, error: "Failed to add team member" };
   }
 
-  // Send invitation email
+  // Send invitation email with a real magic-link so the invited member can
+  // actually log in. Without an auth user + magic link the invitee had no way
+  // to access the portal.
   try {
     // Get client info for the email
     const { data: client } = await supabase
@@ -246,10 +248,42 @@ export async function createPortalTeamMember(
     const agencyId = client?.agency_id || null;
     const businessName = client?.company || client?.name || "the team";
     const inviterName = client?.name || "Your team admin";
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+    const memberEmail = input.email.toLowerCase().trim();
+
+    // 1. Ensure a Supabase auth user exists for this team member.
+    const { ensurePortalAuthUser, generatePortalMagicLink } = await import(
+      "@/lib/portal/portal-activation"
+    );
+    const ensured = await ensurePortalAuthUser({
+      email: memberEmail,
+      clientId,
+      clientName: input.name,
+    });
+    let portalUserId: string | null = null;
+    if (ensured.success) {
+      portalUserId = ensured.userId;
+      // Link auth user back to the team member row.
+      await supabase
+        .from("portal_team_members")
+        .update({ portal_user_id: portalUserId })
+        .eq("id", (data as Record<string, unknown>).id as string);
+    } else {
+      console.error(
+        "[PortalTeamService] ensurePortalAuthUser failed:",
+        ensured.error,
+      );
+    }
+
+    // 2. Generate a real magic link.
+    const fallback = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+    let portalUrl = fallback;
+    if (portalUserId) {
+      const linkResult = await generatePortalMagicLink({ email: memberEmail });
+      if (linkResult.generated) portalUrl = linkResult.link;
+    }
 
     await sendBrandedEmail(agencyId, {
-      to: { email: input.email.toLowerCase().trim(), name: input.name },
+      to: { email: memberEmail, name: input.name },
       emailType: "portal_team_invitation",
       data: {
         inviterName,
@@ -451,18 +485,40 @@ export async function resendPortalTeamInvitation(
   const agencyId = client?.agency_id || null;
   const businessName = client?.company || client?.name || "the team";
   const inviterName = client?.name || "Your team admin";
-  const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+  const memberEmail = (member.email as string).toLowerCase().trim();
 
   try {
+    // Ensure auth user + magic link so they can log in.
+    const { ensurePortalAuthUser, generatePortalMagicLink } = await import(
+      "@/lib/portal/portal-activation"
+    );
+    const ensured = await ensurePortalAuthUser({
+      email: memberEmail,
+      clientId,
+      clientName: member.name as string,
+    });
+    if (ensured.success && !member.portal_user_id) {
+      await supabase
+        .from("portal_team_members")
+        .update({ portal_user_id: ensured.userId })
+        .eq("id", memberId);
+    }
+    const fallback = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+    let portalUrl = fallback;
+    if (ensured.success) {
+      const linkResult = await generatePortalMagicLink({ email: memberEmail });
+      if (linkResult.generated) portalUrl = linkResult.link;
+    }
+
     await sendBrandedEmail(agencyId, {
-      to: { email: member.email, name: member.name },
+      to: { email: memberEmail, name: member.name as string },
       emailType: "portal_team_invitation",
       data: {
         inviterName,
         businessName,
-        role: member.role || "member",
+        role: (member.role as string) || "member",
         portalUrl,
-        memberName: member.name,
+        memberName: member.name as string,
       },
     });
 

@@ -45,7 +45,7 @@ export async function getPortalUser(): Promise<PortalUser | null> {
   if (!user) return null;
 
   // Find client linked to this user (admin client bypasses RLS for portal users)
-  const { data: client, error } = await admin
+  const { data: client } = await admin
     .from("clients")
     .select(
       `
@@ -75,9 +75,49 @@ export async function getPortalUser(): Promise<PortalUser | null> {
     .eq("has_portal_access", true)
     .single();
 
-  if (error || !client) {
-    // User exists but isn't a portal client
-    return null;
+  if (!client) {
+    // Maybe a team member rather than a primary client.
+    const { data: teamMember } = await admin
+      .from("portal_team_members" as any)
+      .select("id, name, email, client_id, status, portal_user_id, can_view_analytics, can_edit_content, can_view_invoices, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers, can_manage_marketing")
+      .eq("portal_user_id", user.id)
+      .neq("status", "inactive")
+      .maybeSingle();
+    if (!teamMember) {
+      // User exists but isn't a portal client/team member
+      return null;
+    }
+    const tm = teamMember as Record<string, any>;
+    // Pull parent client for company/agency context.
+    const { data: parent } = await admin
+      .from("clients")
+      .select("id, name, company, agency_id")
+      .eq("id", tm.client_id)
+      .single();
+    if (!parent) return null;
+    return {
+      userId: user.id,
+      clientId: parent.id,
+      email: tm.email || user.email || "",
+      fullName: tm.name,
+      companyName: parent.company || "",
+      agencyId: parent.agency_id,
+      canViewAnalytics: tm.can_view_analytics ?? false,
+      canEditContent: tm.can_edit_content ?? false,
+      canViewInvoices: tm.can_view_invoices ?? false,
+      canManageLiveChat: tm.can_manage_live_chat ?? false,
+      canManageOrders: tm.can_manage_orders ?? false,
+      canManageProducts: tm.can_manage_products ?? false,
+      canManageBookings: tm.can_manage_bookings ?? false,
+      canManageCrm: tm.can_manage_crm ?? false,
+      canManageAutomation: tm.can_manage_automation ?? false,
+      canManageQuotes: tm.can_manage_quotes ?? false,
+      canManageAgents: tm.can_manage_agents ?? false,
+      canManageCustomers: tm.can_manage_customers ?? false,
+      canManageMarketing: tm.can_manage_marketing ?? false,
+      canManageInvoices: false,
+      canManageSupport: true,
+    };
   }
 
   // Update last login (fire and forget)
@@ -324,7 +364,79 @@ export async function sendMagicLink(
     .maybeSingle();
 
   if (!client) {
-    // Don't reveal whether the email exists.
+    // Check if this is a team member (no clients row, but linked to one).
+    const { data: teamMember } = await admin
+      .from("portal_team_members" as any)
+      .select("id, email, name, client_id, status, portal_user_id")
+      .eq("email", normalizedEmail)
+      .neq("status", "inactive")
+      .maybeSingle();
+
+    if (!teamMember) {
+      // Don't reveal whether the email exists.
+      return { success: true };
+    }
+    const tm = teamMember as Record<string, any>;
+    // Ensure auth user exists for this team member if missing.
+    if (!tm.portal_user_id) {
+      const { ensurePortalAuthUser } = await import(
+        "@/lib/portal/portal-activation"
+      );
+      const ensured = await ensurePortalAuthUser({
+        email: normalizedEmail,
+        clientId: tm.client_id,
+        clientName: tm.name,
+      });
+      if (ensured.success) {
+        await admin
+          .from("portal_team_members" as any)
+          .update({ portal_user_id: ensured.userId })
+          .eq("id", tm.id);
+      } else {
+        return {
+          success: false,
+          error:
+            "Portal account not set up. Please contact your team admin to resend the invitation.",
+        };
+      }
+    }
+    // Generate magic link and send via plain Supabase (no agency branding lookup).
+    const { generatePortalMagicLink } = await import(
+      "@/lib/portal/portal-activation"
+    );
+    const linkResult = await generatePortalMagicLink({
+      email: normalizedEmail,
+    });
+    if (!linkResult.generated) {
+      return {
+        success: false,
+        error: "Failed to send login link. Please try again.",
+      };
+    }
+    try {
+      const { sendBrandedEmail } = await import(
+        "@/lib/email/send-branded-email"
+      );
+      // Look up parent client to get agency branding.
+      const { data: parent } = await admin
+        .from("clients")
+        .select("agency_id, company, name")
+        .eq("id", tm.client_id)
+        .single();
+      await sendBrandedEmail(parent?.agency_id || null, {
+        to: { email: normalizedEmail, name: tm.name },
+        emailType: "portal_team_invitation",
+        data: {
+          inviterName: parent?.name || "Your team admin",
+          businessName: parent?.company || parent?.name || "the team",
+          role: "member",
+          portalUrl: linkResult.link,
+          memberName: tm.name,
+        },
+      });
+    } catch (err) {
+      console.error("[Portal Magic Link] team-member email failed:", err);
+    }
     return { success: true };
   }
 
@@ -692,6 +804,10 @@ export async function changePortalPassword(
 
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
+    data: {
+      portal_password_set: true,
+      portal_password_set_at: new Date().toISOString(),
+    },
   });
 
   if (error) {

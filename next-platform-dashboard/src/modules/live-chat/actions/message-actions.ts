@@ -7,6 +7,8 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyUserSiteAccess } from "@/lib/multi-tenant/tenant-context";
 import { revalidatePath } from "next/cache";
 import { mapRecord, mapRecords } from "../lib/map-db-record";
 import type {
@@ -21,6 +23,27 @@ import type {
 async function getModuleClient() {
   const supabase = await createClient();
   return supabase as any;
+}
+
+/**
+ * Verify the calling user has access to the given site, then return an
+ * admin (service-role) client that bypasses RLS. Use this for writes from
+ * agent UI flows where the RLS policies (which require agency_members
+ * membership) would otherwise block legitimate super-admin / agency-owner
+ * actions. Application-level auth check via `verifyUserSiteAccess` is the
+ * authoritative gate.
+ */
+async function getAdminClientForSite(
+  siteId: string,
+): Promise<{ db: any; error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { db: null, error: "Unauthorized" };
+  const hasAccess = await verifyUserSiteAccess(user.id, siteId);
+  if (!hasAccess) return { db: null, error: "Forbidden" };
+  return { db: createAdminClient() as any, error: null };
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
@@ -328,7 +351,8 @@ export async function approveProactiveMessage(
   editedContent?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await getModuleClient();
+    const { db: supabase, error: authErr } = await getAdminClientForSite(siteId);
+    if (!supabase) return { success: false, error: authErr };
 
     // Fetch current message to validate ownership and state
     const { data: msg, error: fetchErr } = await supabase
@@ -402,7 +426,8 @@ export async function discardProactiveMessage(
   siteId: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await getModuleClient();
+    const { db: supabase, error: authErr } = await getAdminClientForSite(siteId);
+    if (!supabase) return { success: false, error: authErr };
 
     const { data: msg, error: fetchErr } = await supabase
       .from("mod_chat_messages")

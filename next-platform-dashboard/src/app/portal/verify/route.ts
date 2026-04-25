@@ -91,8 +91,23 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (!client) {
-      // Try to link by email in case portal_user_id wasn't set yet.
-      if (user.email) {
+      // Maybe a team member.
+      const { data: teamMember } = await admin
+        .from("portal_team_members" as any)
+        .select("id, email, client_id, portal_user_id, status")
+        .eq("portal_user_id", user.id)
+        .neq("status", "inactive")
+        .maybeSingle();
+      if (teamMember) {
+        // Mark active on first successful login.
+        if ((teamMember as any).status === "invited") {
+          await admin
+            .from("portal_team_members" as any)
+            .update({ status: "active", last_active_at: new Date().toISOString() })
+            .eq("id", (teamMember as any).id);
+        }
+      } else if (user.email) {
+        // Try to link by email in case portal_user_id wasn't set yet.
         const { data: byEmail } = await admin
           .from("clients")
           .select("id")
@@ -106,7 +121,24 @@ export async function GET(request: NextRequest) {
             .update({ portal_user_id: user.id })
             .eq("id", byEmail.id);
         } else {
-          // No portal access — sign out and redirect.
+          // Try team member by email.
+          const { data: tmByEmail } = await admin
+            .from("portal_team_members" as any)
+            .select("id, status")
+            .eq("email", user.email.toLowerCase())
+            .neq("status", "inactive")
+            .maybeSingle();
+          if (tmByEmail) {
+            await admin
+              .from("portal_team_members" as any)
+              .update({
+                portal_user_id: user.id,
+                status: "active",
+                last_active_at: new Date().toISOString(),
+              })
+              .eq("id", (tmByEmail as any).id);
+          } else {
+            // No portal access — sign out and redirect.
           await supabase.auth.signOut();
           const noAccessUrl = new URL(
             "/portal/login?error=no_access",
@@ -121,6 +153,7 @@ export async function GET(request: NextRequest) {
             ),
           );
           return noAccessResponse;
+          }
         }
       }
     }
@@ -128,7 +161,23 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect response and attach all session cookies so the browser
   // receives a fully authenticated session.
-  const redirectResponse = NextResponse.redirect(new URL(next, request.url));
+  // ── First-login password gate ──────────────────────────────────
+  // If the user has never set a password (i.e. they only ever signed in via
+  // magic link), funnel them through `/portal/set-password` so they can set
+  // a password they own. After successfully setting it, that page will
+  // redirect them back to `next`.
+  let finalNext = next;
+  if (user) {
+    const passwordSet =
+      (user.user_metadata as Record<string, unknown> | null)
+        ?.portal_password_set === true;
+    if (!passwordSet) {
+      const setPwdUrl = new URL("/portal/set-password", request.url);
+      setPwdUrl.searchParams.set("next", next);
+      finalNext = setPwdUrl.pathname + setPwdUrl.search;
+    }
+  }
+  const redirectResponse = NextResponse.redirect(new URL(finalNext, request.url));
   cookieMap.forEach(({ value, options }, name) =>
     redirectResponse.cookies.set(
       name,
