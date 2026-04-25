@@ -1,7 +1,13 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Session 10 Part A — Live Chat portal RLS — SHIPPED ✅
+**Last Updated**: Session 11 — Push CHECK fix + Ask Chiko rebrand + Vercel route reduction — SHIPPED ✅
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+## Session 11 (completed) — SHIPPED
+
+- ✅ **Push subscriptions CHECK constraint** — `migrations/push-subscriptions-allow-portal-context.sql` allows `context='portal'`. Already applied to prod via Supabase MCP. Commit `5120c11e`.
+- ✅ **Ask Chiko rebrand** — All "Chiko AI" user-facing copy renamed to "Ask Chiko" across navigation, pricing, plan feature lists, agency assistant page, and API system prompt. Cross-tenant safety verified in `chiko-query-builder.ts`. Commit `4845a42c`.
+- ✅ **Vercel route reduction** — Deploy was blocked at 2053/2048 routes. Consolidated 9 redirect-only pages into `src/proxy.ts` middleware (legacy alias + parameterised builder/pages redirects). tsc clean. Commit `e8f75d66`. Pushed `ea43c3ce..e8f75d66`.
 
 ## Session 10 Part A (completed) — SHIPPED
 

@@ -1,8 +1,36 @@
 # Active Context
 
-**Last Updated**: Session 10 Part C — Portal Perfection Sections 5/6/7/3-editor/9/10/11 — SHIPPED ✅
+**Last Updated**: Session 11 — Push CHECK fix + Ask Chiko rebrand + Vercel route reduction — SHIPPED ✅
 
-## Current State: Session 10 Part C — Portal Perfection (Sec 5, 6, 7, 3-editor, 9, 10, 11) — SHIPPED ✅
+## Current State: Session 11 — Production blockers + branding — SHIPPED ✅
+
+Three commits pushed on `main` (ea43c3ce → e8f75d66):
+
+1. **`5120c11e` fix(push)**: `migrations/push-subscriptions-allow-portal-context.sql` updates the `push_subscriptions.context` CHECK constraint from `('agent','customer')` to `('agent','customer','portal')`. Migration was already applied to prod via Supabase MCP (`push_subscriptions_allow_portal_context`); this commit just lands the SQL in source. Fixes "Failed to enable push notifications" for portal subscribers.
+2. **`4845a42c` feat(chiko)**: Rebrand "Chiko AI" → "Ask Chiko". Touched `src/config/navigation.ts` (agency nav), `src/components/billing/plan-comparison-table.tsx`, `src/app/pricing/page.tsx` (3 occ), `src/lib/paddle/client.ts` (6 occ across plan feature lists), `src/app/(dashboard)/dashboard/chiko/page.tsx` (header + intro), `src/app/api/chiko/route.ts` (header + system prompt). Verified cross-tenant safety: every query in `src/components/chiko/chiko-query-builder.ts` is scoped `.eq("agency_id", agencyId)`. Agencies were already wired to `/dashboard/chiko` + `/api/chiko`; only branding changed.
+3. **`e8f75d66` perf(routes)**: Vercel deploy was failing at 2053 routes (max 2048). Consolidated 9 redirect-only `page.tsx` files into `src/proxy.ts` middleware:
+   - `/dashboard/settings/branding` → `/settings/branding`
+   - `/dashboard/billing` → `/settings/billing` (preserves search params)
+   - `/dashboard/clients/new` → `/dashboard/clients?create=true`
+   - `/marketplace/installed` → `/dashboard/modules/subscriptions`
+   - `/settings` → `/settings/profile`
+   - `/dashboard/sites/:id/builder` → `/dashboard/sites/:id/ai-designer`
+   - `/dashboard/sites/:id/pages` → `/dashboard/sites/:id?tab=pages`
+   - `/dashboard/sites/:id/pages/:pageId` → `/studio/:id/:pageId`
+   - `(dashboard)/page.tsx` removed (root `/` is served by `src/app/page.tsx` marketing landing)
+   Inserted before existing `/dashboard/settings/domains` legacy block. tsc clean except stale `.next/types/validator.ts` references to the deleted page files (cleared on next build).
+
+### Working tree (carry-over from prior sessions, NOT yet committed)
+Modified-but-uncommitted files include `chiko-chat.tsx`, `portal-chiko-query-builder.ts`, `portal-auth.ts`, `branded-templates.ts`, `supabase/middleware.ts`, `portal/login/page.tsx`, `portal/verify/route.ts`, `lib/actions/clients.ts`, `portal-activation.ts`, studio module pages. These are part of Portal Perfection follow-up work that started in Session 10 and have not been validated yet — leave them dirty until the originating session resumes.
+
+### Notes for next session
+- If Vercel still rejects (2048 limit), the next ~140-route reduction target needs to come from `src/app/(dashboard)/dashboard/sites/[siteId]/...` (119 page.tsx files) — many are sub-tabs that could be consolidated behind `?tab=` query strings on the parent `siteId` page.
+- PowerShell `cd path; ...` chains can lose `$PWD` in this tool wrapper. Use `Set-Location` then verify with `Get-Location`, or use absolute paths with `[IO.File]` APIs.
+- Path strings with literal `[brackets]` and `(parens)` need `-LiteralPath` and the `[IO.File]::Exists/ReadAllText` APIs (NOT `Test-Path` without `-LiteralPath`, NOT `Get-Content` without `-LiteralPath`).
+
+---
+
+## Prior State: Session 10 Part C — Portal Perfection (Sec 5, 6, 7, 3-editor, 9, 10, 11) — SHIPPED ✅
 
 **Context:** Continuing `CLIENT-PORTAL-PERFECTION-PROMPT.md`. This part shipped seven scoped commits on top of Part B:
 
