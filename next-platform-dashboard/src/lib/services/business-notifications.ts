@@ -653,6 +653,8 @@ export async function notifyBookingConfirmed(
       siteId: data.siteId,
       resourceType: "appointment",
       resourceId: data.appointmentId,
+      // Must fire exactly once per appointment confirmation transition.
+      stateHash: "booking_confirmed",
       title: `Booking Confirmed: ${data.serviceName}`,
       message: `${data.customerName}'s ${data.serviceName} on ${dateStr} at ${timeStr} has been confirmed.`,
       link: dashboardUrl,
@@ -1059,6 +1061,10 @@ export async function notifyBookingPaymentReceived(
       siteId: data.siteId,
       resourceType: "appointment",
       resourceId: data.appointmentId,
+      // Must fire exactly once per (appointment × payment amount) so a
+      // partial payment + final payment each fire, but a webhook retry
+      // for the same payment is suppressed.
+      stateHash: `booking_payment:${data.price ?? 0}`,
       title: `Payment Received: ${data.serviceName}`,
       message: `${data.customerName} paid ${priceStr} for ${data.serviceName} on ${dateStr} at ${timeStr}.`,
       link: dashboardUrl,
@@ -1162,6 +1168,9 @@ export async function notifyNewOrder(
       siteId: data.siteId,
       resourceType: "order",
       resourceId: data.orderId,
+      // Must fire exactly once per order. Hash includes order id + initial
+      // payment state so a second call with the same data is a no-op.
+      stateHash: `new_order:${data.paymentStatus ?? "pending"}`,
       title: `New Order #${data.orderNumber}`,
       message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
       link: dashboardUrl,
@@ -1299,6 +1308,9 @@ export async function notifyOrderShipped(
       siteId,
       resourceType: "order",
       resourceId: orderNumber,
+      // Must fire exactly once per (order × tracking#). Re-shipping with a
+      // new tracking number legitimately re-fires.
+      stateHash: `order_shipped:${trackingNumber ?? ""}`,
       title: `Order #${orderNumber} Shipped`,
       message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ""}`,
       link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,

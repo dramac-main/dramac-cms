@@ -88,6 +88,18 @@ export interface DispatchOptions {
    * and only wants the dispatcher to fan out to the *additional* portal users.
    */
   excludeUserIds?: string[];
+  /**
+   * Optional content/state hash for global idempotency. When provided, the
+   * dispatcher claims a row in `automation_event_dispatches` keyed by
+   * sha256(resource_type|resource_id|event_type|state_hash); a duplicate
+   * insert short-circuits the entire dispatch — no recipients are walked
+   * and no logs are written. Use this for "must fire exactly once" events
+   * (order paid, booking confirmed, invoice paid). Omit for events where
+   * a re-dispatch is acceptable.
+   */
+  stateHash?: string;
+  /** Optional agency id to record on the idempotency claim row. */
+  agencyId?: string;
 }
 
 export interface DispatchResult {
@@ -137,6 +149,17 @@ export async function dispatchBusinessEvent(
   };
 
   try {
+    // --- Global idempotency claim (Section 6) -------------------------
+    // When the caller passes a stateHash, atomically claim this event.
+    // A duplicate INSERT (unique violation on event_key) means another
+    // process already dispatched — short-circuit and return zeros.
+    if (opts.stateHash) {
+      const claimed = await claimEventDispatch(opts);
+      if (!claimed) {
+        return result;
+      }
+    }
+
     const raw = await resolveInterestedRecipients(opts.siteId, opts.permission);
     const excluded = new Set(opts.excludeUserIds ?? []);
     const filtered = raw.filter((r) => !excluded.has(r.userId));
@@ -359,6 +382,70 @@ function buildDedupeKey(
   channel: string,
 ): string {
   return `${opts.eventType}:${opts.resourceType}:${opts.resourceId}:${userId}:${channel}`;
+}
+
+/**
+ * Compute the global event key from the dispatch options. Same input always
+ * yields the same key; collision is statistically impossible.
+ */
+function computeEventKey(opts: DispatchOptions): string {
+  // Lazy require to avoid hoisting node:crypto at module load — keeps this
+  // file friendly to non-node test runners that import the module surface.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const crypto = require("node:crypto") as typeof import("node:crypto");
+  return crypto
+    .createHash("sha256")
+    .update(
+      [
+        opts.resourceType,
+        opts.resourceId,
+        opts.eventType,
+        opts.stateHash ?? "",
+      ].join("|"),
+    )
+    .digest("hex");
+}
+
+/**
+ * Atomically claim a global event dispatch. Returns true if this caller
+ * is the first to claim — proceed with dispatch. Returns false if another
+ * process already claimed (duplicate event_key) — caller must short-circuit.
+ *
+ * Errors fall through as `true` so a transient DB hiccup never silently
+ * suppresses a notification. The (recipient × channel) dedupe inside the
+ * dispatcher will still catch any redundant fan-out within the same process.
+ */
+async function claimEventDispatch(opts: DispatchOptions): Promise<boolean> {
+  try {
+    const admin = createAdminClient();
+    const eventKey = computeEventKey(opts);
+    const { error } = await admin
+      .from("automation_event_dispatches" as never)
+      .insert({
+        event_key: eventKey,
+        event_type: opts.eventType,
+        resource_type: opts.resourceType,
+        resource_id: opts.resourceId,
+        state_hash: opts.stateHash ?? null,
+        agency_id: opts.agencyId ?? null,
+        site_id: opts.siteId,
+        result: {},
+      } as never);
+
+    if (!error) return true;
+    // Postgres unique violation = 23505. Treat as "someone else got there
+    // first" — caller must short-circuit.
+    const code = (error as { code?: string }).code;
+    if (code === "23505") {
+      return false;
+    }
+    // Any other error: fail-open to avoid silent suppression.
+    console.error("[dispatcher] claim error (fail-open):", error);
+    return true;
+  } catch (err) {
+    console.error("[dispatcher] claim threw (fail-open):", err);
+    return true;
+  }
 }
 
 /**
