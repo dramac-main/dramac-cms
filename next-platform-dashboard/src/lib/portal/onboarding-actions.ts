@@ -93,42 +93,45 @@ export async function loadOnboardingState(): Promise<{
       if (data && data.length > 0) state.team_invited = true;
     })(),
 
-    // 4. first_order_seen — any order on a site belonging to this client?
+    // 4 & 5. Resolve client's site ids once, then derive order/payment flags from them.
     (async () => {
       if (!user.clientId) return;
-      const { data } = await admin
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("mod_ecom_orders" as any)
-        .select("id")
-        .in(
-          "site_id",
-          // sub-select: site ids that belong to this client
-          admin
-            .from("sites")
-            .select("id")
-            .eq("client_id", user.clientId) as never,
-        )
-        .limit(1);
-      if (data && data.length > 0) state.first_order_seen = true;
-    })(),
 
-    // 5. payments_setup — has the client configured any ecommerce payment provider?
-    (async () => {
-      if (!user.clientId) return;
-      const { data } = await admin
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("mod_ecom_settings" as any)
+      const { data: clientSites } = await admin
+        .from("sites")
         .select("id")
-        .in(
-          "site_id",
-          admin
-            .from("sites")
+        .eq("client_id", user.clientId);
+
+      const siteIds: string[] = (clientSites ?? [])
+        .map((s) => (s as { id: string }).id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+      if (siteIds.length === 0) return;
+
+      await Promise.all([
+        // first_order_seen — any order on a site belonging to this client?
+        (async () => {
+          const { data } = await admin
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from("mod_ecom_orders" as any)
             .select("id")
-            .eq("client_id", user.clientId) as never,
-        )
-        .not("payment_provider" as never, "is", null)
-        .limit(1);
-      if (data && data.length > 0) state.payments_setup = true;
+            .in("site_id", siteIds)
+            .limit(1);
+          if (data && data.length > 0) state.first_order_seen = true;
+        })(),
+
+        // payments_setup — has the client configured any ecommerce payment provider?
+        (async () => {
+          const { data } = await admin
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from("mod_ecom_settings" as any)
+            .select("id")
+            .in("site_id", siteIds)
+            .not("payment_provider" as never, "is", null)
+            .limit(1);
+          if (data && data.length > 0) state.payments_setup = true;
+        })(),
+      ]);
     })(),
   ]);
 

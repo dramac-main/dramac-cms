@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
 
       if (user) {
-        // Fetch user profile
+        // Fetch user profile (maybeSingle: portal users have no profiles row → null, not 406)
         const { data } = await supabase
           .from("profiles")
           .select(`
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             organization:agencies(*)
           `)
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         setProfile(data);
       }
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             organization:agencies(*)
           `)
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         setProfile(data);
       } else {
