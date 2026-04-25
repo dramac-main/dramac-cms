@@ -116,7 +116,7 @@ export const mainNavigation: NavGroup[] = [
     title: "Account",
     items: [
       {
-        title: "Chiko AI",
+        title: "Ask Chiko",
         href: "/dashboard/chiko",
         icon: Sparkles,
         dataTour: "chiko",

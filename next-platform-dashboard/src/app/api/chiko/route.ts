@@ -1,14 +1,12 @@
 /**
- * Chiko AI Business Assistant API
- *
- * Phase BIL-10: Chiko AI Business Assistant
+ * Ask Chiko (Agency) Business Assistant API
  *
  * POST /api/chiko
  * Body: { question: string, conversationId?: string }
  * Returns: { answer: string, category: string, conversationId: string }
  *
  * Uses Claude Haiku 4.5 for fast, cost-effective responses.
- * All queries scoped by agency_id for multi-tenant safety.
+ * All queries scoped by agency_id for hard multi-tenant safety.
  * Usage tracked via usageTracker.recordUsage('ai_actions').
  */
 
@@ -27,7 +25,7 @@ export const maxDuration = 60;
 // System Prompt
 // ============================================================================
 
-const CHIKO_SYSTEM_PROMPT = `You are Chiko, the AI business assistant for DRAMAC CMS. You help agency owners understand their business data and make informed decisions.
+const CHIKO_SYSTEM_PROMPT = `You are Chiko, an AI business assistant for agency owners. You help them understand their business data across all their clients and make informed decisions.
 
 Guidelines:
 - Be friendly, professional, and concise

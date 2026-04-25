@@ -89,7 +89,7 @@ const COMPARISON_DATA: ComparisonGroup[] = [
     name: "AI Features",
     rows: [
       {
-        label: "Chiko AI assistant",
+        label: "Ask Chiko assistant",
         starter: true,
         growth: true,
         agency: true,
