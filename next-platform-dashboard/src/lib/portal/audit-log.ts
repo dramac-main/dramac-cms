@@ -149,8 +149,7 @@ export async function writePortalAudit(entry: PortalAuditEntry): Promise<void> {
         siteId: entry.siteId ?? null,
         authUserId: entry.authUserId,
         isImpersonation: true,
-        error:
-          auditErr instanceof Error ? auditErr.message : String(auditErr),
+        error: auditErr instanceof Error ? auditErr.message : String(auditErr),
         metadata: { action: entry.action },
       });
     }

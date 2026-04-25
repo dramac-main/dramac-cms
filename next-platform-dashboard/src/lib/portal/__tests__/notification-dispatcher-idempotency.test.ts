@@ -104,9 +104,8 @@ describe("dispatchBusinessEvent — idempotency", () => {
       { userId: "u-1", email: "a@b", recipientClass: "portal_user" },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const result = await dispatchBusinessEvent({
       eventType: "new_order",
@@ -136,9 +135,8 @@ describe("dispatchBusinessEvent — idempotency", () => {
       { userId: "u-1", email: "a@b", recipientClass: "portal_user" },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const result = await dispatchBusinessEvent({
       eventType: "new_order",
@@ -163,9 +161,8 @@ describe("dispatchBusinessEvent — idempotency", () => {
       { userId: "u-1", email: "a@b", recipientClass: "portal_user" },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const result = await dispatchBusinessEvent({
       eventType: "new_order",
@@ -199,9 +196,8 @@ describe("dispatchBusinessEvent — idempotency", () => {
       { userId: "u-1", email: "a@b", recipientClass: "portal_user" },
     ]);
 
-    const { dispatchBusinessEvent } = await import(
-      "../notification-dispatcher"
-    );
+    const { dispatchBusinessEvent } =
+      await import("../notification-dispatcher");
 
     const opts = {
       eventType: "order_shipped" as const,

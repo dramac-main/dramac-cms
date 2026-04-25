@@ -367,9 +367,11 @@ async function queryGeneral(scope: PortalChikoScope): Promise<string> {
     `Business: ${scope.companyName || scope.clientName || "your account"}`,
   );
   parts.push(
-    `Sites (${sites?.length ?? 0}): ${(sites || [])
-      .map((s: any) => `${s.name}${s.published ? "" : " (draft)"}`)
-      .join(", ") || "none"}`,
+    `Sites (${sites?.length ?? 0}): ${
+      (sites || [])
+        .map((s: any) => `${s.name}${s.published ? "" : " (draft)"}`)
+        .join(", ") || "none"
+    }`,
   );
   parts.push(
     `Last 30 days: ${orders.length} orders, ${bookings.length} bookings, ${invoices.length} invoices.`,

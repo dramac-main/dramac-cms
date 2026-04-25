@@ -22,12 +22,7 @@ interface PageProps {
 export default async function PortalBookingDetailPage({ params }: PageProps) {
   const user = await requirePortalAuth();
   const { siteId, appointmentId } = await params;
-  await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "booking",
-    "canManageBookings",
-  );
+  await verifyPortalModuleAccess(user, siteId, "booking", "canManageBookings");
 
   return (
     <Suspense fallback={<PortalPanelSkeleton rows={8} />}>

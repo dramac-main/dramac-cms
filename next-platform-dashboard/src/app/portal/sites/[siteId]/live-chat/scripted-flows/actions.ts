@@ -11,10 +11,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  requirePortalAuth,
-  getPortalSession,
-} from "@/lib/portal/portal-auth";
+import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
 import { writePortalAudit } from "@/lib/portal/audit-log";
 
@@ -54,7 +51,12 @@ export async function createScriptedFlow(
   input: ScriptedFlowInput,
 ): Promise<ScriptedFlowResult> {
   const user = await requirePortalAuth();
-  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "live-chat",
+    "canManageLiveChat",
+  );
 
   const err = validate(input);
   if (err) return { ok: false, error: err };
@@ -112,7 +114,12 @@ export async function updateScriptedFlow(
   input: ScriptedFlowInput,
 ): Promise<ScriptedFlowResult> {
   const user = await requirePortalAuth();
-  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "live-chat",
+    "canManageLiveChat",
+  );
 
   const err = validate(input);
   if (err) return { ok: false, error: err };
@@ -168,7 +175,12 @@ export async function toggleScriptedFlow(
   isEnabled: boolean,
 ): Promise<ScriptedFlowResult> {
   const user = await requirePortalAuth();
-  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "live-chat",
+    "canManageLiveChat",
+  );
 
   const admin = createAdminClient();
   const session = await getPortalSession();
@@ -204,7 +216,12 @@ export async function deleteScriptedFlow(
   flowId: string,
 ): Promise<ScriptedFlowResult> {
   const user = await requirePortalAuth();
-  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
+  await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "live-chat",
+    "canManageLiveChat",
+  );
 
   const admin = createAdminClient();
   const session = await getPortalSession();

@@ -10,7 +10,13 @@
 
 import { useState, useTransition } from "react";
 import { Mail, Send, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -72,7 +78,7 @@ export function SendTestEmailCard({
           emailType: selected,
           recipient,
           success: result.ok,
-          error: result.ok ? null : result.error ?? null,
+          error: result.ok ? null : (result.error ?? null),
           sentAt: new Date().toISOString(),
         },
         ...prev.slice(0, 19),
@@ -87,9 +93,9 @@ export function SendTestEmailCard({
           <Mail className="h-4 w-4" /> Send a test email
         </CardTitle>
         <CardDescription>
-          Pick a template and send a sample to your own inbox
-          (<span className="font-mono">{recipient}</span>) so you can preview
-          how it looks. Tests use placeholder data; nothing is sent to real
+          Pick a template and send a sample to your own inbox (
+          <span className="font-mono">{recipient}</span>) so you can preview how
+          it looks. Tests use placeholder data; nothing is sent to real
           customers.
         </CardDescription>
       </CardHeader>

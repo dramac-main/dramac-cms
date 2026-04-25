@@ -59,5 +59,9 @@ export const TEST_EMAIL_TEMPLATES: ReadonlyArray<{
     label: "Quote accepted",
     category: "Quotes",
   },
-  { type: "form_submission_owner", label: "Form submission", category: "Forms" },
+  {
+    type: "form_submission_owner",
+    label: "Form submission",
+    category: "Forms",
+  },
 ];

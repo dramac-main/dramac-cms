@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { 
-  Plus, 
-  Code, 
-  Package, 
-  Rocket, 
-  Clock, 
+import {
+  Plus,
+  Code,
+  Package,
+  Rocket,
+  Clock,
   AlertCircle,
   TrendingUp,
   Settings2,
@@ -13,7 +13,13 @@ import {
   Sparkles,
   icons,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,7 +34,7 @@ import { getModuleSources } from "@/lib/modules/module-builder";
 import { isSuperAdmin } from "@/lib/auth/permissions";
 import { resolveIconName } from "@/lib/utils/icon-map";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 const statusConfig = {
   draft: {
     label: "Draft",
@@ -37,12 +43,14 @@ const statusConfig = {
   },
   testing: {
     label: "Testing",
-    color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+    color:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     icon: Settings2,
   },
   published: {
     label: "Published",
-    color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    color:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
     icon: Rocket,
   },
   deprecated: {
@@ -193,7 +201,8 @@ export default async function ModuleStudioPage() {
               </div>
               <h3 className="font-medium text-lg mb-2">No modules yet</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                Create your first module to start building features for the marketplace
+                Create your first module to start building features for the
+                marketplace
               </p>
               <Button asChild>
                 <Link href="/admin/modules/studio/new">
@@ -217,17 +226,31 @@ export default async function ModuleStudioPage() {
                 </TableHeader>
                 <TableBody>
                   {modules.map((module) => {
-                    const status = statusConfig[module.status] || statusConfig.draft;
+                    const status =
+                      statusConfig[module.status] || statusConfig.draft;
                     const StatusIcon = status.icon;
-                    
+
                     return (
                       <TableRow key={module.moduleId}>
                         <TableCell>
-                          <Link 
+                          <Link
                             href={`/admin/modules/studio/${module.moduleId}`}
                             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                           >
-                            <span className="text-2xl">{(() => { const iconName = resolveIconName(module.icon || "Package"); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</span>
+                            <span className="text-2xl">
+                              {(() => {
+                                const iconName = resolveIconName(
+                                  module.icon || "Package",
+                                );
+                                const Ic = (
+                                  icons as Record<
+                                    string,
+                                    React.ComponentType<{ className?: string }>
+                                  >
+                                )[iconName];
+                                return Ic ? <Ic className="h-5 w-5" /> : null;
+                              })()}
+                            </span>
                             <div>
                               <p className="font-medium">{module.name}</p>
                               <p className="text-sm text-muted-foreground">
@@ -237,17 +260,21 @@ export default async function ModuleStudioPage() {
                           </Link>
                         </TableCell>
                         <TableCell>
-                          <span className="capitalize text-sm">{module.category}</span>
+                          <span className="capitalize text-sm">
+                            {module.category}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <code className="text-sm bg-muted px-1.5 py-0.5 rounded font-mono">
                             {module.latestVersion || "0.0.1"}
                           </code>
-                          {module.publishedVersion && module.publishedVersion !== module.latestVersion && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              (published: {module.publishedVersion})
-                            </span>
-                          )}
+                          {module.publishedVersion &&
+                            module.publishedVersion !==
+                              module.latestVersion && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                (published: {module.publishedVersion})
+                              </span>
+                            )}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -265,7 +292,9 @@ export default async function ModuleStudioPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/admin/modules/studio/${module.moduleId}`}>
+                            <Link
+                              href={`/admin/modules/studio/${module.moduleId}`}
+                            >
                               Edit
                             </Link>
                           </Button>

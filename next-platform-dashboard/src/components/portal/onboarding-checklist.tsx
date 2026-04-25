@@ -64,14 +64,16 @@ const STEPS: Step[] = [
   {
     flag: "team_invited",
     title: "Invite your team",
-    description: "Give colleagues their own portal accounts with the right permissions.",
+    description:
+      "Give colleagues their own portal accounts with the right permissions.",
     href: "/portal/team",
     cta: "Invite",
   },
   {
     flag: "first_order_seen",
     title: "Review your first order",
-    description: "Walk through the orders dashboard once to know where things live.",
+    description:
+      "Walk through the orders dashboard once to know where things live.",
     href: "/portal/sites",
     cta: "Open sites",
   },

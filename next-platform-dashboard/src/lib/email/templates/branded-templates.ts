@@ -1595,7 +1595,8 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
 
   // ─── Invoicing ────────────────────────────────────────────────
   invoice_sent_customer: {
-    subject: (data) => `Invoice #${data.invoiceNumber} from ${data.businessName || "us"}`,
+    subject: (data) =>
+      `Invoice #${data.invoiceNumber} from ${data.businessName || "us"}`,
     html: (data, b) =>
       baseEmailTemplate(
         b,
@@ -1603,7 +1604,10 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
         <p style="${EMAIL_STYLES.text}">Invoice <strong>#${data.invoiceNumber}</strong> has been sent to you.</p>
         ${emailInfoBox([
           { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
-          { label: "Amount", value: String(data.formattedTotal || data.total || "N/A") },
+          {
+            label: "Amount",
+            value: String(data.formattedTotal || data.total || "N/A"),
+          },
           { label: "Due Date", value: String(data.dueDate || "N/A") },
         ])}
         ${data.viewUrl ? emailButton(b, String(data.viewUrl), "View & Pay Invoice") : ""}`,
@@ -1621,8 +1625,14 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
         <p style="${EMAIL_STYLES.text}">Thank you! We've received your payment for invoice <strong>#${data.invoiceNumber}</strong>.</p>
         ${emailInfoBox([
           { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
-          { label: "Amount Paid", value: String(data.formattedAmount || data.amount || "N/A") },
-          { label: "Payment Method", value: String(data.paymentMethod || "N/A") },
+          {
+            label: "Amount Paid",
+            value: String(data.formattedAmount || data.amount || "N/A"),
+          },
+          {
+            label: "Payment Method",
+            value: String(data.paymentMethod || "N/A"),
+          },
         ])}
         ${data.receiptUrl ? emailButton(b, String(data.receiptUrl), "View Receipt") : ""}`,
         `Payment received for invoice #${data.invoiceNumber}`,
@@ -1639,7 +1649,10 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
         <p style="${EMAIL_STYLES.text}">Invoice <strong>#${data.invoiceNumber}</strong> was due on <strong>${data.dueDate || "a previous date"}</strong> and remains unpaid.</p>
         ${emailInfoBox([
           { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
-          { label: "Amount Due", value: String(data.formattedAmountDue || data.amountDue || "N/A") },
+          {
+            label: "Amount Due",
+            value: String(data.formattedAmountDue || data.amountDue || "N/A"),
+          },
           { label: "Days Overdue", value: String(data.daysOverdue || "N/A") },
         ])}
         <p style="${EMAIL_STYLES.text}">Please make your payment at your earliest convenience to avoid any late fees.</p>
@@ -1658,8 +1671,14 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
         <p style="${EMAIL_STYLES.text}">A late fee has been applied to invoice <strong>#${data.invoiceNumber}</strong>.</p>
         ${emailInfoBox([
           { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
-          { label: "Late Fee", value: String(data.formattedLateFee || data.lateFee || "N/A") },
-          { label: "New Total", value: String(data.formattedNewTotal || data.newTotal || "N/A") },
+          {
+            label: "Late Fee",
+            value: String(data.formattedLateFee || data.lateFee || "N/A"),
+          },
+          {
+            label: "New Total",
+            value: String(data.formattedNewTotal || data.newTotal || "N/A"),
+          },
         ])}
         <p style="${EMAIL_STYLES.text}">Please settle this invoice promptly to prevent further charges.</p>
         ${data.viewUrl ? emailButton(b, String(data.viewUrl), "View Invoice") : ""}`,

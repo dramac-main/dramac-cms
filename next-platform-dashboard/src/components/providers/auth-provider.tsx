@@ -42,10 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch user profile (maybeSingle: portal users have no profiles row → null, not 406)
         const { data } = await supabase
           .from("profiles")
-          .select(`
+          .select(
+            `
             *,
             organization:agencies(*)
-          `)
+          `,
+          )
           .eq("id", user.id)
           .maybeSingle();
 
@@ -66,10 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const { data } = await supabase
           .from("profiles")
-          .select(`
+          .select(
+            `
             *,
             organization:agencies(*)
-          `)
+          `,
+          )
           .eq("id", session.user.id)
           .maybeSingle();
 

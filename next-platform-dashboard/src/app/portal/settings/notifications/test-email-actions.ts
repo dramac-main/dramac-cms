@@ -184,7 +184,7 @@ export async function sendPortalTestEmail(
       subjectOverride: `[TEST] Sample ${emailType.replace(/_/g, " ")}`,
     });
     success = !!result?.success;
-    errorText = result?.success ? null : result?.error ?? "send_failed";
+    errorText = result?.success ? null : (result?.error ?? "send_failed");
     messageId = (result as any)?.messageId ?? null;
   } catch (e) {
     errorText = e instanceof Error ? e.message : "Unknown error";

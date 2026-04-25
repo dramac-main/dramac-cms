@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieMap.set(name, { value, options: options ?? {} })
+            cookieMap.set(name, { value, options: options ?? {} }),
           );
         },
       },
@@ -108,10 +108,17 @@ export async function GET(request: NextRequest) {
         } else {
           // No portal access — sign out and redirect.
           await supabase.auth.signOut();
-          const noAccessUrl = new URL("/portal/login?error=no_access", request.url);
+          const noAccessUrl = new URL(
+            "/portal/login?error=no_access",
+            request.url,
+          );
           const noAccessResponse = NextResponse.redirect(noAccessUrl);
           cookieMap.forEach(({ value, options }, name) =>
-            noAccessResponse.cookies.set(name, value, options as Parameters<typeof noAccessResponse.cookies.set>[2])
+            noAccessResponse.cookies.set(
+              name,
+              value,
+              options as Parameters<typeof noAccessResponse.cookies.set>[2],
+            ),
           );
           return noAccessResponse;
         }
@@ -123,7 +130,11 @@ export async function GET(request: NextRequest) {
   // receives a fully authenticated session.
   const redirectResponse = NextResponse.redirect(new URL(next, request.url));
   cookieMap.forEach(({ value, options }, name) =>
-    redirectResponse.cookies.set(name, value, options as Parameters<typeof redirectResponse.cookies.set>[2])
+    redirectResponse.cookies.set(
+      name,
+      value,
+      options as Parameters<typeof redirectResponse.cookies.set>[2],
+    ),
   );
   return redirectResponse;
 }

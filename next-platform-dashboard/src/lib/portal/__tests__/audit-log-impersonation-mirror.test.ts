@@ -32,7 +32,11 @@ vi.mock("@/lib/supabase/admin", () => ({
 vi.mock("next/headers", () => ({
   headers: async () => ({
     get: (k: string) =>
-      k === "x-forwarded-for" ? "203.0.113.5" : k === "user-agent" ? "test-ua" : null,
+      k === "x-forwarded-for"
+        ? "203.0.113.5"
+        : k === "user-agent"
+          ? "test-ua"
+          : null,
   }),
 }));
 

@@ -192,9 +192,7 @@ export function ChikoChat({
           </div>
           <div>
             <CardTitle className="text-lg">{title}</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              {subtitle}
-            </p>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>
         </div>
       </CardHeader>
@@ -297,9 +295,7 @@ function EmptyState({
         <Sparkles className="h-8 w-8 text-white" />
       </div>
       <h3 className="text-lg font-semibold mb-1">{headline}</h3>
-      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-        {body}
-      </p>
+      <p className="text-sm text-muted-foreground mb-6 max-w-sm">{body}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
         {QUICK_ACTIONS.map((action) => (
           <Button

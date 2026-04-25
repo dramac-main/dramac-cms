@@ -79,12 +79,7 @@ export function PortalPushBanner() {
           Notifications are off. Turn them on to be alerted instantly when
           orders, bookings, payments and chats arrive.
         </span>
-        <Button
-          size="sm"
-          variant="default"
-          onClick={enable}
-          disabled={loading}
-        >
+        <Button size="sm" variant="default" onClick={enable} disabled={loading}>
           {loading ? "Enabling…" : "Enable"}
         </Button>
         <button

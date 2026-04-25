@@ -18,12 +18,14 @@ Three commits pushed on `main` (ea43c3ce → e8f75d66):
    - `/dashboard/sites/:id/pages` → `/dashboard/sites/:id?tab=pages`
    - `/dashboard/sites/:id/pages/:pageId` → `/studio/:id/:pageId`
    - `(dashboard)/page.tsx` removed (root `/` is served by `src/app/page.tsx` marketing landing)
-   Inserted before existing `/dashboard/settings/domains` legacy block. tsc clean except stale `.next/types/validator.ts` references to the deleted page files (cleared on next build).
+     Inserted before existing `/dashboard/settings/domains` legacy block. tsc clean except stale `.next/types/validator.ts` references to the deleted page files (cleared on next build).
 
 ### Working tree (carry-over from prior sessions, NOT yet committed)
+
 Modified-but-uncommitted files include `chiko-chat.tsx`, `portal-chiko-query-builder.ts`, `portal-auth.ts`, `branded-templates.ts`, `supabase/middleware.ts`, `portal/login/page.tsx`, `portal/verify/route.ts`, `lib/actions/clients.ts`, `portal-activation.ts`, studio module pages. These are part of Portal Perfection follow-up work that started in Session 10 and have not been validated yet — leave them dirty until the originating session resumes.
 
 ### Notes for next session
+
 - If Vercel still rejects (2048 limit), the next ~140-route reduction target needs to come from `src/app/(dashboard)/dashboard/sites/[siteId]/...` (119 page.tsx files) — many are sub-tabs that could be consolidated behind `?tab=` query strings on the parent `siteId` page.
 - PowerShell `cd path; ...` chains can lose `$PWD` in this tool wrapper. Use `Set-Location` then verify with `Get-Location`, or use absolute paths with `[IO.File]` APIs.
 - Path strings with literal `[brackets]` and `(parens)` need `-LiteralPath` and the `[IO.File]::Exists/ReadAllText` APIs (NOT `Test-Path` without `-LiteralPath`, NOT `Get-Content` without `-LiteralPath`).
@@ -46,8 +48,6 @@ Modified-but-uncommitted files include `chiko-chat.tsx`, `portal-chiko-query-bui
 
 - **Section 8** — UX polish (empty/loading/error states): runtime browser walkthrough territory; deferred — most pages already use PageHeader + PortalEmptyState patterns from prior sessions.
 - **Section 12** — Three verification passes (in progress next).
-
-
 
 ### Prior session (Part A) — Live Chat Portal RLS — SHIPPED ✅
 

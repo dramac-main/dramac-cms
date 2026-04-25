@@ -3,14 +3,32 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Loader2, KeyRound, ArrowLeft, CircleX, ShieldOff } from "lucide-react";
+import {
+  Mail,
+  Loader2,
+  KeyRound,
+  ArrowLeft,
+  CircleX,
+  ShieldOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { portalSignIn, sendMagicLink, resetPortalPassword } from "@/lib/portal/portal-auth";
+import {
+  portalSignIn,
+  sendMagicLink,
+  resetPortalPassword,
+} from "@/lib/portal/portal-auth";
 
 function LoginForm() {
   const router = useRouter();
@@ -30,14 +48,16 @@ function LoginForm() {
       <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-4">
         <CircleX className="h-4 w-4 mt-0.5 shrink-0" />
         <span>
-          That login link has expired or was already used. Request a new one below.
+          That login link has expired or was already used. Request a new one
+          below.
         </span>
       </div>
     ) : errorParam === "no_access" ? (
       <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-4">
         <ShieldOff className="h-4 w-4 mt-0.5 shrink-0" />
         <span>
-          Portal access is not enabled for this account. Please contact your agency.
+          Portal access is not enabled for this account. Please contact your
+          agency.
         </span>
       </div>
     ) : null;
@@ -109,11 +129,12 @@ function LoginForm() {
             </div>
             <h2 className="text-2xl font-bold mb-2">Check your email</h2>
             <p className="text-muted-foreground mb-4">
-              We sent a login link to <strong className="text-foreground">{email}</strong>
+              We sent a login link to{" "}
+              <strong className="text-foreground">{email}</strong>
             </p>
             <p className="text-sm text-muted-foreground">
-              Click the link in the email to access your portal.
-              The link expires in 1 hour.
+              Click the link in the email to access your portal. The link
+              expires in 1 hour.
             </p>
             <Button
               variant="outline"
@@ -143,8 +164,9 @@ function LoginForm() {
             </div>
             <h2 className="text-2xl font-bold mb-2">Check your email</h2>
             <p className="text-muted-foreground mb-4">
-              If an account exists for <strong className="text-foreground">{email}</strong>,
-              we&apos;ve sent password reset instructions.
+              If an account exists for{" "}
+              <strong className="text-foreground">{email}</strong>, we&apos;ve
+              sent password reset instructions.
             </p>
             <Button
               variant="outline"
@@ -197,10 +219,7 @@ function LoginForm() {
             </form>
           </CardContent>
           <CardFooter className="justify-center">
-            <Button
-              variant="link"
-              onClick={() => setShowForgotPassword(false)}
-            >
+            <Button variant="link" onClick={() => setShowForgotPassword(false)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to login
             </Button>
@@ -300,7 +319,8 @@ function LoginForm() {
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  We&apos;ll send you a secure link to sign in without a password
+                  We&apos;ll send you a secure link to sign in without a
+                  password
                 </p>
               </form>
             </TabsContent>
@@ -309,7 +329,10 @@ function LoginForm() {
         <CardFooter className="flex flex-col gap-4 text-center">
           <p className="text-sm text-muted-foreground">
             Don&apos;t have access?{" "}
-            <Link href="/portal/support" className="text-primary hover:underline">
+            <Link
+              href="/portal/support"
+              className="text-primary hover:underline"
+            >
               Contact your agency
             </Link>
           </p>
@@ -321,11 +344,13 @@ function LoginForm() {
 
 export default function PortalLoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-muted/30">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

@@ -623,8 +623,7 @@ export async function createPublicAppointment(
         } else {
           // Parse name into first/last
           const nameParts = (input.customerName || "").trim().split(/\s+/);
-          const firstName =
-            nameParts[0] || custEmail.split("@")[0] || "Guest";
+          const firstName = nameParts[0] || custEmail.split("@")[0] || "Guest";
           const lastName = nameParts.slice(1).join(" ") || "";
 
           await supabase.from(`${ECOM_PREFIX}_customers`).insert({

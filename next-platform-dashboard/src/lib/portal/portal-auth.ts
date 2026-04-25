@@ -332,9 +332,8 @@ export async function sendMagicLink(
   // (pre-fix invitations), fix it now.
   let portalUserId = client.portal_user_id as string | null;
   if (!portalUserId) {
-    const { ensurePortalAuthUser } = await import(
-      "@/lib/portal/portal-activation"
-    );
+    const { ensurePortalAuthUser } =
+      await import("@/lib/portal/portal-activation");
     const ensured = await ensurePortalAuthUser({
       email: client.email ?? normalizedEmail,
       clientId: client.id,
@@ -366,10 +365,13 @@ export async function sendMagicLink(
   }
 
   // Generate magic link via admin API.
-  const { generatePortalMagicLink } = await import(
-    "@/lib/portal/portal-activation"
-  );
-  const { link, generated, error: linkErr } = await generatePortalMagicLink({
+  const { generatePortalMagicLink } =
+    await import("@/lib/portal/portal-activation");
+  const {
+    link,
+    generated,
+    error: linkErr,
+  } = await generatePortalMagicLink({
     email: normalizedEmail,
   });
   if (!generated) {
@@ -382,9 +384,7 @@ export async function sendMagicLink(
 
   // Send through branded email pipeline so the link carries agency styling.
   try {
-    const { sendBrandedEmail } = await import(
-      "@/lib/email/send-branded-email"
-    );
+    const { sendBrandedEmail } = await import("@/lib/email/send-branded-email");
     const { getAgencyBranding } = await import("@/lib/queries/branding");
     const branding = await getAgencyBranding(client.agency_id as string);
     const businessName = branding?.agency_display_name || "our team";

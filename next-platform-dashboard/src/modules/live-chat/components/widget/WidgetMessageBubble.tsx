@@ -510,7 +510,9 @@ function FlowChoice({
         )}
         <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
           <div className="px-3 pt-2.5 pb-1.5">
-            <p className="text-sm text-[#1e293b] leading-relaxed">{data.text}</p>
+            <p className="text-sm text-[#1e293b] leading-relaxed">
+              {data.text}
+            </p>
           </div>
           <div className="px-3 pb-2.5 flex flex-col gap-1.5">
             {data.buttons.map((btn) => (
@@ -519,7 +521,11 @@ function FlowChoice({
                 type="button"
                 onClick={() => onSendMessage?.(btn.label)}
                 className="w-full text-left px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
-                style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: "white" }}
+                style={{
+                  borderColor: primaryColor,
+                  color: primaryColor,
+                  backgroundColor: "white",
+                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = primaryColor;
                   e.currentTarget.style.color = "white";
@@ -535,7 +541,9 @@ function FlowChoice({
           </div>
         </div>
         <div className="flex items-center mt-0.5 px-1">
-          <span className="text-[10px] text-gray-400">{formatTime(message.createdAt)}</span>
+          <span className="text-[10px] text-gray-400">
+            {formatTime(message.createdAt)}
+          </span>
         </div>
       </div>
     </div>

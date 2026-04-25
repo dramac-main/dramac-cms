@@ -30,10 +30,13 @@ export function getPushPermission(): NotificationPermission | "unsupported" {
  */
 export async function subscribeToPush(
   context: "agent" | "customer" | "portal",
-  options?: { siteId?: string; conversationId?: string }
+  options?: { siteId?: string; conversationId?: string },
 ): Promise<{ success: boolean; error?: string }> {
   if (!isPushSupported()) {
-    return { success: false, error: "Push notifications are not supported in this browser" };
+    return {
+      success: false,
+      error: "Push notifications are not supported in this browser",
+    };
   }
 
   if (!VAPID_PUBLIC_KEY) {
@@ -79,7 +82,10 @@ export async function subscribeToPush(
 
     if (!response.ok) {
       const data = await response.json();
-      return { success: false, error: data.error || "Failed to save subscription" };
+      return {
+        success: false,
+        error: data.error || "Failed to save subscription",
+      };
     }
 
     return { success: true };
@@ -95,7 +101,10 @@ export async function subscribeToPush(
 /**
  * Unsubscribe from push notifications
  */
-export async function unsubscribeFromPush(): Promise<{ success: boolean; error?: string }> {
+export async function unsubscribeFromPush(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
   if (!isPushSupported()) {
     return { success: false, error: "Push not supported" };
   }
@@ -134,7 +143,9 @@ export async function unsubscribeFromPush(): Promise<{ success: boolean; error?:
 /**
  * Update the conversation ID for an existing push subscription (used by widget)
  */
-export async function updatePushConversation(conversationId: string): Promise<void> {
+export async function updatePushConversation(
+  conversationId: string,
+): Promise<void> {
   if (!isPushSupported()) return;
 
   try {

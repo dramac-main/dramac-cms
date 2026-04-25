@@ -267,11 +267,8 @@ export async function inviteClientToPortal(clientId: string) {
   }
 
   const { createAdminClient } = await import("@/lib/supabase/admin");
-  const {
-    ensurePortalAuthUser,
-    generatePortalMagicLink,
-    getPortalBaseUrl,
-  } = await import("@/lib/portal/portal-activation");
+  const { ensurePortalAuthUser, generatePortalMagicLink, getPortalBaseUrl } =
+    await import("@/lib/portal/portal-activation");
   const admin = createAdminClient();
 
   // Step 1: Ensure Supabase auth user exists and is linked to the client row.
@@ -301,7 +298,10 @@ export async function inviteClientToPortal(clientId: string) {
     })
     .eq("id", clientId);
   if (updateErr) {
-    console.error("[Portal Invite] Failed to persist portal linkage:", updateErr);
+    console.error(
+      "[Portal Invite] Failed to persist portal linkage:",
+      updateErr,
+    );
     return { error: updateErr.message };
   }
 
@@ -311,8 +311,11 @@ export async function inviteClientToPortal(clientId: string) {
   });
 
   // Step 3: Generate a branded magic link.
-  const { link: magicLink, generated: magicGenerated, error: magicErr } =
-    await generatePortalMagicLink({ email: client.email });
+  const {
+    link: magicLink,
+    generated: magicGenerated,
+    error: magicErr,
+  } = await generatePortalMagicLink({ email: client.email });
   if (!magicGenerated) {
     console.warn(
       `[Portal Invite] Falling back to /portal/login (generateLink failed): ${magicErr}`,
@@ -324,9 +327,7 @@ export async function inviteClientToPortal(clientId: string) {
     ? magicLink
     : `${getPortalBaseUrl()}/portal/login`;
   try {
-    const { sendBrandedEmail } = await import(
-      "@/lib/email/send-branded-email"
-    );
+    const { sendBrandedEmail } = await import("@/lib/email/send-branded-email");
     const { getAgencyBranding } = await import("@/lib/queries/branding");
     const branding = await getAgencyBranding(profile.agency_id);
     const businessName = branding?.agency_display_name || "our team";

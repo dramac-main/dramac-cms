@@ -52,28 +52,52 @@
       "short_name": "Chat",
       "description": "Open conversations across your sites",
       "url": "/portal?goto=chat",
-      "icons": [{ "src": "/icons/shortcut-chat.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [
+        {
+          "src": "/icons/shortcut-chat.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
       "name": "Orders",
       "short_name": "Orders",
       "description": "Recent orders across all sites",
       "url": "/portal?goto=orders",
-      "icons": [{ "src": "/icons/shortcut-orders.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [
+        {
+          "src": "/icons/shortcut-orders.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
       "name": "Bookings",
       "short_name": "Bookings",
       "description": "Upcoming bookings across all sites",
       "url": "/portal?goto=bookings",
-      "icons": [{ "src": "/icons/shortcut-bookings.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [
+        {
+          "src": "/icons/shortcut-bookings.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
       "name": "Notifications",
       "short_name": "Inbox",
       "description": "Your notification inbox",
       "url": "/portal/notifications",
-      "icons": [{ "src": "/icons/shortcut-bell.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [
+        {
+          "src": "/icons/shortcut-bell.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }

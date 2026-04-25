@@ -27,8 +27,8 @@ export async function ensurePortalAuthUser(params: {
   const normalizedEmail = params.email.trim().toLowerCase();
 
   // Try to create first — fastest path for new invitations.
-  const { data: created, error: createErr } =
-    await admin.auth.admin.createUser({
+  const { data: created, error: createErr } = await admin.auth.admin.createUser(
+    {
       email: normalizedEmail,
       email_confirm: true,
       user_metadata: {
@@ -36,7 +36,8 @@ export async function ensurePortalAuthUser(params: {
         client_id: params.clientId,
         client_name: params.clientName ?? null,
       },
-    });
+    },
+  );
 
   if (!createErr && created?.user?.id) {
     return { success: true, userId: created.user.id, created: true };
@@ -107,7 +108,8 @@ export async function generatePortalMagicLink(params: {
   const admin = createAdminClient();
   const base = getPortalBaseUrl();
   const fallback = `${base}/portal/login`;
-  const next = params.next && params.next.startsWith("/") ? params.next : "/portal";
+  const next =
+    params.next && params.next.startsWith("/") ? params.next : "/portal";
 
   try {
     const { data, error } = await admin.auth.admin.generateLink({

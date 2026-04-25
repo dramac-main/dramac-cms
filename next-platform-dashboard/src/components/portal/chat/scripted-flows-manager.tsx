@@ -155,9 +155,7 @@ export function ScriptedFlowsManager({ siteId, flows }: ManagerProps) {
 
   const onDelete = (flow: ScriptedFlowRow) => {
     if (flow.is_default) {
-      toast.error(
-        "Default flows cannot be deleted. Disable them instead.",
-      );
+      toast.error("Default flows cannot be deleted. Disable them instead.");
       return;
     }
     if (!confirm(`Delete "${flow.name}"? This cannot be undone.`)) return;
@@ -372,9 +370,7 @@ export function ScriptedFlowsManager({ siteId, flows }: ManagerProps) {
               <Switch
                 id="flow-enabled"
                 checked={editor.isEnabled}
-                onCheckedChange={(v) =>
-                  setEditor({ ...editor, isEnabled: v })
-                }
+                onCheckedChange={(v) => setEditor({ ...editor, isEnabled: v })}
               />
               <Label htmlFor="flow-enabled" className="cursor-pointer">
                 Enabled
@@ -394,8 +390,8 @@ export function ScriptedFlowsManager({ siteId, flows }: ManagerProps) {
                 spellCheck={false}
               />
               <p className="text-xs text-muted-foreground">
-                Each step is an object with a <code>type</code> field. See
-                the docs for available step types.
+                Each step is an object with a <code>type</code> field. See the
+                docs for available step types.
               </p>
             </div>
 

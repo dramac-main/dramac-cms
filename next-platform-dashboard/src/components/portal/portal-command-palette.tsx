@@ -41,28 +41,135 @@ interface CommandItem {
 }
 
 const ITEMS: CommandItem[] = [
-  { id: "home", label: "Dashboard", href: "/portal", icon: LayoutDashboard, group: "Navigate", keywords: ["home", "overview"] },
-  { id: "chat", label: "Live Chat", href: "/portal?goto=chat", icon: MessageSquare, group: "Navigate", keywords: ["messages", "support"] },
-  { id: "orders", label: "Orders", href: "/portal/orders", icon: ShoppingBag, group: "Navigate", keywords: ["sales", "checkout"] },
-  { id: "bookings", label: "Bookings", href: "/portal/bookings", icon: CalendarDays, group: "Navigate", keywords: ["appointments", "calendar"] },
-  { id: "invoices", label: "Invoices", href: "/portal/invoices", icon: Receipt, group: "Navigate", keywords: ["billing", "payments"] },
-  { id: "products", label: "Products", href: "/portal/products", icon: Package, group: "Navigate", keywords: ["catalog", "inventory"] },
-  { id: "customers", label: "Customers", href: "/portal/customers", icon: Users, group: "Navigate", keywords: ["clients", "contacts"] },
-  { id: "domains", label: "Domains", href: "/portal/domains", icon: Globe, group: "Navigate", keywords: ["dns"] },
-  { id: "billing", label: "Billing", href: "/portal/billing", icon: CreditCard, group: "Navigate", keywords: ["plan", "subscription"] },
-  { id: "support", label: "Support Tickets", href: "/portal/support", icon: LifeBuoy, group: "Navigate", keywords: ["help"] },
+  {
+    id: "home",
+    label: "Dashboard",
+    href: "/portal",
+    icon: LayoutDashboard,
+    group: "Navigate",
+    keywords: ["home", "overview"],
+  },
+  {
+    id: "chat",
+    label: "Live Chat",
+    href: "/portal?goto=chat",
+    icon: MessageSquare,
+    group: "Navigate",
+    keywords: ["messages", "support"],
+  },
+  {
+    id: "orders",
+    label: "Orders",
+    href: "/portal/orders",
+    icon: ShoppingBag,
+    group: "Navigate",
+    keywords: ["sales", "checkout"],
+  },
+  {
+    id: "bookings",
+    label: "Bookings",
+    href: "/portal/bookings",
+    icon: CalendarDays,
+    group: "Navigate",
+    keywords: ["appointments", "calendar"],
+  },
+  {
+    id: "invoices",
+    label: "Invoices",
+    href: "/portal/invoices",
+    icon: Receipt,
+    group: "Navigate",
+    keywords: ["billing", "payments"],
+  },
+  {
+    id: "products",
+    label: "Products",
+    href: "/portal/products",
+    icon: Package,
+    group: "Navigate",
+    keywords: ["catalog", "inventory"],
+  },
+  {
+    id: "customers",
+    label: "Customers",
+    href: "/portal/customers",
+    icon: Users,
+    group: "Navigate",
+    keywords: ["clients", "contacts"],
+  },
+  {
+    id: "domains",
+    label: "Domains",
+    href: "/portal/domains",
+    icon: Globe,
+    group: "Navigate",
+    keywords: ["dns"],
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    href: "/portal/billing",
+    icon: CreditCard,
+    group: "Navigate",
+    keywords: ["plan", "subscription"],
+  },
+  {
+    id: "support",
+    label: "Support Tickets",
+    href: "/portal/support",
+    icon: LifeBuoy,
+    group: "Navigate",
+    keywords: ["help"],
+  },
   // Actions
-  { id: "ask-chiko", label: "Ask Chiko", hint: "AI assistant", href: "/portal?openChiko=1", icon: Sparkles, group: "Actions", keywords: ["ai", "assistant", "help"] },
-  { id: "notifications", label: "View notifications", href: "/portal/notifications", icon: Bell, group: "Actions", keywords: ["alerts"] },
+  {
+    id: "ask-chiko",
+    label: "Ask Chiko",
+    hint: "AI assistant",
+    href: "/portal?openChiko=1",
+    icon: Sparkles,
+    group: "Actions",
+    keywords: ["ai", "assistant", "help"],
+  },
+  {
+    id: "notifications",
+    label: "View notifications",
+    href: "/portal/notifications",
+    icon: Bell,
+    group: "Actions",
+    keywords: ["alerts"],
+  },
   // Settings
-  { id: "settings", label: "Account settings", href: "/portal/settings", icon: Settings, group: "Settings" },
-  { id: "settings-notifications", label: "Notification preferences", href: "/portal/settings/notifications", icon: Bell, group: "Settings", keywords: ["email", "push"] },
-  { id: "settings-team", label: "Team & permissions", href: "/portal/settings/team", icon: Users, group: "Settings", keywords: ["users", "roles"] },
+  {
+    id: "settings",
+    label: "Account settings",
+    href: "/portal/settings",
+    icon: Settings,
+    group: "Settings",
+  },
+  {
+    id: "settings-notifications",
+    label: "Notification preferences",
+    href: "/portal/settings/notifications",
+    icon: Bell,
+    group: "Settings",
+    keywords: ["email", "push"],
+  },
+  {
+    id: "settings-team",
+    label: "Team & permissions",
+    href: "/portal/settings/team",
+    icon: Users,
+    group: "Settings",
+    keywords: ["users", "roles"],
+  },
 ];
 
 function matchesQuery(q: string, item: CommandItem): boolean {
   if (!q) return true;
-  const text = [item.label, item.hint, ...(item.keywords || [])].join(" ").toLowerCase();
+  const text = [item.label, item.hint, ...(item.keywords || [])]
+    .join(" ")
+    .toLowerCase();
   return q
     .toLowerCase()
     .split(/\s+/)
@@ -220,7 +327,9 @@ export function PortalCommandPalette() {
                       <Icon className="w-4 h-4 shrink-0" />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.hint && (
-                        <span className="text-[11px] text-zinc-400">{item.hint}</span>
+                        <span className="text-[11px] text-zinc-400">
+                          {item.hint}
+                        </span>
                       )}
                     </button>
                   );

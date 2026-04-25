@@ -326,9 +326,7 @@ function CommsFilterBar({
       <a
         href={base}
         className={`rounded-full border px-2 py-0.5 ${
-          !hasFilter
-            ? "bg-foreground text-background"
-            : "hover:bg-muted"
+          !hasFilter ? "bg-foreground text-background" : "hover:bg-muted"
         }`}
       >
         All

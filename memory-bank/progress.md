@@ -49,7 +49,7 @@ passes with commit+push after each. Still outstanding after Part A:
 - §6 Automation: verify `system-templates.ts` coverage; audit every
   resource action for `logAutomationEvent` + `dispatchBusinessEvent` +
   branded email; add idempotency key `(resource_type, resource_id,
-  event_type, state_hash)`.
+event_type, state_hash)`.
 - §7 Impersonation: `impersonation_actions` audit table + log all writes
   with both impersonator + impersonated IDs.
 - §8 Page-by-page audit (Playwright, since browser testing unavailable).

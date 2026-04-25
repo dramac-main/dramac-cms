@@ -16,17 +16,17 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options: _options }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
   // IMPORTANT: Avoid writing any logic between createServerClient and
@@ -40,19 +40,19 @@ export async function updateSession(request: NextRequest) {
   // Define public routes that don't require authentication
   // These include auth pages, embed routes, and PUBLIC-FACING client sites/blogs
   const publicRoutes = [
-    "/login", 
-    "/signup", 
-    "/forgot-password", 
-    "/reset-password", 
-    "/auth/callback", 
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/auth/callback",
     "/embed",
-    "/site",     // Public client sites - /site/[domain]/[...slug]
-    "/blog",     // Public blog pages - /blog/[subdomain]/[slug]
-    "/preview",  // Preview pages - /preview/[siteId]/[pageId]
-    "/portal",   // Portal has its own auth gate (requirePortalAuth → /portal/login)
+    "/site", // Public client sites - /site/[domain]/[...slug]
+    "/blog", // Public blog pages - /blog/[subdomain]/[slug]
+    "/preview", // Preview pages - /preview/[siteId]/[pageId]
+    "/portal", // Portal has its own auth gate (requirePortalAuth → /portal/login)
   ];
   const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   // Redirect unauthenticated users to login (except for API, embed, and public routes)
@@ -75,7 +75,9 @@ export async function updateSession(request: NextRequest) {
 
       const url = request.nextUrl.clone();
       // Redirect to onboarding if not completed, otherwise to dashboard
-      url.pathname = profile?.onboarding_completed ? "/dashboard" : "/onboarding";
+      url.pathname = profile?.onboarding_completed
+        ? "/dashboard"
+        : "/onboarding";
       return NextResponse.redirect(url);
     }
 
@@ -85,8 +87,18 @@ export async function updateSession(request: NextRequest) {
     }
 
     // For protected routes, check if onboarding is completed
-    const protectedRoutes = ["/dashboard", "/settings", "/sites", "/clients", "/marketplace", "/admin", "/editor"];
-    const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+    const protectedRoutes = [
+      "/dashboard",
+      "/settings",
+      "/sites",
+      "/clients",
+      "/marketplace",
+      "/admin",
+      "/editor",
+    ];
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      pathname.startsWith(route),
+    );
 
     if (isProtectedRoute) {
       const { data: profile } = await supabase

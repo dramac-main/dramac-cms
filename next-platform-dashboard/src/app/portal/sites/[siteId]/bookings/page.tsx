@@ -56,12 +56,7 @@ export default async function PortalBookingsPage({
   const { siteId } = await params;
   const sp = (await searchParams) ?? {};
 
-  await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "booking",
-    "canManageBookings",
-  );
+  await verifyPortalModuleAccess(user, siteId, "booking", "canManageBookings");
 
   const statusRaw =
     sp.status && BOOKING_STATUS_VALUES.has(sp.status) ? sp.status : "all";

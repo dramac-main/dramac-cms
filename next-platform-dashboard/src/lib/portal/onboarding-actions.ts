@@ -44,7 +44,8 @@ export async function loadOnboardingState(): Promise<{
     .eq("user_id" as never, user.userId)
     .maybeSingle();
 
-  const stored = (row as { app_installed?: boolean; dismissed?: boolean } | null) ?? {};
+  const stored =
+    (row as { app_installed?: boolean; dismissed?: boolean } | null) ?? {};
 
   const state: OnboardingState = {
     profile_confirmed: false,
@@ -65,7 +66,11 @@ export async function loadOnboardingState(): Promise<{
         .select("full_name")
         .eq("id", user.userId)
         .maybeSingle();
-      if (data && typeof data.full_name === "string" && data.full_name.trim().length > 0) {
+      if (
+        data &&
+        typeof data.full_name === "string" &&
+        data.full_name.trim().length > 0
+      ) {
         state.profile_confirmed = true;
       }
     })(),
@@ -161,10 +166,9 @@ export async function markAppInstalled(): Promise<
 
   const { error } = await admin
     .from("portal_onboarding_state" as never)
-    .upsert(
-      { user_id: user.userId, app_installed: true } as never,
-      { onConflict: "user_id" },
-    );
+    .upsert({ user_id: user.userId, app_installed: true } as never, {
+      onConflict: "user_id",
+    });
 
   if (error) return { ok: false, error: error.message };
 
@@ -180,10 +184,9 @@ export async function dismissOnboarding(): Promise<
 
   const { error } = await admin
     .from("portal_onboarding_state" as never)
-    .upsert(
-      { user_id: user.userId, dismissed: true } as never,
-      { onConflict: "user_id" },
-    );
+    .upsert({ user_id: user.userId, dismissed: true } as never, {
+      onConflict: "user_id",
+    });
 
   if (error) return { ok: false, error: error.message };
 
