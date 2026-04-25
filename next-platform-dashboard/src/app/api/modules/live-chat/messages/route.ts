@@ -164,12 +164,27 @@ export async function POST(request: NextRequest) {
       site_id: string;
       assigned_agent_id?: string;
     };
+
+    // Resolve assigned_agent_id (mod_chat_agents.id) → auth.users.id.
+    // The notifications.user_id and web-push subscriptions are keyed on the
+    // auth user id; passing the chat agent row id triggers FK violations.
+    let assignedAgentAuthUserId: string | undefined;
+    if (convForNotify.assigned_agent_id) {
+      const { data: agentRow } = await (supabase as any)
+        .from("mod_chat_agents")
+        .select("user_id")
+        .eq("id", convForNotify.assigned_agent_id)
+        .maybeSingle();
+      assignedAgentAuthUserId =
+        (agentRow as { user_id?: string } | null)?.user_id || undefined;
+    }
+
     notifyNewChatMessage({
       siteId: convForNotify.site_id,
       conversationId,
       visitorName: visitorData?.name || "Visitor",
       messageText: content,
-      agentUserId: convForNotify.assigned_agent_id || undefined,
+      agentUserId: assignedAgentAuthUserId,
     }).catch((err) => console.error("[LiveChat] Notification error:", err));
 
     // Emit automation event for new visitor message
@@ -205,10 +220,8 @@ export async function POST(request: NextRequest) {
           url: `/dashboard/sites/${convForNotify.site_id}/live-chat/conversations/${conversationId}`,
           renotify: true,
         };
-        if (convForNotify.assigned_agent_id) {
-          sendPushToUser(convForNotify.assigned_agent_id, pushPayload).catch(
-            () => {},
-          );
+        if (assignedAgentAuthUserId) {
+          sendPushToUser(assignedAgentAuthUserId, pushPayload).catch(() => {});
         } else {
           sendPushToSiteAgents(convForNotify.site_id, pushPayload).catch(
             () => {},

@@ -195,7 +195,67 @@ export async function resolveInterestedRecipients(
     });
   }
 
-  return out;
+  // Defensive: drop any recipients whose userId no longer exists in
+  // auth.users. notifications.user_id has an FK → auth.users(id) and stale
+  // portal_user_id / owner_id references would otherwise cause every
+  // downstream insert to fail with code 23503.
+  return await filterRecipientsByExistingAuthUsers(admin, out);
+}
+
+interface AdminAuthHandle {
+  // We only depend on the listing capability used below; this matches
+  // the runtime shape of the supabase admin client without dragging in
+  // its internal types here.
+  auth: {
+    admin: {
+      getUserById: (
+        id: string,
+      ) => Promise<{
+        data: { user: { id: string } | null } | null;
+        error: unknown;
+      }>;
+    };
+  };
+}
+
+async function filterRecipientsByExistingAuthUsers(
+  admin: unknown,
+  recipients: DispatchRecipient[],
+): Promise<DispatchRecipient[]> {
+  if (recipients.length === 0) return recipients;
+  const adminTyped = admin as AdminAuthHandle;
+  const checked = new Map<string, boolean>();
+  await Promise.all(
+    recipients.map(async (r) => {
+      if (checked.has(r.userId)) return;
+      try {
+        const { data, error } = await adminTyped.auth.admin.getUserById(
+          r.userId,
+        );
+        const exists = !error && Boolean(data?.user);
+        checked.set(r.userId, exists);
+        if (!exists) {
+          console.warn(
+            "[recipient-resolver] dropping recipient with missing auth user:",
+            r.userId,
+            "recipientClass:",
+            r.recipientClass,
+          );
+        }
+      } catch (err) {
+        // Fail open: if the auth lookup itself errors, keep the recipient
+        // and let the downstream insert decide. We never want a notification
+        // hard-blocked by a transient auth API hiccup.
+        console.error(
+          "[recipient-resolver] auth.users existence check failed for",
+          r.userId,
+          err,
+        );
+        checked.set(r.userId, true);
+      }
+    }),
+  );
+  return recipients.filter((r) => checked.get(r.userId) !== false);
 }
 
 /**

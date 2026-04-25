@@ -196,6 +196,41 @@ function PaymentMethodSelectBubble({
   }
 }
 
+function FlowChoicePreview({ content }: { content: string | null }) {
+  if (!content) return null;
+  try {
+    const data = JSON.parse(content) as {
+      text?: string;
+      stepId?: string;
+      buttons?: { id: string; label: string }[];
+    };
+    return (
+      <div className="space-y-2">
+        {data.text && (
+          <p className="text-sm whitespace-pre-wrap break-words">{data.text}</p>
+        )}
+        {Array.isArray(data.buttons) && data.buttons.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {data.buttons.map((btn) => (
+              <span
+                key={btn.id}
+                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border border-border text-foreground"
+              >
+                {btn.label}
+              </span>
+            ))}
+          </div>
+        )}
+        <p className="text-[10px] opacity-60 text-muted-foreground">
+          Scripted-flow choice sent to visitor
+        </p>
+      </div>
+    );
+  } catch {
+    return <p className="text-sm whitespace-pre-wrap break-words">{content}</p>;
+  }
+}
+
 export function MessageBubble({ message, className }: MessageBubbleProps) {
   const isSystem =
     message.senderType === "system" || message.contentType === "system";
@@ -290,6 +325,12 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
               content={message.content}
               isAgent={isAgent}
             />
+          ) : message.contentType === "flow_choice" ? (
+            <FlowChoicePreview content={message.content} />
+          ) : message.contentType === "flow_handoff" ? (
+            <p className="text-sm italic opacity-90 whitespace-pre-wrap break-words">
+              {message.content}
+            </p>
           ) : message.contentType === "payment_upload_prompt" ? (
             <>
               {message.content && (

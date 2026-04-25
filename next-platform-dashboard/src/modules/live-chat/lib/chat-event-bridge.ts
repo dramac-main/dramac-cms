@@ -300,7 +300,7 @@ export async function createConversationForEntity(
         site_id: siteId,
         visitor_id: visitorId,
         status: "active",
-        priority: "medium",
+        priority: "normal",
         subject,
         tags,
         metadata,

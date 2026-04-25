@@ -287,6 +287,45 @@ export async function generateAutoResponse(
       }
     }
 
+    // ── Always-on payment-method grounding ───────────────────────────────
+    // Even when there is no pending order or booking, the visitor may ask
+    // "what payment methods do you accept?". Without authoritative data the
+    // AI tends to invent options ("card online payments", "PayPal", etc.).
+    // We load the configured methods unconditionally and feed them to the
+    // prompt as the *only* allowed answer source.
+    let configuredPaymentMethodLabels: string[] = [];
+    {
+      const sources: string[] = [];
+      const { data: ecomForMethods } = await supabase
+        .from("mod_ecommod01_settings")
+        .select("manual_payment_instructions")
+        .eq("site_id", siteId)
+        .maybeSingle();
+      if (ecomForMethods?.manual_payment_instructions) {
+        sources.push(ecomForMethods.manual_payment_instructions as string);
+      }
+      const { data: bookForMethods } = await supabase
+        .from("mod_bookmod01_settings")
+        .select("manual_payment_instructions")
+        .eq("site_id", siteId)
+        .maybeSingle();
+      if (bookForMethods?.manual_payment_instructions) {
+        sources.push(bookForMethods.manual_payment_instructions as string);
+      }
+      const seen = new Set<string>();
+      for (const src of sources) {
+        const parsed = parsePaymentMethods(src);
+        if (!parsed) continue;
+        for (const m of parsed) {
+          const label = m.label?.trim();
+          if (label && !seen.has(label.toLowerCase())) {
+            seen.add(label.toLowerCase());
+            configuredPaymentMethodLabels.push(label);
+          }
+        }
+      }
+    }
+
     // ── PHASE LC-12: Payment method selection buttons ─────────────────────
     // If a pending manual order exists and we have structured payment instructions,
     // send interactive buttons FIRST instead of dumping all instructions at once.
@@ -500,6 +539,18 @@ RULES:
 - If the visitor has order or booking history, use it to provide personalized support
 - Respond in the same language as the visitor
 ${customInstructions ? `\nCUSTOM INSTRUCTIONS FROM STORE OWNER:\n${customInstructions}\n` : ""}
+
+ALLOWED PAYMENT METHODS (authoritative — never invent others):
+${
+  configuredPaymentMethodLabels.length > 0
+    ? configuredPaymentMethodLabels.map((l) => `- ${l}`).join("\n")
+    : "- (none configured for this site)"
+}
+HARD RULES ABOUT PAYMENT METHODS:
+- The list above is the COMPLETE set of payment methods this business accepts.
+- NEVER mention, suggest, or imply ANY payment method that is not in that list (no card, no PayPal, no Stripe, no crypto, etc. — unless explicitly listed).
+- If the visitor asks "what payment methods do you accept?" answer with ONLY the labels in the list (or, if the list is empty, tell them to contact the business directly).
+- If the visitor asks for a method that is NOT listed, politely say it isn't currently supported and offer the listed alternatives.
 ${
   pendingManualOrder
     ? `
