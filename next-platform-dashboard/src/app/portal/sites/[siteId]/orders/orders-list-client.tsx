@@ -31,12 +31,14 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { PortalStatusPill } from "@/components/portal/patterns/portal-status-pill";
 import { PortalEmptyState } from "@/components/portal/patterns/portal-empty-state";
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowRight, Download } from "lucide-react";
 import type { PortalOrderListItem } from "@/lib/portal/commerce-data-access";
 import {
   formatPortalCurrency,
   formatPortalRelative,
 } from "@/lib/portal/format";
+import { exportOrdersCsvAction } from "./_actions";
+import { toast } from "sonner";
 
 const ORDER_STATUSES = [
   "all",
@@ -101,6 +103,31 @@ export function OrdersListClient({
     const form = new FormData(e.currentTarget);
     const q = String(form.get("q") ?? "").trim();
     push({ q: q || null });
+  }
+
+  const [isExporting, startExport] = useTransition();
+  function onExport() {
+    startExport(async () => {
+      const r = await exportOrdersCsvAction(siteId, {
+        status: activeStatus,
+        paymentStatus: activePaymentStatus,
+        search: activeSearch,
+      });
+      if (!r.ok) {
+        toast.error(r.error);
+        return;
+      }
+      const blob = new Blob([r.csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = r.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Orders exported");
+    });
   }
 
   return (
@@ -177,6 +204,17 @@ export function OrdersListClient({
               </SelectContent>
             </Select>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            disabled={isExporting || orders.length === 0}
+            aria-label="Export orders to CSV"
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {isExporting ? "Exporting…" : "Export CSV"}
+          </Button>
         </div>
       </div>
 

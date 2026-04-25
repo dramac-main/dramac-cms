@@ -24,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/layout/page-header";
+import { CommunicationsToolbar } from "./communications-toolbar";
+import { CommunicationsRowDelete } from "./communications-row-delete";
 
 export const metadata: Metadata = {
   title: "Communications | Client Portal",
@@ -62,6 +64,17 @@ function stateVariant(
       return "secondary";
     default:
       return "outline";
+  }
+}
+
+function stateLabel(state: string): string {
+  switch (state) {
+    case "skipped_no_subscription":
+      return "no push device";
+    case "skipped_preference":
+      return "skipped";
+    default:
+      return state.replace(/_/g, " ");
   }
 }
 
@@ -127,8 +140,30 @@ async function LogLoader({
   const byChannel = Object.entries(stats.byChannel).sort((a, b) => b[1] - a[1]);
   const byState = Object.entries(stats.byState).sort((a, b) => b[1] - a[1]);
 
+  const failedCount =
+    (stats.byState.failed ?? 0) +
+    (stats.byState.bounced ?? 0) +
+    (stats.byState.dropped ?? 0);
+  const skippedCount =
+    (stats.byState.skipped_no_subscription ?? 0) +
+    (stats.byState.skipped_preference ?? 0);
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Showing the most recent 100 entries{" "}
+          {Object.keys(stats.byState).length > 0 && (
+            <span>· {stats.totalCount} total in the last batch</span>
+          )}
+        </p>
+        <CommunicationsToolbar
+          siteId={siteId}
+          failedCount={failedCount}
+          skippedCount={skippedCount}
+        />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
@@ -177,7 +212,7 @@ async function LogLoader({
                   key={st}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="capitalize">{st.replace(/_/g, " ")}</span>
+                  <span className="capitalize">{stateLabel(st)}</span>
                   <span className="font-medium tabular-nums">{n}</span>
                 </div>
               ))
@@ -208,11 +243,12 @@ async function LogLoader({
                     <TableHead>Recipient</TableHead>
                     <TableHead className="text-right">Latency</TableHead>
                     <TableHead>Error</TableHead>
+                    <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {entries.map((e) => (
-                    <TableRow key={e.id}>
+                    <TableRow key={e.id} className="group">
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {formatDate(e.createdAt)}
                       </TableCell>
@@ -236,7 +272,7 @@ async function LogLoader({
                           variant={stateVariant(e.deliveryState)}
                           className="capitalize"
                         >
-                          {e.deliveryState.replace(/_/g, " ")}
+                          {stateLabel(e.deliveryState)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs">
@@ -253,6 +289,12 @@ async function LogLoader({
                         ) : (
                           "—"
                         )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <CommunicationsRowDelete
+                          siteId={siteId}
+                          id={e.id}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -364,7 +406,7 @@ function CommsFilterBar({
                   active ? "bg-foreground text-background" : "hover:bg-muted"
                 }`}
               >
-                {st.replace(/_/g, " ")}{" "}
+                {stateLabel(st)}{" "}
                 <span className="tabular-nums opacity-70">({n})</span>
               </a>
             );

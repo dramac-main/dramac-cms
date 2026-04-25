@@ -339,7 +339,8 @@ async function dispatchForRecipient(
       });
     } else {
       const started = Date.now();
-      let ok = false;
+      let attempted = 0;
+      let sentCount = 0;
       let errMsg: string | null = null;
       try {
         const mod = await import("@/lib/actions/web-push");
@@ -353,25 +354,53 @@ async function dispatchForRecipient(
           type: opts.push.type || "notification",
           renotify: true,
         });
-        ok = Boolean((res as { sent?: number } | undefined)?.sent ?? true);
+        attempted =
+          (res as { attempted?: number } | undefined)?.attempted ?? 0;
+        sentCount = (res as { sent?: number } | undefined)?.sent ?? 0;
       } catch (err) {
         errMsg = err instanceof Error ? err.message : String(err);
       }
-      if (ok) siteCtx.result.pushSent++;
-      else siteCtx.result.pushFailed++;
-      await writeSendLog({
-        eventType: opts.eventType,
-        recipientClass: recipient.recipientClass,
-        channel: "push",
-        deliveryState: ok ? "sent" : "failed",
-        userId: recipient.userId,
-        agencyId: recipient.agencyId,
-        clientId: recipient.clientId,
-        siteId: recipient.siteId,
-        provider: "web_push",
-        latencyMs: Date.now() - started,
-        errorMessage: errMsg,
-      });
+
+      if (errMsg !== null) {
+        // Top-level failure (import error / VAPID misconfig). Log it.
+        siteCtx.result.pushFailed++;
+        await writeSendLog({
+          eventType: opts.eventType,
+          recipientClass: recipient.recipientClass,
+          channel: "push",
+          deliveryState: "failed",
+          userId: recipient.userId,
+          agencyId: recipient.agencyId,
+          clientId: recipient.clientId,
+          siteId: recipient.siteId,
+          provider: "web_push",
+          latencyMs: Date.now() - started,
+          errorMessage: errMsg,
+        });
+      } else if (attempted === 0) {
+        // No push subscription registered for this user — this is NOT a
+        // failure, the user just hasn't opted in to push on any device.
+        // Logging as `skipped_no_subscription` keeps the comms log clean.
+        siteCtx.result.pushSkipped++;
+        await writeSendLog({
+          eventType: opts.eventType,
+          recipientClass: recipient.recipientClass,
+          channel: "push",
+          deliveryState: "skipped_no_subscription",
+          userId: recipient.userId,
+          agencyId: recipient.agencyId,
+          clientId: recipient.clientId,
+          siteId: recipient.siteId,
+          provider: "web_push",
+          latencyMs: Date.now() - started,
+          metadata: { reason: "no_subscription" },
+        });
+      } else {
+        // web-push.ts already wrote a per-subscription send-log row; we just
+        // count the outcome here. Treat "any subscription delivered" as ok.
+        if (sentCount > 0) siteCtx.result.pushSent++;
+        else siteCtx.result.pushFailed++;
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PortalPanelSkeleton } from "@/components/portal/patterns/portal-panel-skeleton";
 import { PortalErrorState } from "@/components/portal/patterns/portal-error-state";
 import { BookingsListClient } from "./bookings-list-client";
+import { BookingsCalendarView } from "./bookings-calendar-view";
 import type {
   PortalAppointmentStatus,
   PortalBookingListFilter,
@@ -27,6 +28,8 @@ interface PageProps {
     from?: string;
     to?: string;
     page?: string;
+    view?: string;
+    month?: string;
   }>;
 }
 
@@ -58,6 +61,7 @@ export default async function PortalBookingsPage({
 
   await verifyPortalModuleAccess(user, siteId, "booking", "canManageBookings");
 
+  const view = sp.view === "calendar" ? "calendar" : "list";
   const statusRaw =
     sp.status && BOOKING_STATUS_VALUES.has(sp.status) ? sp.status : "all";
   const status = statusRaw as PortalAppointmentStatus | "all";
@@ -65,13 +69,43 @@ export default async function PortalBookingsPage({
   const to = sanitiseIsoDate(sp.to);
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
-  const filter: PortalBookingListFilter = {
-    status,
-    from,
-    to,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  };
+  // Calendar mode: ignore pagination and filter to the visible month
+  const monthParam = sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : null;
+  let calendarFrom: string | undefined;
+  let calendarTo: string | undefined;
+  if (view === "calendar") {
+    const ref = monthParam
+      ? new Date(
+          parseInt(monthParam.slice(0, 4), 10),
+          parseInt(monthParam.slice(5, 7), 10) - 1,
+          1,
+        )
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    // expand to grid bounds (6 weeks)
+    const gridStart = new Date(ref);
+    gridStart.setDate(gridStart.getDate() - ref.getDay());
+    const gridEnd = new Date(gridStart);
+    gridEnd.setDate(gridEnd.getDate() + 41);
+    calendarFrom = gridStart.toISOString();
+    calendarTo = gridEnd.toISOString();
+  }
+
+  const filter: PortalBookingListFilter =
+    view === "calendar"
+      ? {
+          status,
+          from: calendarFrom,
+          to: calendarTo,
+          limit: 200,
+          offset: 0,
+        }
+      : {
+          status,
+          from,
+          to,
+          limit: PAGE_SIZE,
+          offset: (page - 1) * PAGE_SIZE,
+        };
 
   return (
     <div className="space-y-6">
@@ -87,6 +121,8 @@ export default async function PortalBookingsPage({
           activeStatus={statusRaw}
           activeFrom={from ?? ""}
           activeTo={to ?? ""}
+          view={view}
+          month={monthParam}
         />
       </Suspense>
     </div>
@@ -100,6 +136,8 @@ async function BookingsLoader({
   activeStatus,
   activeFrom,
   activeTo,
+  view,
+  month,
 }: {
   siteId: string;
   filter: PortalBookingListFilter;
@@ -107,6 +145,8 @@ async function BookingsLoader({
   activeStatus: string;
   activeFrom: string;
   activeTo: string;
+  view: "list" | "calendar";
+  month: string | null;
 }) {
   try {
     const user = await requirePortalAuth();
@@ -117,6 +157,15 @@ async function BookingsLoader({
       impersonatorEmail: session.impersonatorEmail,
     });
     const bookings = await dal.bookings.list(siteId, filter);
+    if (view === "calendar") {
+      return (
+        <BookingsCalendarView
+          siteId={siteId}
+          bookings={bookings}
+          initialMonth={month ?? undefined}
+        />
+      );
+    }
     const hasMore = bookings.length === (filter.limit ?? PAGE_SIZE);
     return (
       <BookingsListClient

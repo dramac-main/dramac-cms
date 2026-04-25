@@ -1633,9 +1633,12 @@ export async function POST(request: NextRequest) {
           const endIso = b.end_time as string | null;
           const startDate = startIso ? new Date(startIso) : null;
           const endDate = endIso ? new Date(endIso) : null;
-          const service = b.service as
-            | { name?: string; price?: number; currency?: string; duration?: number }
-            | null;
+          const service = b.service as {
+            name?: string;
+            price?: number;
+            currency?: string;
+            duration?: number;
+          } | null;
           const fmtTime = (d: Date | null) =>
             d
               ? d.toLocaleTimeString("en-US", {

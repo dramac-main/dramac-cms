@@ -1,8 +1,71 @@
 # Active Context
 
-**Last Updated**: Session 11 — Push CHECK fix + Ask Chiko rebrand + Vercel route reduction — SHIPPED ✅
+**Last Updated**: Session 12 — Portal Apps page rebuild + Push notifications fix + Operations enhancements (Bookings calendar, Orders CSV export) — IN PROGRESS
 
-## Current State: Session 11 — Production blockers + branding — SHIPPED ✅
+## Current State: Session 12 — Portal hardening + Operations polish
+
+User directive: "fully understand the client portal" — go deep into specific surfaces and make them 100%, agency global branding only, no shortcuts. Focus pages this session:
+
+1. `/portal/sites/{siteId}/apps` — full rebuild
+2. `/portal/sites/{siteId}/communications` — fix repeating "Failed [Push]" entries
+3. `/portal/sites/{siteId}/orders` — industry-standard
+4. `/portal/sites/{siteId}/bookings` — needs calendar
+5. All other Operations pages — industry-standard
+
+### Shipped this session (uncommitted at time of writing)
+
+**Push notification "failed" spam — 3-layer fix**
+- `migrations/portal-send-log-skipped-no-subscription.sql` — applied via Supabase MCP. Adds `skipped_no_subscription` to `portal_send_log.state` CHECK; backfills 27 phantom failed-push rows.
+- `src/lib/actions/web-push.ts` — `sendPushToUser` now filters `.in("context",["agent","portal"])`; returns `{sent,attempted}`. (DB CHECK on `push_subscriptions.context` already accepts `agent|customer|portal` from session 11.)
+- `src/lib/portal/notification-dispatcher.ts` — push branch distinguishes 3 paths: error → `failed`, attempted===0 → `skipped_no_subscription` + `siteCtx.result.pushSkipped++`, attempted>0 → success counts.
+- `src/lib/portal/send-log.ts` — `DeliveryState` union extended with `skipped_no_subscription`.
+
+**Communications page polish**
+- `communications-data-access.ts` — extended `PortalSendState`; added `sendLog.delete(siteId,id)`, `sendLog.clearByState(siteId, states[])`, `sendLog.clearOlderThan(siteId, days)` — all permission-gated via `requireScope(canViewAnalytics)`, audited.
+- `communications/_actions.ts` (new) — `deleteSendLogEntryAction`, `clearSendLogByStateAction`, `clearSendLogOlderThanAction`, `refreshCommunicationsAction`.
+- `communications-toolbar.tsx` (new) — Refresh + Cleanup dropdown (clear failed / skipped / older-than-30 days) with AlertDialog confirms.
+- `communications-row-delete.tsx` (new) — per-row trash button (group-hover).
+- `communications/page.tsx` — `stateLabel` helper renames `skipped_no_subscription`→"no push device" / `skipped_preference`→"skipped"; toolbar wired with failed/skipped counts; 8-col table with row delete.
+
+**Apps page rebuild** (`/portal/sites/{siteId}/apps`)
+- `_actions.ts` (new) — `installAppAction`, `uninstallAppAction`, `updateAppSettingsAction` wrap `dal.apps.*` with revalidatePath.
+- `src/lib/portal/app-routes.ts` (new) — `NATIVE_PORTAL_ROUTES` map + `resolvePortalAppRoute(siteId, slug, fallbackId)` + `hasNativePortalSurface(slug)`. Maps ecommerce/store→/orders, products→/products, booking→/bookings, crm→/crm, customers→/customers, quotes→/quotes, invoicing→/invoicing, payments→/payment-proofs, marketing→/marketing, live-chat→/live-chat, chat-agents→/chat-agents, blog→/blog, media→/media, pages→/pages, seo→/seo, analytics→/analytics, automation→/automation, forms→/submissions.
+- `apps-installed-grid.tsx` (new) — grid grouped by category. Card has absolute Link overlay to resolved route, primary/10 icon tile, Active badge, Launcher badge for non-native, dropdown menu (Open / Configure / Uninstall) with AlertDialog.
+- `marketplace-install-button.tsx` — already correctly written (verified existing impl matches API).
+- `apps/page.tsx` — fully rewritten: ArrowLeft back link, header + "Browse marketplace" button, 3 stats cards (Active+disabled / Categories / Available), Installed section using `AppsInstalledGrid`, `id="marketplace"` Marketplace section grouped by category with install buttons.
+
+**Bookings calendar**
+- `bookings/bookings-calendar-view.tsx` (new) — full-month grid (6×7), prev/Today/next nav, day cells with count chip + first 3 bookings + "+N more", click selects day → bottom Card lists bookings with `PortalStatusPill` + `formatPortalCurrency` + link to detail. Switches to list via removing `?view`. Tailwind v4 lint: `min-h-22` (not `min-h-[88px]`).
+- `bookings/page.tsx` — searchParams now accepts `view` and `month`. When `view==="calendar"`, expands filter to 6-week grid bounds and limit=200; otherwise paginated list. Branches `BookingsLoader` to render `<BookingsCalendarView>` or `<BookingsListClient>`.
+- `bookings-list-client.tsx` — added "Calendar" toggle button (CalendarDays icon) that pushes `?view=calendar`.
+
+**Orders CSV export**
+- `orders/_actions.ts` — added `exportOrdersCsvAction(siteId, filter)` that pulls up to 1000 rows via `dal.orders.list`, builds RFC-4180 CSV (csvEscape helper), returns `{csv, filename: orders-YYYY-MM-DD.csv}`.
+- `orders-list-client.tsx` — "Export CSV" button (Download icon) in toolbar with `useTransition` → `Blob` → `URL.createObjectURL` → click anchor → `revokeObjectURL`. Disabled when empty or pending.
+
+### Validation status
+
+- All edited files: `get_errors` clean.
+- `npx tsc --noEmit --skipLibCheck`: only stale `.next/types/validator.ts` errors from session 11's deleted-page consolidation; zero source errors.
+- Push migration applied: `{success:true}`; 27 phantom rows backfilled.
+- DB verified: site `b019cce4-35ff-4283-a032-6d87f56b9302` has 10 active installs.
+
+### Tailwind v4 lint reminders (from this session)
+
+- `flex-shrink-0` → `shrink-0`
+- `min-h-[88px]` → `min-h-22`
+
+### Pending after this session
+
+- Products create/edit form + variants
+- Customers notes/segments
+- Quotes composer + branded email send
+- Run a runtime smoke test of new surfaces
+- Consider adding Bulk-status update on Orders (kept out of scope for now to ship calendar+CSV cleanly)
+
+---
+
+## Prior State: Session 11 — Push CHECK fix + Ask Chiko rebrand + Vercel route reduction — SHIPPED ✅
 
 Three commits pushed on `main` (ea43c3ce → e8f75d66):
 

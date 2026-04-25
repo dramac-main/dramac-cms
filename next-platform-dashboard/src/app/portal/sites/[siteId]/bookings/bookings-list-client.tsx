@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarClock, ArrowRight } from "lucide-react";
+import { CalendarClock, ArrowRight, CalendarDays } from "lucide-react";
 import { PortalStatusPill } from "@/components/portal/patterns/portal-status-pill";
 import { PortalEmptyState } from "@/components/portal/patterns/portal-empty-state";
 import type { PortalBookingListItem } from "@/lib/portal/commerce-data-access";
@@ -147,6 +147,16 @@ export function BookingsListClient({
               ))}
             </SelectContent>
           </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => push({ view: "calendar" })}
+            disabled={isPending}
+          >
+            <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+            Calendar
+          </Button>
         </div>
       </div>
 

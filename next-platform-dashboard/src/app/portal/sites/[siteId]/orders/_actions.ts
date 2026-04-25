@@ -10,7 +10,12 @@
 import { revalidatePath } from "next/cache";
 import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
 import { createPortalDAL } from "@/lib/portal/data-access";
-import type { PortalOrderStatus } from "@/lib/portal/commerce-data-access";
+import type {
+  PortalOrderStatus,
+  PortalOrderPaymentStatus,
+  PortalOrderListFilter,
+} from "@/lib/portal/commerce-data-access";
+import { formatPortalCurrency } from "@/lib/portal/format";
 
 async function dal() {
   const user = await requirePortalAuth();
@@ -122,6 +127,75 @@ export async function addOrderInternalNoteAction(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Note save failed",
+    };
+  }
+}
+
+function csvEscape(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  const s = String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export async function exportOrdersCsvAction(
+  siteId: string,
+  filter: {
+    status?: string;
+    paymentStatus?: string;
+    search?: string;
+  },
+): Promise<{ ok: true; csv: string; filename: string } | { ok: false; error: string }> {
+  try {
+    const d = await dal();
+    const dalFilter: PortalOrderListFilter = {
+      status: (filter.status && filter.status !== "all"
+        ? (filter.status as PortalOrderStatus)
+        : "all"),
+      paymentStatus: (filter.paymentStatus && filter.paymentStatus !== "all"
+        ? (filter.paymentStatus as PortalOrderPaymentStatus)
+        : "all"),
+      search: filter.search?.trim() || undefined,
+      limit: 1000,
+      offset: 0,
+    };
+    const rows = await d.orders.list(siteId, dalFilter);
+    const header = [
+      "Order #",
+      "Status",
+      "Payment",
+      "Customer",
+      "Email",
+      "Items",
+      "Total",
+      "Currency",
+      "Placed",
+    ];
+    const lines = [header.map(csvEscape).join(",")];
+    for (const o of rows) {
+      lines.push(
+        [
+          o.orderNumber,
+          o.status,
+          o.paymentStatus ?? "",
+          o.customerName ?? "",
+          o.customerEmail ?? "",
+          o.itemCount,
+          formatPortalCurrency(o.totalCents, o.currency),
+          o.currency,
+          o.createdAt ?? "",
+        ]
+          .map(csvEscape)
+          .join(","),
+      );
+    }
+    const csv = lines.join("\r\n");
+    const stamp = new Date().toISOString().slice(0, 10);
+    return { ok: true, csv, filename: `orders-${stamp}.csv` };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Export failed",
     };
   }
 }

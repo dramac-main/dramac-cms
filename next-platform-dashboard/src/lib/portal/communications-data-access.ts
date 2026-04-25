@@ -150,6 +150,7 @@ export type PortalSendState =
   | "failed"
   | "dropped"
   | "skipped_preference"
+  | "skipped_no_subscription"
   | "deduped"
   | "retried";
 
@@ -220,6 +221,27 @@ export interface PortalCommunicationsSendLogNamespace {
     siteId: string,
     range?: { from?: string; to?: string },
   ): Promise<PortalSendLogStats>;
+  /**
+   * Delete a single send-log row scoped to this client × site.
+   * Used by the portal Communications page to dismiss a specific entry.
+   */
+  delete(siteId: string, id: string): Promise<{ deleted: number }>;
+  /**
+   * Bulk-delete send-log rows in one or more delivery states scoped to this
+   * client × site. Used to clear out phantom failed/skipped rows.
+   */
+  clearByState(
+    siteId: string,
+    states: PortalSendState[],
+  ): Promise<{ deleted: number }>;
+  /**
+   * Delete every send-log row older than `olderThanDays` for this client × site.
+   * Used by the portal Communications page "Clear old logs" action.
+   */
+  clearOlderThan(
+    siteId: string,
+    olderThanDays: number,
+  ): Promise<{ deleted: number }>;
 }
 
 function createSendLogNamespace(
@@ -351,6 +373,96 @@ function createSendLogNamespace(
             byState,
             byChannel,
           };
+        },
+      ),
+
+    delete: async (siteId, id) =>
+      withPortalEvent(
+        "portal.dal.communications.sendLog.delete",
+        evtCtx(ctx, siteId),
+        async () => {
+          const scope = await requireScope(ctx, siteId);
+          const admin = createAdminClient() as any;
+          const { error, count } = await admin
+            .from(T.sendLog)
+            .delete({ count: "exact" })
+            .eq("id", id)
+            .eq("site_id", scope.siteId)
+            .eq("client_id", ctx.user.clientId);
+          if (error)
+            throw new Error(`[portal][comms] delete: ${error.message}`);
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.communications.sendLog.delete",
+            "portal_send_log",
+            id,
+            { deleted: count ?? 0 },
+          );
+          return { deleted: count ?? 0 };
+        },
+      ),
+
+    clearByState: async (siteId, states) =>
+      withPortalEvent(
+        "portal.dal.communications.sendLog.clearByState",
+        evtCtx(ctx, siteId),
+        async () => {
+          if (!states.length) return { deleted: 0 };
+          const scope = await requireScope(ctx, siteId);
+          const admin = createAdminClient() as any;
+          const { error, count } = await admin
+            .from(T.sendLog)
+            .delete({ count: "exact" })
+            .eq("site_id", scope.siteId)
+            .eq("client_id", ctx.user.clientId)
+            .in("delivery_state", states);
+          if (error)
+            throw new Error(
+              `[portal][comms] clearByState: ${error.message}`,
+            );
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.communications.sendLog.clearByState",
+            "portal_send_log",
+            null,
+            { deleted: count ?? 0, states },
+          );
+          return { deleted: count ?? 0 };
+        },
+      ),
+
+    clearOlderThan: async (siteId, olderThanDays) =>
+      withPortalEvent(
+        "portal.dal.communications.sendLog.clearOlderThan",
+        evtCtx(ctx, siteId),
+        async () => {
+          const days = Math.max(1, Math.floor(olderThanDays));
+          const cutoff = new Date(
+            Date.now() - days * 24 * 60 * 60 * 1000,
+          ).toISOString();
+          const scope = await requireScope(ctx, siteId);
+          const admin = createAdminClient() as any;
+          const { error, count } = await admin
+            .from(T.sendLog)
+            .delete({ count: "exact" })
+            .eq("site_id", scope.siteId)
+            .eq("client_id", ctx.user.clientId)
+            .lt("created_at", cutoff);
+          if (error)
+            throw new Error(
+              `[portal][comms] clearOlderThan: ${error.message}`,
+            );
+          finalizeAudit(
+            ctx,
+            siteId,
+            "portal.communications.sendLog.clearOlderThan",
+            "portal_send_log",
+            null,
+            { deleted: count ?? 0, days, cutoff },
+          );
+          return { deleted: count ?? 0 };
         },
       ),
   };

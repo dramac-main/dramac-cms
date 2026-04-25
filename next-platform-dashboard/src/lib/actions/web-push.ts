@@ -51,22 +51,36 @@ interface PushPayload {
 }
 
 /**
- * Send push notification to a specific user (agent)
+ * Send push notification to a specific user (agent or portal user).
+ *
+ * Returns `{ sent, attempted }`:
+ *   - `attempted` = number of push subscriptions found for the user.
+ *   - `sent`      = number that successfully delivered.
+ *
+ * Callers MUST distinguish "user has no subscriptions" (`attempted === 0`)
+ * from "every send failed" (`attempted > 0 && sent === 0`). The dispatcher
+ * uses this to write `skipped_no_subscription` instead of polluting the
+ * communications log with phantom `failed` rows.
  */
 export async function sendPushToUser(userId: string, payload: PushPayload) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.log("VAPID keys not configured, skipping web push");
-    return { sent: 0 };
+    return { sent: 0, attempted: 0 };
   }
 
   const supabase = createAdminClient();
+  // Match both `agent` (legacy/internal staff) and `portal` (client-portal
+  // users) contexts. `customer` subs belong to end-customer chat — never
+  // routed via per-user push.
   const { data: subscriptions } = (await supabase
     .from(PUSH_TABLE)
     .select("*")
     .eq("user_id", userId)
-    .eq("context", "agent")) as { data: PushSubscriptionRow[] | null };
+    .in("context", ["agent", "portal"])) as {
+    data: PushSubscriptionRow[] | null;
+  };
 
-  if (!subscriptions?.length) return { sent: 0 };
+  if (!subscriptions?.length) return { sent: 0, attempted: 0 };
 
   let sent = 0;
   for (const sub of subscriptions) {
@@ -110,7 +124,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     }
   }
 
-  return { sent };
+  return { sent, attempted: subscriptions.length };
 }
 
 /**
