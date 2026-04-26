@@ -8,11 +8,12 @@ import {
 } from "@/lib/portal/portal-permissions";
 import { writePortalAudit } from "@/lib/portal/audit-log";
 import { revalidatePath } from "next/cache";
+import {
+  renderPaymentMethods,
+  type PaymentMethodRow,
+} from "@/lib/portal/payment-methods-render";
 
-export interface PaymentMethodRow {
-  label: string;
-  details: string;
-}
+export type { PaymentMethodRow } from "@/lib/portal/payment-methods-render";
 
 export type PaymentSurface = "ecommerce" | "bookings";
 
@@ -33,18 +34,6 @@ const SURFACE_MODULE: Record<PaymentSurface, string> = {
   ecommerce: "ecommerce",
   bookings: "booking",
 };
-
-/** Render a list of structured rows back into the numbered-list format the
- *  parser understands most reliably. */
-export function renderPaymentMethods(rows: PaymentMethodRow[]): string {
-  return rows
-    .map((row, idx) => {
-      const label = row.label.trim() || `Method ${idx + 1}`;
-      const details = row.details.trim();
-      return details ? `${idx + 1}. ${label}\n${details}` : `${idx + 1}. ${label}`;
-    })
-    .join("\n\n");
-}
 
 export async function updatePaymentMethods(
   siteId: string,
