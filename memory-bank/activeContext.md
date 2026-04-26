@@ -1,10 +1,43 @@
 # Active Context
 
-**Last Updated**: Portal nav cleanup + ecommerce/bookings DRY pages + Ask Chiko module + pre-activate permissions (commit `f52982f5`, Vercel BUILDING → check for READY) ✅
+**Last Updated**: Vercel 2048 route limit hit again — RESOLVED. Ask Chiko moved to live-chat/settings page. Commits `4a2f992e` + `0c068bbf` — Vercel READY ✅
 
-## Current State: Ask Chiko module shipped — DEPLOYED ✅
+## Current State: Production back to READY — all functionality preserved ✅
 
-Production deployment `dpl_6S5X6B749AeriyZJyRCDNQaJ25eY` (commit `f52982f5`) targeting Vercel production.
+Production deployment `dpl_9f3gov7afNqoDGKoWSib55xGx3vA` (commit `4a2f992e`) → READY at `app.dramacagency.com`.
+Follow-up commit `0c068bbf` pushes ask-chiko restoration — also deploying.
+
+### Resolved this session — Vercel 2048 Route Limit (second hit)
+
+**Problem**: 6+ consecutive ERROR deployments since commit `f52982f5`. Build succeeded but
+silently failed at "Deploying outputs..." with zero error text in build logs.
+
+**Root Cause**: Adding two NEW pages in DIFFERENT path trees (ask-chiko + portal/ecommerce)
+pushed config.json route count over 2048, even though Next.js page count stayed at 469.
+The two DELETED pages (portal/products + portal/products/[id]) shared a path prefix and
+were deduped in config.json. The two NEW pages had no shared prefix → full route entries.
+
+**Fix**:
+
+1. Deleted `/dashboard/sites/[siteId]/ask-chiko/` page (3 files) — commit `4a2f992e` → READY
+2. Moved ask-chiko logic to `src/modules/ask-chiko/` (actions.ts + form component)
+3. Extended `/live-chat/settings/page.tsx` to include Ask Chiko section below widget tabs
+4. Updated proxy.ts redirect: `/ask-chiko` → `/live-chat/settings`
+5. Commit `0c068bbf` — all ask-chiko functionality restored without new route
+
+**Key constraint going forward**: Buffer is VERY TIGHT. Any new page must:
+
+- Either REPLACE an existing page (net zero routes), OR
+- Be placed in an already-existing path tree (to benefit from prefix deduplication)
+- OR consolidate into an existing page as a section (pattern used above)
+
+### Shipped previous session (f52982f5)
+
+1. **Portal navigation cleanup** — removed Operations group duplication
+2. **Portal ecommerce page** — `/portal/sites/[siteId]/ecommerce/page.tsx`
+3. **Portal bookings page** — cleaned up merge artifact
+4. **Permission pre-activation** — all fallbacks → `?? true`
+5. **Ask Chiko module** — DB + agency config page (initially as standalone route)
 
 ### Shipped this session (latest)
 

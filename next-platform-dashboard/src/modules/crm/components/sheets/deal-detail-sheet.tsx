@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react'
 import { useCRM, useDealActivities } from '../../context/crm-context'
+import { useIsPortalView } from '@/lib/portal/portal-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -113,6 +114,7 @@ export function DealDetailSheet({
 }: DealDetailSheetProps) {
   const { deals, contacts, companies, pipelines, editDeal, removeDeal, getStages, siteId } = useCRM()
   const { activities } = useDealActivities(dealId || '')
+  const isPortalView = useIsPortalView()
   
   // State
   const [isEditing, setIsEditing] = useState(false)
@@ -635,7 +637,12 @@ export function DealDetailSheet({
                         <div
                           key={inv.id}
                           className="flex items-center justify-between rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
-                          onClick={() => window.open(`/dashboard/sites/${siteId}/invoicing/invoices/${inv.id}`, '_blank')}
+                          onClick={() => {
+                            const basePath = isPortalView
+                              ? `/portal/sites/${siteId}/invoicing/invoices/${inv.id}`
+                              : `/dashboard/sites/${siteId}/invoicing/invoices/${inv.id}`;
+                            window.open(basePath, '_blank');
+                          }}
                         >
                           <div className="flex items-center gap-2">
                             <Receipt className="h-3.5 w-3.5 text-muted-foreground" />

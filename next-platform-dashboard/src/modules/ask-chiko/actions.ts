@@ -105,7 +105,8 @@ export async function saveAskChikoSettings(
           site_id: siteId,
           is_enabled: settings.isEnabled,
           tone: settings.tone,
-          custom_instructions: settings.customInstructions?.slice(0, 2000) || null,
+          custom_instructions:
+            settings.customInstructions?.slice(0, 2000) || null,
           allowed_data_sources: sources,
           monthly_message_quota: settings.monthlyMessageQuota,
           updated_at: new Date().toISOString(),

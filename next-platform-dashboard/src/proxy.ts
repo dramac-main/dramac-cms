@@ -248,9 +248,14 @@ async function proxyCore(request: NextRequest) {
   // PUBLIC ROUTES - No Auth Required
   // ========================================
 
-  // Portal login/verify - must be accessible without auth
+  // Portal login/verify - must be accessible without auth.
+  // Inject x-pathname into request headers so portal layout can detect
+  // the current path in RSCs (response headers aren't visible to server components).
   if (pathname === "/portal/login" || pathname === "/portal/verify") {
-    return NextResponse.next();
+    const reqHeaders = new Headers(request.headers);
+    reqHeaders.set("x-pathname", pathname);
+    reqHeaders.set("x-search", request.nextUrl.search);
+    return NextResponse.next({ request: { headers: reqHeaders } });
   }
 
   // Quote portal - public, token-based access (no login required)
@@ -263,40 +268,76 @@ async function proxyCore(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Portal: chat-agents → live-chat/agents (consolidated into live-chat module)
+  const chatAgentsMatch = pathname.match(/^\/portal\/sites\/([^/]+)\/chat-agents(\/.*)?$/);
+  if (chatAgentsMatch) {
+    return NextResponse.redirect(
+      new URL(`/portal/sites/${chatAgentsMatch[1]}/live-chat/agents`, request.url),
+      301,
+    );
+  }
+
   // Legacy alias redirects (pages removed to reduce Vercel route count)
   if (pathname === "/dashboard/settings/branding") {
-    return NextResponse.redirect(new URL("/settings/branding", request.url), 301);
+    return NextResponse.redirect(
+      new URL("/settings/branding", request.url),
+      301,
+    );
   }
   if (pathname === "/dashboard/billing") {
     const qs = request.nextUrl.search || "";
-    return NextResponse.redirect(new URL("/settings/billing" + qs, request.url), 301);
+    return NextResponse.redirect(
+      new URL("/settings/billing" + qs, request.url),
+      301,
+    );
   }
   if (pathname === "/dashboard/clients/new") {
-    return NextResponse.redirect(new URL("/dashboard/clients?create=true", request.url), 301);
+    return NextResponse.redirect(
+      new URL("/dashboard/clients?create=true", request.url),
+      301,
+    );
   }
   if (pathname === "/marketplace/installed") {
-    return NextResponse.redirect(new URL("/dashboard/modules/subscriptions", request.url), 301);
+    return NextResponse.redirect(
+      new URL("/dashboard/modules/subscriptions", request.url),
+      301,
+    );
   }
   if (pathname === "/settings") {
-    return NextResponse.redirect(new URL("/settings/profile", request.url), 301);
+    return NextResponse.redirect(
+      new URL("/settings/profile", request.url),
+      301,
+    );
   }
   {
     const m1 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/builder$/);
     if (m1) {
-      return NextResponse.redirect(new URL("/dashboard/sites/" + m1[1] + "/ai-designer", request.url), 301);
+      return NextResponse.redirect(
+        new URL("/dashboard/sites/" + m1[1] + "/ai-designer", request.url),
+        301,
+      );
     }
     const m2 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/pages$/);
     if (m2) {
-      return NextResponse.redirect(new URL("/dashboard/sites/" + m2[1] + "?tab=pages", request.url), 301);
+      return NextResponse.redirect(
+        new URL("/dashboard/sites/" + m2[1] + "?tab=pages", request.url),
+        301,
+      );
     }
     const m3 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/pages\/([^/]+)$/);
     if (m3) {
-      return NextResponse.redirect(new URL("/studio/" + m3[1] + "/" + m3[2], request.url), 301);
+      return NextResponse.redirect(
+        new URL("/studio/" + m3[1] + "/" + m3[2], request.url),
+        301,
+      );
     }
     // Legacy editor URL → site detail pages tab (page deleted to reduce route count)
     const m4 = pathname.match(/^\/dashboard\/sites\/([^/]+)\/editor$/);
     if (m4) {
-      return NextResponse.redirect(new URL("/dashboard/sites/" + m4[1] + "?tab=pages", request.url), 301);
+      return NextResponse.redirect(
+        new URL("/dashboard/sites/" + m4[1] + "?tab=pages", request.url),
+        301,
+      );
     }
   }
   // Legacy public blog redirects (subdomain) — pages deleted to reduce Vercel route count.
@@ -309,7 +350,10 @@ async function proxyCore(request: NextRequest) {
     }
     const b2 = pathname.match(/^\/blog\/([^/]+)\/([^/]+)$/);
     if (b2) {
-      return NextResponse.redirect(`https://${b2[1]}.${baseDomain}/blog/${b2[2]}`, 301);
+      return NextResponse.redirect(
+        `https://${b2[1]}.${baseDomain}/blog/${b2[2]}`,
+        301,
+      );
     }
   }
   // Legacy portal products redirects (pages removed to reduce Vercel route count)
@@ -326,10 +370,15 @@ async function proxyCore(request: NextRequest) {
   // Ask Chiko settings (page removed to reduce Vercel route count)
   // Redirects to live-chat settings which houses AI configuration.
   {
-    const ac = pathname.match(/^\/dashboard\/sites\/([^/]+)\/ask-chiko(\/.*)?$/);
+    const ac = pathname.match(
+      /^\/dashboard\/sites\/([^/]+)\/ask-chiko(\/.*)?$/,
+    );
     if (ac) {
       return NextResponse.redirect(
-        new URL("/dashboard/sites/" + ac[1] + "/live-chat/settings", request.url),
+        new URL(
+          "/dashboard/sites/" + ac[1] + "/live-chat/settings",
+          request.url,
+        ),
         301,
       );
     }
@@ -387,10 +436,8 @@ async function proxyCore(request: NextRequest) {
 
   // Only check session for app domain routes
   if (isAppDomain) {
-    const response = await updateSession(request);
-    // Set x-pathname header for server components that need the current path
-    response.headers.set("x-pathname", pathname);
-    return response;
+    // updateSession already injects x-pathname into the request headers
+    return await updateSession(request);
   }
 
   // Fallback - should never reach here

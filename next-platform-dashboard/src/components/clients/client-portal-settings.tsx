@@ -370,6 +370,22 @@ export function ClientPortalSettings({ client }: ClientPortalSettingsProps) {
                 handlePermissionChange("canManageAutomation", v)
               }
             />
+            <PermissionToggle
+              label="Manage Marketing"
+              description="Client can manage marketing campaigns, email, and social media"
+              checked={permissions.canManageMarketing}
+              onCheckedChange={(v) =>
+                handlePermissionChange("canManageMarketing", v)
+              }
+            />
+            <PermissionToggle
+              label="Manage Invoices"
+              description="Client can create, send, and manage invoices and billing"
+              checked={permissions.canManageInvoices}
+              onCheckedChange={(v) =>
+                handlePermissionChange("canManageInvoices", v)
+              }
+            />
           </div>
         </CardContent>
       </Card>

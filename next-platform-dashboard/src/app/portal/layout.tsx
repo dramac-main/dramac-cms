@@ -29,19 +29,14 @@ export default async function PortalLayout({
   const session = await getPortalSession();
 
   if (!session.user) {
-    // Check if user is on a public portal route (login/verify)
+    // Check if user is on a public portal route (login/verify).
+    // x-pathname is injected by middleware/proxy as a request header,
+    // which makes it visible to RSCs via headers(). Do NOT use referer
+    // (it's the previous page) or response headers (not visible to RSCs).
     const headersList = await headers();
-    const url = headersList.get("x-url") || headersList.get("referer") || "";
-    const urlObj = url
-      ? (() => {
-          try {
-            return new URL(url);
-          } catch {
-            return null;
-          }
-        })()
-      : null;
-    const pathname = urlObj?.pathname || "";
+    const pathname = headersList.get("x-pathname") || "";
+    const search = headersList.get("x-search") || "";
+
     const isPublicPortalRoute =
       pathname === "/portal/login" ||
       pathname === "/portal/verify" ||
@@ -53,9 +48,10 @@ export default async function PortalLayout({
       redirect("/portal/login");
     }
 
-    // For login page: try to get agency branding from URL search params
-    // Portal login URLs can include ?agency=slug for branding
-    const agencySlug = urlObj?.searchParams?.get("agency") || null;
+    // For login page: try to get agency branding from ?agency=slug query param
+    const agencySlug = search
+      ? new URLSearchParams(search).get("agency")
+      : null;
 
     if (agencySlug) {
       const branding = await getAgencyBrandingBySlug(agencySlug);

@@ -1,19 +1,21 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Per-module portal nav + structured payment methods + site-aware Chiko (commit `ca22ceac`, Vercel READY)
+**Last Updated**: Vercel 2048 route limit second hit — RESOLVED. Commits `4a2f992e` + `0c068bbf` → READY.
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
 
 ## Latest deployment
 
-- Commit `f52982f5` — `feat: portal nav cleanup + ecommerce/bookings DRY pages + pre-activate permissions + Ask Chiko module` — deployment `dpl_6S5X6B749AeriyZJyRCDNQaJ25eY` (verify READY on Vercel).
-- What works (new):
-  - Portal nav: Operations group removed; each module has one authoritative entry. CRM/Automation/Invoicing added as standalone nav groups.
-  - Portal `/ecommerce` page: renders `EcommerceDashboard` + `PortalProvider` — same full UI as agency.
-  - Portal `/bookings` page: renders `BookingDashboard` + `PortalProvider` — same full UI as agency.
-  - All client permissions pre-activated: `portal-auth.ts` + `portal-permissions.ts` fallbacks = `true`; DB column defaults + existing rows = `true`.
-  - **Ask Chiko module**: `ask-chiko` in `modules_v2`, `mod_ask_chiko_settings` table, installed on all 9 sites. Agency config page at `/dashboard/sites/[siteId]/ask-chiko/` (enable/disable, tone, custom instructions, data sources, monthly quota).
-  - Portal Ask Chiko chat at `/portal/ask-chiko/` (account-level, no change needed).
-- Previous: Commit `ca22ceac` (`dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2`, READY) — per-module portal nav, structured payment methods, site-aware Chiko.
+- Commit `0c068bbf` — `feat(ask-chiko): restore Ask Chiko settings into live-chat/settings page` — ask-chiko module restored without new route.
+- Commit `4a2f992e` — `fix(routes): remove ask-chiko page to reduce Vercel route count` — deployment `dpl_9f3gov7afNqoDGKoWSib55xGx3vA` → **READY** ✅ at `app.dramacagency.com`.
+- Previous (broken): Commits `f52982f5` through `b10ac188` — 6 consecutive ERROR deployments (silent "Deploying outputs..." failure, Vercel config.json route count >2048).
+
+### What's live now
+
+- Portal nav: Operations group removed; per-module authoritative entries. CRM/Automation/Invoicing standalone nav groups.
+- Portal `/ecommerce` page: full `EcommerceDashboard` + `PortalProvider`.
+- Portal `/bookings` page: full `BookingDashboard` + `PortalProvider`.
+- All client permissions pre-activated.
+- **Ask Chiko module**: `mod_ask_chiko_settings` table, installed on all 9 sites. Settings UI on live-chat settings page (section below widget tabs). Middleware redirects `/ask-chiko` → `/live-chat/settings`.
 
 ---
 

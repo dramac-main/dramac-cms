@@ -6,42 +6,43 @@
  * Vercel config.json route count — the dedicated /ask-chiko page was removed).
  */
 
-import { Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
-import { Sparkles } from 'lucide-react'
-import { getWidgetSettings, getDepartments } from '@/modules/live-chat/actions'
-import { SettingsPageWrapper } from '@/modules/live-chat/components/wrappers/SettingsPageWrapper'
-import { getAskChikoSettings } from '@/modules/ask-chiko/actions'
-import { AskChikoSettingsForm } from '@/modules/ask-chiko/components/ask-chiko-settings-form'
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Sparkles } from "lucide-react";
+import { getWidgetSettings, getDepartments } from "@/modules/live-chat/actions";
+import { SettingsPageWrapper } from "@/modules/live-chat/components/wrappers/SettingsPageWrapper";
+import { getAskChikoSettings } from "@/modules/ask-chiko/actions";
+import { AskChikoSettingsForm } from "@/modules/ask-chiko/components/ask-chiko-settings-form";
 
 interface PageProps {
-  params: Promise<{ siteId: string }>
+  params: Promise<{ siteId: string }>;
 }
 
 async function AskChikoSection({ siteId }: { siteId: string }) {
-  const settings = await getAskChikoSettings(siteId)
-  return <AskChikoSettingsForm initial={settings} siteId={siteId} />
+  const settings = await getAskChikoSettings(siteId);
+  return <AskChikoSettingsForm initial={settings} siteId={siteId} />;
 }
 
 export default async function SettingsPage({ params }: PageProps) {
-  const { siteId } = await params
+  const { siteId } = await params;
 
   const [settingsResult, departmentsResult] = await Promise.all([
     getWidgetSettings(siteId),
     getDepartments(siteId),
-  ])
+  ]);
 
   if (settingsResult.error || !settingsResult.settings) {
     return (
       <div className="container py-6">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">
-            Failed to load widget settings: {settingsResult.error || 'Settings not found'}
+            Failed to load widget settings:{" "}
+            {settingsResult.error || "Settings not found"}
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -60,8 +61,9 @@ export default async function SettingsPage({ params }: PageProps) {
             Ask Chiko — Portal AI Assistant
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure the AI business assistant available to your portal clients.
-            Chiko answers questions about revenue, orders, bookings, and more.
+            Configure the AI business assistant available to your portal
+            clients. Chiko answers questions about revenue, orders, bookings,
+            and more.
           </p>
         </div>
         <Suspense
@@ -77,5 +79,5 @@ export default async function SettingsPage({ params }: PageProps) {
         </Suspense>
       </div>
     </div>
-  )
+  );
 }

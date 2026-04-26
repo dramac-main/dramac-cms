@@ -20,6 +20,7 @@ import { SegmentsView } from "./views/segments-view";
 import { FormCapturesView } from "./views/form-captures-view";
 import { FormsView } from "./views/forms-view";
 import { CRMProvider, useCRM } from "../context/crm-context";
+import { useIsPortalView } from "@/lib/portal/portal-context";
 import {
   // Enhanced UI Components (PHASE-UI-10A/10B)
   CRMHeader,
@@ -62,6 +63,11 @@ interface CRMDashboardProps {
 
 function CRMDashboardContent() {
   const { contacts, companies, deals, error, refresh, siteId } = useCRM();
+  const isPortalView = useIsPortalView();
+
+  const analyticsHref = isPortalView
+    ? `/portal/sites/${siteId}/crm`
+    : `/dashboard/sites/${siteId}/crm-module/analytics`;
 
   const [activeTab, setActiveTab] = useState("deals");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -267,7 +273,7 @@ function CRMDashboardContent() {
                 Comprehensive analytics and insights for your CRM data.
               </p>
             </div>
-            <Link href={`/dashboard/sites/${siteId}/crm-module/analytics`}>
+            <Link href={analyticsHref}>
               <Button size="lg" className="w-full max-w-md">
                 <LineChart className="h-5 w-5 mr-2" />
                 Open Analytics Dashboard

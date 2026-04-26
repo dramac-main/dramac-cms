@@ -122,7 +122,11 @@ export function getPortalNavigationGroups(
     );
 
     if (permissions.canEditContent) {
-      contentItems.push({ title: "Apps", href: siteUrl("apps")!, icon: Blocks });
+      contentItems.push({
+        title: "Apps",
+        href: siteUrl("apps")!,
+        icon: Blocks,
+      });
     }
 
     if (permissions.canViewAnalytics) {
@@ -140,12 +144,14 @@ export function getPortalNavigationGroups(
   // Single entry → full EcommerceDashboard (tabs: Products, Orders, Customers,
   // Quotes, Discounts, Inventory, Analytics, Settings…)
   const storeItems: NavItem[] = [];
-  if (siteId && hasModule("ecommerce") && (
-    permissions.canManageProducts ||
-    permissions.canManageOrders ||
-    permissions.canManageQuotes ||
-    permissions.canManageCustomers
-  )) {
+  if (
+    siteId &&
+    hasModule("ecommerce") &&
+    (permissions.canManageProducts ||
+      permissions.canManageOrders ||
+      permissions.canManageQuotes ||
+      permissions.canManageCustomers)
+  ) {
     storeItems.push({
       title: "Store",
       href: siteUrl("ecommerce")!,
@@ -191,10 +197,15 @@ export function getPortalNavigationGroups(
         icon: Sparkles,
       },
     );
+    liveChatItems.push({
+      title: "Settings",
+      href: siteUrl("live-chat/settings")!,
+      icon: Settings,
+    });
     if (permissions.canManageAgents) {
       liveChatItems.push({
-        title: "Chat Agents",
-        href: siteUrl("chat-agents")!,
+        title: "Agents",
+        href: siteUrl("live-chat/agents")!,
         icon: Bot,
       });
     }

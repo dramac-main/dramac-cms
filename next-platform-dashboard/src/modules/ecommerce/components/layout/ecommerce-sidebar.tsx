@@ -123,12 +123,10 @@ export function EcommerceSidebar({
   const [_hoveredItem, setHoveredItem] = useState<string | null>(null);
   const allNavItems = getNavItems(pendingOrders, lowStockCount);
 
-  // In portal mode, hide admin-only views (settings, developer, embed, marketing)
+  // In portal mode, hide only technical/dev-only views that clients never need
   const PORTAL_HIDDEN_VIEWS: EcommerceView[] = [
-    "settings",
     "developer",
     "embed",
-    "marketing",
   ];
   const navItems = portalMode
     ? allNavItems.filter((item) => !PORTAL_HIDDEN_VIEWS.includes(item.id))

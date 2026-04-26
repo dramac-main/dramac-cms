@@ -201,10 +201,7 @@ export function AskChikoSettingsForm({ initial, siteId }: Props) {
                         toggleSource(opt.id, !!checked)
                       }
                     />
-                    <Label
-                      htmlFor={`source-${opt.id}`}
-                      className="font-normal"
-                    >
+                    <Label htmlFor={`source-${opt.id}`} className="font-normal">
                       {opt.label}
                     </Label>
                   </div>

@@ -642,6 +642,7 @@ export async function updatePortalPermissions(
     canManageAgents?: boolean;
     canManageCustomers?: boolean;
     canManageMarketing?: boolean;
+    canManageInvoices?: boolean;
   },
 ): Promise<{ success: boolean; error?: string }> {
   const admin = createAdminClient();
@@ -673,6 +674,8 @@ export async function updatePortalPermissions(
     updateData.can_manage_customers = permissions.canManageCustomers;
   if (permissions.canManageMarketing !== undefined)
     updateData.can_manage_marketing = permissions.canManageMarketing;
+  if (permissions.canManageInvoices !== undefined)
+    updateData.can_manage_invoices = permissions.canManageInvoices;
 
   const { error } = await admin
     .from("clients")
