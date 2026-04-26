@@ -22,9 +22,7 @@ async function dal() {
   });
 }
 
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+export type ActionResult = { ok: true } | { ok: false; error: string };
 
 export async function approvePaymentProofAction(
   siteId: string,
@@ -50,7 +48,10 @@ export async function rejectPaymentProofAction(
 ): Promise<ActionResult> {
   try {
     if (!reason || reason.trim().length < 3) {
-      return { ok: false, error: "A reason of at least 3 characters is required." };
+      return {
+        ok: false,
+        error: "A reason of at least 3 characters is required.",
+      };
     }
     const d = await dal();
     await d.payments.rejectProof(siteId, proofId, { reason: reason.trim() });
@@ -87,7 +88,8 @@ export async function bulkReviewPaymentProofsAction(
     const result = await d.payments.bulkReview(siteId, {
       ids: proofIds,
       action: decision.status === "approved" ? "approve" : "reject",
-      reason: decision.status === "rejected" ? decision.reason.trim() : undefined,
+      reason:
+        decision.status === "rejected" ? decision.reason.trim() : undefined,
     });
     revalidatePath(`/portal/sites/${siteId}/payment-proofs`);
     return {
@@ -110,8 +112,13 @@ export async function signPaymentProofUrlAction(
   try {
     const d = await dal();
     // Verify scope + permission by loading the proof from the DAL first.
-    const proofs = await d.payments.listProofs(siteId, { status: "all", limit: 200 });
-    const proof: PortalPaymentProof | undefined = proofs.find((p) => p.id === proofId);
+    const proofs = await d.payments.listProofs(siteId, {
+      status: "all",
+      limit: 200,
+    });
+    const proof: PortalPaymentProof | undefined = proofs.find(
+      (p) => p.id === proofId,
+    );
     if (!proof) return { ok: false, error: "Proof not found" };
 
     const { createAdminClient } = await import("@/lib/supabase/admin");

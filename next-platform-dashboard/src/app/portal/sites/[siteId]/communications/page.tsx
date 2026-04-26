@@ -291,10 +291,7 @@ async function LogLoader({
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <CommunicationsRowDelete
-                          siteId={siteId}
-                          id={e.id}
-                        />
+                        <CommunicationsRowDelete siteId={siteId} id={e.id} />
                       </TableCell>
                     </TableRow>
                   ))}

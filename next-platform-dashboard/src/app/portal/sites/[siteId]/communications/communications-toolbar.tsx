@@ -42,9 +42,9 @@ export function CommunicationsToolbar({
 }: CommunicationsToolbarProps) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [confirmOpen, setConfirmOpen] = useState<null | "failed" | "skipped" | "old">(
-    null,
-  );
+  const [confirmOpen, setConfirmOpen] = useState<
+    null | "failed" | "skipped" | "old"
+  >(null);
 
   const handleRefresh = () => {
     start(() => {
@@ -54,9 +54,15 @@ export function CommunicationsToolbar({
 
   const runClearFailed = () => {
     start(async () => {
-      const r = await clearSendLogByStateAction(siteId, ["failed", "bounced", "dropped"]);
+      const r = await clearSendLogByStateAction(siteId, [
+        "failed",
+        "bounced",
+        "dropped",
+      ]);
       if (r.ok) {
-        toast.success(`Cleared ${r.deleted} failed entr${r.deleted === 1 ? "y" : "ies"}`);
+        toast.success(
+          `Cleared ${r.deleted} failed entr${r.deleted === 1 ? "y" : "ies"}`,
+        );
         router.refresh();
       } else {
         toast.error(r.error || "Failed to clear entries");
@@ -72,7 +78,9 @@ export function CommunicationsToolbar({
         "skipped_preference",
       ]);
       if (r.ok) {
-        toast.success(`Cleared ${r.deleted} skipped entr${r.deleted === 1 ? "y" : "ies"}`);
+        toast.success(
+          `Cleared ${r.deleted} skipped entr${r.deleted === 1 ? "y" : "ies"}`,
+        );
         router.refresh();
       } else {
         toast.error(r.error || "Failed to clear entries");
@@ -85,7 +93,9 @@ export function CommunicationsToolbar({
     start(async () => {
       const r = await clearSendLogOlderThanAction(siteId, days);
       if (r.ok) {
-        toast.success(`Cleared ${r.deleted} entr${r.deleted === 1 ? "y" : "ies"} older than ${days} days`);
+        toast.success(
+          `Cleared ${r.deleted} entr${r.deleted === 1 ? "y" : "ies"} older than ${days} days`,
+        );
         router.refresh();
       } else {
         toast.error(r.error || "Failed to clear entries");
@@ -102,7 +112,9 @@ export function CommunicationsToolbar({
         onClick={handleRefresh}
         disabled={pending}
       >
-        <RefreshCw className={`mr-2 h-4 w-4 ${pending ? "animate-spin" : ""}`} />
+        <RefreshCw
+          className={`mr-2 h-4 w-4 ${pending ? "animate-spin" : ""}`}
+        />
         Refresh
       </Button>
 

@@ -125,11 +125,11 @@ const ITEMS: CommandItem[] = [
   {
     id: "ask-chiko",
     label: "Ask Chiko",
-    hint: "AI assistant",
+    hint: "Your business assistant",
     href: "/portal?openChiko=1",
     icon: Sparkles,
     group: "Actions",
-    keywords: ["ai", "assistant", "help"],
+    keywords: ["chiko", "assistant", "help"],
   },
   {
     id: "notifications",

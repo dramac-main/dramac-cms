@@ -35,7 +35,6 @@ export type DeliveryState =
   | "failed"
   | "dropped"
   | "skipped_preference"
-  | "skipped_no_subscription"
   | "deduped"
   | "retried";
 

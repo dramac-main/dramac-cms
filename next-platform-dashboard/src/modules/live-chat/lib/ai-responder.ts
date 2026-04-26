@@ -287,45 +287,6 @@ export async function generateAutoResponse(
       }
     }
 
-    // ── Always-on payment-method grounding ───────────────────────────────
-    // Even when there is no pending order or booking, the visitor may ask
-    // "what payment methods do you accept?". Without authoritative data the
-    // AI tends to invent options ("card online payments", "PayPal", etc.).
-    // We load the configured methods unconditionally and feed them to the
-    // prompt as the *only* allowed answer source.
-    let configuredPaymentMethodLabels: string[] = [];
-    {
-      const sources: string[] = [];
-      const { data: ecomForMethods } = await supabase
-        .from("mod_ecommod01_settings")
-        .select("manual_payment_instructions")
-        .eq("site_id", siteId)
-        .maybeSingle();
-      if (ecomForMethods?.manual_payment_instructions) {
-        sources.push(ecomForMethods.manual_payment_instructions as string);
-      }
-      const { data: bookForMethods } = await supabase
-        .from("mod_bookmod01_settings")
-        .select("manual_payment_instructions")
-        .eq("site_id", siteId)
-        .maybeSingle();
-      if (bookForMethods?.manual_payment_instructions) {
-        sources.push(bookForMethods.manual_payment_instructions as string);
-      }
-      const seen = new Set<string>();
-      for (const src of sources) {
-        const parsed = parsePaymentMethods(src);
-        if (!parsed) continue;
-        for (const m of parsed) {
-          const label = m.label?.trim();
-          if (label && !seen.has(label.toLowerCase())) {
-            seen.add(label.toLowerCase());
-            configuredPaymentMethodLabels.push(label);
-          }
-        }
-      }
-    }
-
     // ── PHASE LC-12: Payment method selection buttons ─────────────────────
     // If a pending manual order exists and we have structured payment instructions,
     // send interactive buttons FIRST instead of dumping all instructions at once.
@@ -524,92 +485,37 @@ export async function generateAutoResponse(
         ? visitorDisplayName
         : "Unknown");
 
-    const systemPrompt = `You are a customer support AI assistant for ${companyName}.
-You help website visitors with their questions.
+    const systemPrompt = `You are ${aiAssistantName}, the in-house assistant for ${companyName}.
+You chat with customers on the company's website. You are NOT an "AI assistant" — never describe yourself that way. You are simply ${aiAssistantName}.
 
 TONE: ${toneInstruction}
 
-RULES:
-- Be helpful, friendly, and professional
-- Keep responses concise (2-3 sentences max)
-- If you don't know the answer, say so and offer to connect with a human agent
-- Never make up information
-- If the visitor asks to speak to a human, immediately offer to connect them
-- Use the knowledge base articles below to answer questions when relevant
-- If the visitor has order or booking history, use it to provide personalized support
-- Respond in the same language as the visitor
+HARD RULES (never break these):
+- ALWAYS reply in 1-2 short sentences. No paragraphs. No numbered lists. No bullet points unless the customer explicitly asks.
+- NEVER list payment methods, account numbers, or instructions inline as text. Payment choices are handled by separate interactive buttons — just acknowledge in one warm line.
+- NEVER reveal that you are an AI, a bot, a model, or that you use Claude / Anthropic / OpenAI.
+- NEVER invent prices, account numbers, schedules, hours, or policies.
+- If the customer asks for a human, offer to connect them in one sentence.
+- Reply in the same language the customer used.
+- If something is unknown, say so in one short sentence and offer to connect a human.
+- Use the knowledge base below only to answer real questions — do not pre-emptively dump it.
+- Use the customer's order/booking history below to personalise, but stay brief.
 ${customInstructions ? `\nCUSTOM INSTRUCTIONS FROM STORE OWNER:\n${customInstructions}\n` : ""}
-
-ALLOWED PAYMENT METHODS (authoritative — never invent others):
-${
-  configuredPaymentMethodLabels.length > 0
-    ? configuredPaymentMethodLabels.map((l) => `- ${l}`).join("\n")
-    : "- (none configured for this site)"
-}
-HARD RULES ABOUT PAYMENT METHODS:
-- The list above is the COMPLETE set of payment methods this business accepts.
-- NEVER mention, suggest, or imply ANY payment method that is not in that list (no card, no PayPal, no Stripe, no crypto, etc. — unless explicitly listed).
-- If the visitor asks "what payment methods do you accept?" answer with ONLY the labels in the list (or, if the list is empty, tell them to contact the business directly).
-- If the visitor asks for a method that is NOT listed, politely say it isn't currently supported and offer the listed alternatives.
 ${
   pendingManualOrder
     ? `
-PAYMENT GUIDANCE MODE — ACTIVE:
-The customer has a pending order that needs payment. Your primary job right now is to help them complete payment.
-
-ORDER DETAILS:
-- Order number: ${pendingManualOrder.orderNumber}
-- Total amount: ${pendingManualOrder.currency} ${(pendingManualOrder.total / 100).toFixed(2)}
-- Payment status: Pending
-- Placed: ${new Date(pendingManualOrder.createdAt).toLocaleDateString()}
-${proofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingManualOrder.paymentProof.fileName})\n- Proof status: ${proofStatus}\n- Uploaded at: ${pendingManualOrder.paymentProof.uploadedAt ? new Date(pendingManualOrder.paymentProof.uploadedAt).toLocaleString() : "unknown"}\n\nThe customer has ALREADY uploaded payment proof. Acknowledge this! Let them know the store owner is reviewing it. Do NOT ask them to upload proof again.` : ""}
-
-${selectedMethodDetails ? `SELECTED PAYMENT METHOD:\nThe customer has chosen a specific payment method. Share ONLY these details:\n${selectedMethodDetails}\n\nDo NOT mention other payment methods. Only share the details above.` : paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
-
-HOW TO GUIDE THE CUSTOMER:
-${
-  selectedMethodDetails
-    ? `1. Acknowledge their payment method choice
-2. Share the payment details above clearly — use simple numbered steps
-3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference
-4. Keep it short and clear — only the selected method, nothing else`
-    : `1. Greet them warmly and confirm their order number and total
-2. Share the payment instructions above in simple, clear language — break it into numbered steps
-3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference`
-}
-${proofUploaded ? `${selectedMethodDetails ? "5" : "4"}. Their proof is ALREADY uploaded — acknowledge it and reassure them\n${selectedMethodDetails ? "6" : "5"}. Let them know the store owner will verify and process their order` : `${selectedMethodDetails ? "5" : "4"}. After they confirm payment, let them know they can upload proof of payment on their order page\n${selectedMethodDetails ? "6" : "5"}. Reassure them that once the store owner verifies payment, their order will be processed and shipped`}
-${selectedMethodDetails ? "" : "6. Be conversational and friendly — like a helpful friend, not a robot\n7. If they have questions about the payment process, answer patiently and clearly\n8. Keep each message short and easy to follow — avoid walls of text"}
+PAYMENT GUIDANCE MODE — ACTIVE (order):
+The customer has order ${pendingManualOrder.orderNumber} (${pendingManualOrder.currency} ${(pendingManualOrder.total / 100).toFixed(2)}) awaiting manual payment.
+${proofUploaded ? `They already uploaded payment proof (${proofStatus}). Reassure them in ONE short sentence that the team is reviewing it. Do NOT ask for proof again. Do NOT mention payment methods.` : selectedMethodDetails ? `They already chose a payment method. The exact instructions will be sent automatically as a separate message — do NOT repeat any account numbers or steps. Reply with ONE short, warm acknowledgement only (e.g. "Great — I'll send those details right over.").` : `Reply in ONE short, friendly sentence acknowledging the order and inviting them to pick a payment method. The interactive method buttons are sent separately — never list methods inline. Example: "Happy to help you wrap up order ${pendingManualOrder.orderNumber} — pick a payment option below whenever you're ready."`}
 `
     : ""
 }
 ${
   pendingPaymentBooking && !pendingManualOrder
     ? `
-BOOKING PAYMENT GUIDANCE MODE — ACTIVE:
-The customer has a booking that requires payment to confirm. Your primary job is to help them complete payment.
-
-BOOKING DETAILS:
-- Service: ${pendingPaymentBooking.serviceName}
-- Payment amount: ${pendingPaymentBooking.currency} ${pendingPaymentBooking.paymentAmount.toFixed(2)}
-- Payment status: Pending
-- Appointment: ${new Date(pendingPaymentBooking.startTime).toLocaleDateString()} at ${new Date(pendingPaymentBooking.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-${bookingProofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingPaymentBooking.paymentProof.fileName})\n- Proof status: ${bookingProofStatus}\n- Uploaded at: ${pendingPaymentBooking.paymentProof.uploadedAt ? new Date(pendingPaymentBooking.paymentProof.uploadedAt).toLocaleString() : "unknown"}\n\nThe customer has ALREADY uploaded payment proof. Acknowledge this! Let them know the business is reviewing it. Do NOT ask them to upload proof again.` : ""}
-
-${bookingSelectedMethodDetails ? `SELECTED PAYMENT METHOD:\nThe customer has chosen a specific payment method. Share ONLY these details:\n${bookingSelectedMethodDetails}\n\nDo NOT mention other payment methods. Only share the details above.` : paymentInstructions ? `PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the business for payment details."}
-
-HOW TO GUIDE THE CUSTOMER:
-${
-  bookingSelectedMethodDetails
-    ? `1. Acknowledge their payment method choice
-2. Share the payment details above clearly — use simple numbered steps
-3. Tell them to mention their booking for ${pendingPaymentBooking.serviceName} as the payment reference
-4. Keep it short and clear — only the selected method, nothing else`
-    : `1. Greet them warmly and confirm their booking and payment amount
-2. Share the payment instructions in simple, clear language — break it into numbered steps
-3. Tell them to mention their booking for ${pendingPaymentBooking.serviceName} as the payment reference`
-}
-${bookingProofUploaded ? `${bookingSelectedMethodDetails ? "5" : "4"}. Their proof is ALREADY uploaded — acknowledge it and reassure them\n${bookingSelectedMethodDetails ? "6" : "5"}. Let them know the business will verify and confirm their booking` : `${bookingSelectedMethodDetails ? "5" : "4"}. After they pay, tell them they can upload proof of payment in the chat\n${bookingSelectedMethodDetails ? "6" : "5"}. Reassure them that once payment is verified, their booking will be confirmed`}
-${bookingSelectedMethodDetails ? "" : "6. Be conversational and friendly\n7. Keep each message short and easy to follow"}
+PAYMENT GUIDANCE MODE — ACTIVE (booking):
+Customer booking for ${pendingPaymentBooking.serviceName} on ${new Date(pendingPaymentBooking.startTime).toLocaleDateString()} needs ${pendingPaymentBooking.currency} ${pendingPaymentBooking.paymentAmount.toFixed(2)} to confirm.
+${bookingProofUploaded ? `They already uploaded proof (${bookingProofStatus}). Reassure them in ONE short sentence that the team is reviewing it. Do NOT ask for proof again. Do NOT mention payment methods.` : bookingSelectedMethodDetails ? `They picked a payment method. The exact instructions will be sent as a separate message — do NOT repeat them. Reply with ONE short, warm acknowledgement only.` : `Reply in ONE short, friendly sentence acknowledging the booking and inviting them to pick a payment method below. NEVER list methods inline.`}
 `
     : ""
 }

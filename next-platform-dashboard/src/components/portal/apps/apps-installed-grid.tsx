@@ -175,14 +175,20 @@ function InstalledAppCard({
                     Active
                   </Badge>
                   {!isNative && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
                       Launcher
                     </Badge>
                   )}
                 </div>
               </div>
               {canManage && (
-                <div className="relative z-20" onClick={(e) => e.preventDefault()}>
+                <div
+                  className="relative z-20"
+                  onClick={(e) => e.preventDefault()}
+                >
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -212,9 +218,7 @@ function InstalledAppCard({
                           </Link>
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem
-                        asChild
-                      >
+                      <DropdownMenuItem asChild>
                         <Link
                           href={`/portal/sites/${siteId}/apps/${app.slug || app.id}?settings=1`}
                           className="cursor-pointer"

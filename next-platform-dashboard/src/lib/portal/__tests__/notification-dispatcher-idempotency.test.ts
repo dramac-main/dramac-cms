@@ -115,7 +115,6 @@ describe("dispatchBusinessEvent — idempotency", () => {
       resourceId: "order-1",
       title: "New order",
       message: "duplicate",
-      stateHash: "paid",
     });
 
     expect(result.recipients).toBe(0);
@@ -146,7 +145,6 @@ describe("dispatchBusinessEvent — idempotency", () => {
       resourceId: "order-2",
       title: "New order",
       message: "first time",
-      stateHash: "paid",
     });
 
     expect(result.recipients).toBe(1);
@@ -172,7 +170,6 @@ describe("dispatchBusinessEvent — idempotency", () => {
       resourceId: "order-3",
       title: "Resilient",
       message: "still fires",
-      stateHash: "paid",
     });
 
     // Fail-open: dispatch must still happen.
@@ -207,7 +204,6 @@ describe("dispatchBusinessEvent — idempotency", () => {
       resourceId: "order-42",
       title: "Shipped",
       message: "Same input, same key",
-      stateHash: "TRACK-XYZ",
     };
 
     const a = await dispatchBusinessEvent(opts);

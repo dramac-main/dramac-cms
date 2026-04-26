@@ -70,8 +70,8 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: "Advanced Features",
     items: [
       {
-        title: "AI Assistant",
-        description: "Use AI to edit components with natural language",
+        title: "Chiko",
+        description: "Use Chiko to edit components with natural language",
         icon: "sparkles",
         link: "/docs/studio/ai-assistant",
       },

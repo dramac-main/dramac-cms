@@ -68,7 +68,9 @@ export function resolvePortalAppRoute(
   return `/portal/sites/${siteId}/apps/${target}`;
 }
 
-export function hasNativePortalSurface(slug: string | null | undefined): boolean {
+export function hasNativePortalSurface(
+  slug: string | null | undefined,
+): boolean {
   if (!slug) return false;
   return Boolean(NATIVE_PORTAL_ROUTES[slug.toLowerCase().trim()]);
 }

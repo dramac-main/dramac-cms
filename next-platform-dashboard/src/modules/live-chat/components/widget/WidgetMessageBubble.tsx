@@ -71,7 +71,6 @@ export function WidgetMessageBubble({
 }: WidgetMessageBubbleProps) {
   const isVisitor = message.senderType === "visitor";
   const isSystem = message.senderType === "system";
-  const isAi = message.senderType === "ai";
 
   // System / info messages
   if (isSystem) {
@@ -133,17 +132,12 @@ export function WidgetMessageBubble({
   return (
     <div className={`flex ${isVisitor ? "justify-end" : "justify-start"} mb-1`}>
       <div className="max-w-[80%]">
-        {/* Agent name */}
+        {/* Agent name (customer-facing — never reveal AI/bot) */}
         {!isVisitor && message.senderName && (
           <div className="flex items-center gap-1.5 mb-0.5 px-1">
             <span className="text-[11px] font-medium text-gray-600">
               {message.senderName}
             </span>
-            {isAi && (
-              <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full font-medium">
-                AI
-              </span>
-            )}
           </div>
         )}
 

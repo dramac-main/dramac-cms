@@ -58,7 +58,11 @@ function buildGrid(reference: Date) {
   return { cells, first, last };
 }
 
-export function BookingsCalendarView({ siteId, bookings, initialMonth }: Props) {
+export function BookingsCalendarView({
+  siteId,
+  bookings,
+  initialMonth,
+}: Props) {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -186,9 +190,7 @@ export function BookingsCalendarView({ siteId, bookings, initialMonth }: Props) 
               <button
                 type="button"
                 key={key}
-                onClick={() =>
-                  setSelectedDay(dayBookings.length ? key : null)
-                }
+                onClick={() => setSelectedDay(dayBookings.length ? key : null)}
                 className={cn(
                   "min-h-22 border-b border-r p-1.5 text-left text-xs transition-colors",
                   inMonth ? "bg-background" : "bg-muted/30",

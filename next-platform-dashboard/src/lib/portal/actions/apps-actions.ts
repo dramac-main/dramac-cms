@@ -31,8 +31,7 @@ export async function installAppAction(
   moduleId: string,
   settings?: Record<string, unknown>,
 ): Promise<
-  | { ok: true; installationId: string }
-  | { ok: false; error: string }
+  { ok: true; installationId: string } | { ok: false; error: string }
 > {
   try {
     const dal = await dalForSite();
@@ -40,7 +39,10 @@ export async function installAppAction(
     revalidatePath(pathFor(siteId));
     return { ok: true, installationId: result.installationId };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -54,7 +56,10 @@ export async function uninstallAppAction(
     revalidatePath(pathFor(siteId));
     return { ok: true };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -69,6 +74,9 @@ export async function updateAppSettingsAction(
     revalidatePath(pathFor(siteId));
     return { ok: true };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }

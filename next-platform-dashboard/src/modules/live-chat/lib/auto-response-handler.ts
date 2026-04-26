@@ -95,14 +95,12 @@ export async function handleNewVisitorMessage(
   const aiAutoEnabled = aiSettings?.ai_auto_response_enabled !== false; // default true
   const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false; // default true
   const flowsEnabled = aiSettings?.scripted_flows_enabled !== false; // default true
-  // When true, scripted-flow messages are staged for agent approval before the customer sees them
+  // OPT-IN approval — site owners enable manual review per site if they want it.
+  // When the platform's Anthropic key is funded, we ship Chiko replies straight
+  // to customers so the conversation feels live and responsive.
   const flowsRequireApproval =
-    aiSettings?.scripted_flows_require_approval !== false; // default TRUE (safe-by-default)
-  // GLOBAL APPROVAL GATE — every AI-generated message (free-form AI replies AND
-  // payment-guidance messages such as the `payment_method_select` button card)
-  // must be reviewed by a human agent before reaching the customer, unless the
-  // site explicitly opts out by setting `ai_responses_require_approval = false`.
-  const aiRequireApproval = aiSettings?.ai_responses_require_approval !== false; // default TRUE
+    aiSettings?.scripted_flows_require_approval === true; // default FALSE
+  const aiRequireApproval = aiSettings?.ai_responses_require_approval === true; // default FALSE
 
   // ── PRIORITY 0: Payment method selection from a prior payment_method_select ──
   // When the visitor clicked one of the payment method buttons (e.g. "Airtel Money")
@@ -611,8 +609,7 @@ async function resolvePaymentMethodSelection(
   if (!selectMsg) return false;
 
   // 2. Parse the buttons from the prior select message
-  let parsed: { text?: string; buttons?: { id: string; label: string }[] } =
-    {};
+  let parsed: { text?: string; buttons?: { id: string; label: string }[] } = {};
   try {
     parsed = JSON.parse(selectMsg.content as string);
   } catch {

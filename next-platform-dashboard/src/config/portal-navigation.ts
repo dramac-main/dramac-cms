@@ -227,6 +227,33 @@ export function getPortalNavigationGroups(
     }
   }
 
+  // === Module Settings Group (per-site configuration clients can manage) ===
+  const moduleSettingsItems: NavItem[] = [];
+
+  if (siteId) {
+    if (hasModule("ecommerce") && permissions.canManageProducts) {
+      moduleSettingsItems.push({
+        title: "Store Payment Methods",
+        href: siteUrl("ecommerce/payment-methods")!,
+        icon: ShoppingCart,
+      });
+    }
+    if (hasModule("booking") && permissions.canManageBookings) {
+      moduleSettingsItems.push({
+        title: "Booking Payment Methods",
+        href: siteUrl("bookings/payment-methods")!,
+        icon: CalendarDays,
+      });
+    }
+    if (hasModule("live-chat") && permissions.canManageLiveChat) {
+      moduleSettingsItems.push({
+        title: "Chiko AI Settings",
+        href: siteUrl("live-chat/ai-settings")!,
+        icon: Sparkles,
+      });
+    }
+  }
+
   // === Support Group ===
   const supportItems: NavItem[] = [
     {
@@ -260,6 +287,9 @@ export function getPortalNavigationGroups(
   }
 
   groups.push({ title: "Content", items: contentItems });
+  if (moduleSettingsItems.length > 0) {
+    groups.push({ title: "Module Settings", items: moduleSettingsItems });
+  }
   groups.push({ title: "Support", items: supportItems });
 
   return groups;

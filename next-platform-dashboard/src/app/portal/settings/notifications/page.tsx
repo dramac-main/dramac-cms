@@ -19,9 +19,6 @@ import {
   NotificationPreferencesForm,
   type PreferenceGroup,
 } from "@/components/portal/notifications/notification-preferences-form";
-import { SendTestEmailCard } from "@/components/portal/notifications/send-test-email-card";
-import { TEST_EMAIL_TEMPLATES } from "./test-email-templates";
-import { listPortalTestEmailHistory } from "./test-email-actions";
 
 export const metadata: Metadata = {
   title: "Notification Preferences | Portal",
@@ -117,8 +114,6 @@ export default async function NotificationPreferencesPage() {
   );
   const current = Object.fromEntries(currentEntries);
 
-  const testHistory = await listPortalTestEmailHistory(20);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -126,11 +121,6 @@ export default async function NotificationPreferencesPage() {
         description="Choose which notifications you receive and through which channels. Disabling in-app hides the notification from your inbox entirely."
       />
       <NotificationPreferencesForm groups={GROUPS} initial={current} />
-      <SendTestEmailCard
-        templates={TEST_EMAIL_TEMPLATES}
-        recipient={user.email}
-        initialHistory={testHistory}
-      />
     </div>
   );
 }

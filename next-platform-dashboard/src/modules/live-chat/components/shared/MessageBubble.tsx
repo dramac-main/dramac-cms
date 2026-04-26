@@ -313,7 +313,7 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
           {isAI && (
             <Badge variant="outline" className="text-[10px] py-0 px-1 gap-0.5">
               <Bot className="h-2.5 w-2.5" />
-              AI
+              Chiko
             </Badge>
           )}
         </div>

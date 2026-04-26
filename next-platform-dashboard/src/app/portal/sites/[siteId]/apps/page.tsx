@@ -238,8 +238,8 @@ export default async function SiteAppsPage({ params }: PageProps) {
                   Marketplace
                 </h2>
                 <span className="text-xs text-muted-foreground">
-                  {available.length}{" "}
-                  {available.length === 1 ? "app" : "apps"} available
+                  {available.length} {available.length === 1 ? "app" : "apps"}{" "}
+                  available
                 </span>
               </div>
               <MarketplaceGrid

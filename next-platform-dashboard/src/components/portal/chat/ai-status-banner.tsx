@@ -36,8 +36,8 @@ export function AiStatusBanner({
       >
         <AlertTriangle className="h-4 w-4" />
         <span>
-          Automated reply is temporarily unavailable. This conversation is
-          awaiting a human reply.
+          Chiko is temporarily unavailable. This conversation is awaiting a
+          human reply.
         </span>
       </div>
     );
@@ -53,7 +53,7 @@ export function AiStatusBanner({
       >
         <Bot className="h-4 w-4" />
         <span>
-          The AI has requested a human handoff. Please take over this
+          Chiko has requested a human handoff. Please take over this
           conversation.
         </span>
       </div>
@@ -69,7 +69,7 @@ export function AiStatusBanner({
         )}
       >
         <BotOff className="h-4 w-4" />
-        <span>AI auto-responses are disabled for this site.</span>
+        <span>Chiko auto-responses are disabled for this site.</span>
       </div>
     );
   }
@@ -82,7 +82,7 @@ export function AiStatusBanner({
       )}
     >
       <Badge variant="outline" className="gap-1">
-        <Bot className="h-3 w-3" /> AI active
+        <Bot className="h-3 w-3" /> Chiko active
       </Badge>
       {typeof lastAiConfidence === "number" && (
         <span className="text-xs text-muted-foreground">

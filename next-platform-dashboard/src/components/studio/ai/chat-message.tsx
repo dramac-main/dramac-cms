@@ -51,7 +51,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-muted-foreground mb-1">
-          {isUser ? "You" : "AI Assistant"}
+          {isUser ? "You" : "Chiko"}
         </div>
         
         {message.isLoading ? (

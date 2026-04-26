@@ -37,7 +37,10 @@ export async function deleteSendLogEntryAction(
     revalidatePath(pathFor(siteId));
     return { ok: true, deleted };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -54,7 +57,10 @@ export async function clearSendLogByStateAction(
     revalidatePath(pathFor(siteId));
     return { ok: true, deleted };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -71,10 +77,15 @@ export async function clearSendLogOlderThanAction(
     revalidatePath(pathFor(siteId));
     return { ok: true, deleted };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
-export async function refreshCommunicationsAction(siteId: string): Promise<void> {
+export async function refreshCommunicationsAction(
+  siteId: string,
+): Promise<void> {
   revalidatePath(pathFor(siteId));
 }

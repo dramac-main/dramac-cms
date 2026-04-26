@@ -104,8 +104,8 @@ export const CHANGELOG: ChangelogRelease[] = [
       },
       {
         type: "feature",
-        title: "AI Assistant",
-        description: "Edit any component using natural language",
+        title: "Chiko",
+        description: "Edit any component using natural language with Chiko",
       },
       {
         type: "feature",

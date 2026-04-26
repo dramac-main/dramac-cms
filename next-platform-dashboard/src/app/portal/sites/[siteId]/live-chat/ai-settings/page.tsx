@@ -17,7 +17,7 @@ import { ChikoAiSettingsForm } from "@/components/portal/chat/chiko-ai-settings-
 
 export const metadata: Metadata = {
   title: "Chiko AI Settings | Portal",
-  description: "Control AI auto-responses per site",
+  description: "Control Chiko auto-responses per site",
 };
 
 interface PageProps {
@@ -28,12 +28,7 @@ export default async function ChikoAiSettingsPage({ params }: PageProps) {
   const user = await requirePortalAuth();
   const { siteId } = await params;
 
-  await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "live-chat",
-    "canManageLiveChat",
-  );
+  await verifyPortalModuleAccess(user, siteId, "live-chat", "canManageLiveChat");
 
   const admin = createAdminClient();
   const { data: site } = await admin
@@ -60,7 +55,8 @@ export default async function ChikoAiSettingsPage({ params }: PageProps) {
       <ChikoAiSettingsForm
         siteId={siteId}
         initial={{
-          aiAutoResponseEnabled: settings?.ai_auto_response_enabled !== false, // default true
+          aiAutoResponseEnabled:
+            settings?.ai_auto_response_enabled !== false, // default true
           assistantName: settings?.ai_assistant_name || "Chiko",
           responseTone: settings?.ai_response_tone || "friendly",
           handoffMessage: settings?.ai_handoff_message || "",

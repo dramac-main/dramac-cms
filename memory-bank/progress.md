@@ -1,159 +1,23 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Session 11 — Push CHECK fix + Ask Chiko rebrand + Vercel route reduction — SHIPPED ✅
+**Last Updated**: Portal Overhaul — Session 2 (2A + 2B + 2C) complete
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
-
-## Session 11 (completed) — SHIPPED
-
-- ✅ **Push subscriptions CHECK constraint** — `migrations/push-subscriptions-allow-portal-context.sql` allows `context='portal'`. Already applied to prod via Supabase MCP. Commit `5120c11e`.
-- ✅ **Ask Chiko rebrand** — All "Chiko AI" user-facing copy renamed to "Ask Chiko" across navigation, pricing, plan feature lists, agency assistant page, and API system prompt. Cross-tenant safety verified in `chiko-query-builder.ts`. Commit `4845a42c`.
-- ✅ **Vercel route reduction** — Deploy was blocked at 2053/2048 routes. Consolidated 9 redirect-only pages into `src/proxy.ts` middleware (legacy alias + parameterised builder/pages redirects). tsc clean. Commit `e8f75d66`. Pushed `ea43c3ce..e8f75d66`.
-
-## Session 10 Part A (completed) — SHIPPED
-
-- ✅ **Live Chat portal empty-list RLS fix**. Added `<table>_portal_select`
-  SELECT-only RLS policies on every `mod_chat_*` table
-  (`migrations/portal-live-chat-rls.sql`), each
-  `USING (public.is_portal_user_for_site(site_id))`. Applied to prod via
-  Supabase MCP (`portal_live_chat_rls`). Verified as authenticated portal
-  JWT: 3 conversations / 1 visitor / 9 messages visible for Lumina. The
-  Session 9B `can_access_site()` update had NOT reached `mod_chat_*` because
-  those tables' RLS was hand-rolled with inline `agency_members` joins
-  instead of the helper. Many other modules likely have the same gap
-  (ecom-40 inventory, ecom-41 analytics, ecom-42 marketing, ecom-43
-  integrations, em-30 embed tokens, em-41 versioning, etc.) — audit each
-  affected portal page in next pass.
-
-## Portal Perfection Prompt — remaining scope (OPEN)
-
-Driven by `CLIENT-PORTAL-PERFECTION-PROMPT.md`. User directive: three full
-passes with commit+push after each. Still outstanding after Part A:
-
-- §2 (continued): audit other `mod_*` tables whose RLS bypasses
-  `can_access_site()` and add portal-select policies where portal pages are
-  reading (ecom-40/41/42/43, em-30, em-41 already flagged).
-- §3 Scripted flows: `mod_chat_scripted_flows` migration, AI-credit
-  exhaustion fallback in `src/modules/live-chat/lib/ai-responder.ts`, 10
-  default flows, portal admin tab.
-- §4 PWA: create `public/manifest.json`, flesh out `public/sw.js` (precache,
-  network-first API, cache-first static, SWR fonts/images, per-user push
-  tag scoping, actions, requireInteraction for critical events), link
-  manifest from `src/app/portal/layout.tsx`, notification permission
-  banner + 30-day dismissal.
-- §4 Dispatcher: audit `src/lib/portal/notification-dispatcher.ts` for full
-  event coverage (orders, bookings, invoices, quotes, chat, forms, CRM,
-  push-subscription-expired, ai-credits-low, plan-usage, support tickets).
-- §5 Email: "Send test email" on `/portal/settings/notifications`, email
-  log viewer at `/portal/sites/[siteId]/communications`, `email_failures`
-  dead-letter + retry + agency alert at 5 failures/hour.
-- §6 Automation: verify `system-templates.ts` coverage; audit every
-  resource action for `logAutomationEvent` + `dispatchBusinessEvent` +
-  branded email; add idempotency key `(resource_type, resource_id,
-event_type, state_hash)`.
-- §7 Impersonation: `impersonation_actions` audit table + log all writes
-  with both impersonator + impersonated IDs.
-- §8 Page-by-page audit (Playwright, since browser testing unavailable).
-- §9 UX polish: Cmd+K global command palette (highest leverage),
-  onboarding checklist, "What's new" feed, skeletons, empty states, error
-  recovery, mobile cards, a11y.
-- §10 Testing: `npx tsc --noEmit`, `npx next build`, tests for
-  empty-list path, scripted-flow trigger, credit-exhaustion fallback,
-  dispatcher dedupe, impersonation audit, two Playwright journeys.
-
-## Session 9 (completed) — SHIPPED
-
-- ✅ **Portal magic link cookie-persistence fix** (commit `466e75d2`).
-  Root cause: Server Components cannot set cookies; the `try/catch` in
-  `createClient::setAll` silently swallowed every session cookie from
-  `verifyOtp`. OTP was consumed on Supabase's side but browser never
-  received a session → redirect to `/portal` hit `updateSession` with no
-  session → bounced to main `/login`.
-  Fix: replaced `portal/verify/page.tsx` (Server Component) with
-  `portal/verify/route.ts` (GET Route Handler — can set cookies); manually
-  collect cookies from Supabase's `setAll` and attach to redirect response.
-  Also added `/portal` to `updateSession` publicRoutes so portal pages aren't
-  redirected to platform `/login`. Login page now shows error banners for
-  `?error=invalid_link` / `?error=no_access`.
-
-## Session 8 (completed) — SHIPPED
-
-- ✅ **Magic-link PKCE fix** (commit `6fb87cd7`). Switched from PKCE
-  `action_link` to `hashed_token` + `verifyOtp`. Correct OTP flow; cookie
-  persistence was still broken (fixed in Session 9).
-
-  via `logAutomationEvent`, (d) chat bridge where applicable. Dispatcher
-  Session-7 fix holds.
-
-- ✅ Build green: `npx next build` EXIT 0.
-- ✅ Pushed commit `6fb87cd7` to `main`. Vercel auto-deploy triggered
-  (monitoring unavailable this session — MCP tool loading disabled).
-
-## Session 7 (completed) — SHIPPED
-
-- ✅ **Critical portal activation bug — FIXED** (commit `d74bc98d`).
-  Client portal invites never created a Supabase auth user; login link
-  was dead. Rewrote `inviteClientToPortal()` + `sendMagicLink()` +
-  added `src/lib/portal/portal-activation.ts` helper, new
-  `"portal_magic_link"` EmailType + BrandedTemplate. Self-heals orphan
-  `has_portal_access=true` / `portal_user_id=null` rows on next login.
-- ✅ **Notification dispatcher (@deprecated no-op) — FIXED** (commit
-  `d74bc98d`). `dispatchNotification()` in
-  `src/lib/notifications/automation-aware-dispatcher.ts` was silently
-  swallowing every booking / order / invoice notification callback.
-  Now actively invokes `params.notificationFunction()`.
-- ✅ **BIL-10 Ask Chiko portal expansion — COMPLETE** (commit
-  `0b0dc6bd`). Per-client scoped AI business assistant at
-  `/portal/ask-chiko`. Supabase migration `chiko_portal_client_scope`
-  applied (adds `client_id`, `scope`, 2 indexes, 3 RLS policies). New
-  route `src/app/api/portal/chiko/route.ts` + query builder
-  `src/components/chiko/portal-chiko-query-builder.ts` (7
-  tenant-scoped queries, all via `.in("site_id", scope.siteIds)`).
-  `ChikoChat` generalized via props. Nav entry added under Dashboard.
-- ✅ Build green: `npx next build` EXIT 0 (5.2min, 148 static pages);
-  both new routes in manifest.
-- ✅ Pushed to main; Vercel `dpl_7pD7H7iSe4uwEJHY7ctKSr3ctZCK` READY on
-  commit `0b0dc6bd`, live on app.dramacagency.com.
-
----
-
-## Route-Cap Hotfix (after Session 6)
-
-- Vercel was rejecting deploys with `Max routes 2048, received 2070`.
-- Fix: consolidated 7 invoicing report wrapper routes into one
-  `dashboard/sites/[siteId]/invoicing/reports/[report]/page.tsx` that
-  switches on the slug; dropped dead studio integration-test and
-  `site-tabs.tsx`; cleaned broken "Pipeline Test" / "Test Module" links.
-- Also fixed `next.config.ts`: set `outputFileTracingRoot` and
-  `turbopack.root` to `__dirname` (dashboard dir) to prevent monorepo
-  root from being used as trace root.
-- Commit `c413340d` (dpl_5gyzKrUBSEh1jQ2NoYv6euhh9Ken) READY on Vercel.
-- Local routes: 208 static + 269 dynamic = 477.
 
 ---
 
 ## Client Portal Overhaul (7-session plan)
 
-| Session | Scope                                               | Status      |
-| ------- | --------------------------------------------------- | ----------- |
-| 1       | Shell, permission resolver, DAL, dashboard          | ✅ Complete |
-| 2A      | Communication foundation (dispatcher + send-log)    | ✅ Complete |
-| 2B      | Chiko AI per-site toggle + status banner            | ✅ Complete |
-| 2C      | Notification preferences UI + archive action        | ✅ Complete |
-| 3       | Commerce DAL + portal-first payment-proofs UI       | ✅ Complete |
-| 4A      | Invoicing DAL + portal pages                        | ✅ Complete |
-| 4B      | CRM DAL + portal pages                              | ✅ Complete |
-| 4C      | Marketing DAL + portal pages                        | ✅ Complete |
-| 4D      | Support + Communications DAL + send-log viewer page | ✅ Complete |
-| 5       | Content & Infrastructure DALs (7 namespaces)        | ✅ Complete |
-| 6       | Portal polish • mobile • acceptance                 | ✅ Complete |
-
-**Session 6 deliverables** (commits `9ffcb948` 6A commerce rewrite, `89e9b948` 6B client-page auth-guards, plus 6C/6D/6E): Full portal-first rewrite of five commerce namespaces (orders, products, customers, quotes, bookings) with server `page.tsx` → Suspense `PortalPanelSkeleton` → loader → client list/detail. URL-driven filters via `push()` helper with empty/"all" deletion and `page` reset. `useTransition` for all mutations, toast success/error, `router.refresh()` on completion. Dual layouts per list: mobile cards (`block md:hidden`) + desktop table (`hidden md:block`). Dialog-driven status transitions with reason/reschedule capture. Shared patterns landed in `src/components/portal/patterns/portal-status-pill.tsx` and `src/lib/portal/format.ts` (`formatPortalCurrency/Date/Relative`). Server auth-guard shells for previously `"use client"` pages (submissions/blog/media/seo) — existing UI preserved in `*-client.tsx`, new server `page.tsx` enforces `requirePortalAuth` + `getClientSite` before render. i18n skeleton at `src/lib/portal/i18n/strings.ts` (60+ keys, `t(key)` + `resolvePortalLocale` — extraction-only, runtime switching in follow-up). New `supplier-brand-leak.test.ts` with 35 tests covering every documented token, prefix, and free-text pattern. Portal DAL test total: **135 tests** across **12 files**. `tsc --noEmit` clean.
-
-**Session 5 deliverables** (this commit): seven new DAL namespaces wired on `createPortalDAL(ctx)` — `blog`, `media`, `seo`, `forms`, `domains`, `businessEmail`, `apps` — all gated behind `canEditContent`. New utility `supplier-brand.ts` (`stripSupplierBrandDeep` / `stripSupplierBrandText`) enforces no-supplier-leak on `domains` and `businessEmail` responses (tokens: `provider*`, `resellerclub`, `rc_*`, `titan`, `tm_*`). `PortalAccessDeniedError.siteId` widened to `string | null` for client-scope denials. New Apps nav entry (`Blocks` icon) in Content group. Tests consolidated into `content-infrastructure-dal.test.ts` — 15 tests, 7 describe blocks — deliberate deviation from per-namespace pattern since all seven share the same permission gate + brand-strip invariants. New invariants: SEO merge rule (field-level, preserves `site_noindex`), media guarded-delete (rejects if referenced by posts/products/pages), apps catalog filtered by `MODULE_CATALOG[id].siteInstallable`, forms portal is read+archive only. Portal DAL test total: **100 tests** (85 + 15). `tsc --noEmit` clean.
-
-**Session 4 deliverables** (commits `debe0e00` 4A, `2a00fea0` 4B, `eaa0e4a4` 4C, this commit 4D): five new DAL namespaces wired on `createPortalDAL(ctx)` — `invoicing`, `crm`, `marketing`, `support`, `communications`. 85/85 portal vitest tests pass across 10 files. New invariants documented in `PORTAL-FOUNDATION.md` Session 4 appendix: double-scope rule (support+comms filter on both `site_id` and `client_id`), no-supplier-leak (`stripSupplierBrand` strips `provider*` / `resend` / `sendgrid` / `mailgun` / `postmark` / `twilio` columns from `portal_send_log`), authoritative-owner rule (invoicing), consent-gate (marketing), forward-contract for future `internal_note` column (support). First **universal permission** (`canManageSupport`, defaults `true`, no DB column) wired through `portal-auth.ts`, `portal-layout-client.tsx`, `portal-sidebar.tsx`, and `recipient-resolver.ts` (`canManageSupport: null` in `PERMISSION_TO_CLIENT_COLUMN` map). New portal page: `/portal/sites/[siteId]/communications` (read-only send-log viewer, payment-proofs-style RSC pattern).
-
-**Session 3 deliverables**: `src/lib/portal/commerce-data-access.ts` (~2700 lines, 6 namespaces — orders extensions, products, customers, quotes, bookings, payments); wired on `createPortalDAL(ctx)`; all writes emit `ecommerce.*` / `booking.*` automation events with money in cents. Payment proofs live in `mod_ecommod01_orders.metadata.payment_proof` JSON (no dedicated table); DAL refactored to query/mutate metadata in-place. Portal-first UI at `src/app/portal/sites/[siteId]/payment-proofs/{page,proofs-queue,_actions}.tsx` with bulk approve/reject + signed-URL preview. 13 new Vitest deny-path tests (`src/lib/portal/__tests__/commerce-dal.test.ts`); 28 portal tests total, all pass. `docs/PORTAL-FOUNDATION.md` gains Session 3 appendix.
+| Session | Scope                                            | Status      |
+| ------- | ------------------------------------------------ | ----------- |
+| 1       | Shell, permission resolver, DAL, dashboard       | ✅ Complete |
+| 2A      | Communication foundation (dispatcher + send-log) | ✅ Complete |
+| 2B      | Chiko AI per-site toggle + status banner         | ✅ Complete |
+| 2C      | Notification preferences UI + archive action     | ✅ Complete |
+| 3       | Live chat module (portal admin surfaces)         | ⬜ Pending  |
+| 4       | Bookings / CRM (portal)                          | ⬜ Pending  |
+| 5       | Automation / marketing (portal)                  | ⬜ Pending  |
+| 6       | Playwright E2E + observability polish            | ⬜ Pending  |
+| 7       | Launch hardening + docs                          | ⬜ Pending  |
 
 **Session 2C deliverables**: `src/app/portal/settings/notifications/page.tsx` (RSC with 8 curated event groups spanning 29 event types); `src/app/portal/settings/notifications/actions.ts` (`updateNotificationPreference`, `archiveNotifications`); `src/components/portal/notifications/notification-preferences-form.tsx` (per-event × per-channel switch grid with optimistic updates + rollback on failure); "Preferences" link added to `/portal/notifications` header.
 

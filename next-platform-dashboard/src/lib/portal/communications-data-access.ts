@@ -418,9 +418,7 @@ function createSendLogNamespace(
             .eq("client_id", ctx.user.clientId)
             .in("delivery_state", states);
           if (error)
-            throw new Error(
-              `[portal][comms] clearByState: ${error.message}`,
-            );
+            throw new Error(`[portal][comms] clearByState: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,
@@ -451,9 +449,7 @@ function createSendLogNamespace(
             .eq("client_id", ctx.user.clientId)
             .lt("created_at", cutoff);
           if (error)
-            throw new Error(
-              `[portal][comms] clearOlderThan: ${error.message}`,
-            );
+            throw new Error(`[portal][comms] clearOlderThan: ${error.message}`);
           finalizeAudit(
             ctx,
             siteId,

@@ -113,7 +113,11 @@ export function PaymentProofsQueue({
       return;
     }
     startTransition(async () => {
-      const res = await rejectPaymentProofAction(siteId, rejectTarget.id, reason);
+      const res = await rejectPaymentProofAction(
+        siteId,
+        rejectTarget.id,
+        reason,
+      );
       if (res.ok) {
         toast.success("Payment proof rejected");
         setRejectTarget(null);
@@ -209,11 +213,7 @@ export function PaymentProofsQueue({
             <span className="text-sm font-medium">
               {selected.size} selected
             </span>
-            <Button
-              size="sm"
-              onClick={onBulkApprove}
-              disabled={isPending}
-            >
+            <Button size="sm" onClick={onBulkApprove} disabled={isPending}>
               <Check className="mr-1 h-4 w-4" /> Approve all
             </Button>
             <Button

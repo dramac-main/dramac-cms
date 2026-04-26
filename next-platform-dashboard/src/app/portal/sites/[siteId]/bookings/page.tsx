@@ -70,7 +70,8 @@ export default async function PortalBookingsPage({
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   // Calendar mode: ignore pagination and filter to the visible month
-  const monthParam = sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : null;
+  const monthParam =
+    sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : null;
   let calendarFrom: string | undefined;
   let calendarTo: string | undefined;
   if (view === "calendar") {

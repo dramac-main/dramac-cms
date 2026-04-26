@@ -378,11 +378,18 @@ export async function createConversationForEntity(
     // 7. Send initial greeting message
     const { data: settings } = await supabase
       .from("mod_chat_widget_settings")
-      .select("ai_assistant_name, company_name")
+      .select(
+        "ai_assistant_name, company_name, ai_responses_require_approval",
+      )
       .eq("site_id", siteId)
       .single();
     const assistantName = settings?.ai_assistant_name || "Chiko";
     const companyName = settings?.company_name || "our team";
+    // Approval is OPT-IN. Sites that explicitly enable manual review still
+    // get the safe-by-default behaviour, but the platform default lets Chiko
+    // greet customers immediately so the conversation feels live.
+    const greetingRequiresApproval =
+      settings?.ai_responses_require_approval === true;
 
     let greeting: string;
     // When payment is required AND pending, we DELIBERATELY skip the verbose
@@ -417,10 +424,8 @@ export async function createConversationForEntity(
     }
 
     if (!skipGreeting) {
-      // Stage greeting as pending_approval so a human agent reviews the AI's
-      // first proactive message before the customer sees it. This matches the
-      // approval gate used by every other proactive AI notification on this
-      // platform — no AI text should reach the customer un-reviewed.
+      // Insert the greeting. By default it is sent straight to the customer;
+      // sites that opted into approval get it staged as pending_approval.
       await supabase.from("mod_chat_messages").insert({
         conversation_id: conversation.id,
         site_id: siteId,
@@ -428,11 +433,13 @@ export async function createConversationForEntity(
         sender_name: assistantName,
         content: greeting,
         content_type: "text",
-        status: "pending_approval",
+        status: greetingRequiresApproval ? "pending_approval" : "sent",
         is_ai_generated: true,
         ai_confidence: 1.0,
-        is_internal_note: true,
-        metadata: { pending_agent_approval: true },
+        is_internal_note: greetingRequiresApproval,
+        metadata: greetingRequiresApproval
+          ? { pending_agent_approval: true }
+          : {},
       });
     }
 
