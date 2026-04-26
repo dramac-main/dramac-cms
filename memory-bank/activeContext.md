@@ -1,8 +1,51 @@
 # Active Context
 
-**Last Updated**: Portal Overhaul — Session 2 (Communication Overhaul) COMPLETE ✅
+**Last Updated**: Chiko branding + Portal payment-methods management (Vercel READY) ✅
 
-## Current State: Portal Overhaul — Session 2 (2A + 2B + 2C) — COMPLETE ✅
+## Current State: Chiko AI fixes + Portal Module Self-Service — DEPLOYED ✅
+
+Production deployment `dpl_jfvHzWaNk9ZcQjcRiuUEtCHJdrdU` (commit `6c9b5c82`) is **READY** on Vercel.
+
+### Shipped this session
+
+1. **Chiko AI behavioral fixes**
+   - `chat-event-bridge.ts` greeting now honors per-site `ai_responses_require_approval` (default off). No more accidental approval queue for auto-greetings.
+   - Migration `migrations/chiko-ai-no-approval-by-default.sql` flips defaults.
+   - Auto-response handler payment-method selection sends payment cards as separate Chiko message via `parsePaymentMethods`.
+
+2. **Chiko branding cleanup** — every platform-internal "AI"/"AI Assistant" surfaced label rebranded:
+   - studio chat-message header
+   - onboarding `help-content.ts` + `changelog.ts`
+   - portal command palette
+   - agent-side `MessageBubble` badge ("Chiko")
+   - customer-facing widget `WidgetMessageBubble` — AI badge **removed entirely**
+   - `ai-status-banner` (4 strings)
+   - `ai-settings` page metadata
+
+   Per-site `ai_assistant_name` (e.g. "Luna" on b019cce4) is preserved — that's a customer-facing customization, not internal branding.
+
+3. **Portal payment-methods self-service** (NEW)
+   - `src/lib/portal/payment-methods-render.ts` — pure helper (`renderPaymentMethods`, `PaymentMethodRow`).
+   - `src/lib/portal/actions/payment-methods-actions.ts` — `"use server"` `updatePaymentMethods(siteId, surface, rows)` with `requirePortalAuth` → `verifyPortalModuleAccess` → admin-client upsert → `writePortalAudit` → `revalidatePath`.
+   - `src/components/portal/payments/payment-methods-form.tsx` — structured row editor with reorder, presets (Airtel Money / MTN MoMo / Zanaco bank).
+   - Pages: `/portal/sites/[siteId]/ecommerce/payment-methods` and `/portal/sites/[siteId]/bookings/payment-methods`.
+   - Surfaces store free-text into `mod_ecommod01_settings.manual_payment_instructions` / `mod_bookmod01_settings.manual_payment_instructions`. The same parser the Chiko payment flow uses can re-read it.
+   - Wired into `src/config/portal-navigation.ts` under new "Module Settings" group along with Chiko AI settings link.
+
+4. **Bug fixes**
+   - `chiko-ai-settings-form.tsx` import was pointing at a non-existent `app/portal/.../actions` module — corrected to `@/lib/portal/actions/live-chat-ai-settings-actions`.
+   - `recipient-resolver.ts` `PERMISSION_TO_CLIENT_COLUMN` was missing `canManageSupport` (TS2741) — added.
+   - Test file referenced unsupported `stateHash` option — removed from 4 callsites.
+   - First Vercel build failed: `renderPaymentMethods` was a sync export inside a `"use server"` file. Extracted into `payment-methods-render.ts`.
+
+### Architectural conventions reinforced
+
+- **`"use server"` files may only export `async` functions.** Pure helpers, types, and constants must live in a sibling non-server module.
+- Portal module action pattern is now stable everywhere:
+  `requirePortalAuth()` → `verifyPortalModuleAccess(user, siteId, moduleSlug, requiredPermission)` → `createAdminClient()` work → `writePortalAudit({...})` → `revalidatePath(...)`.
+- Dynamic-table Supabase calls need an `as any` admin alias to escape the strict generated types.
+
+
 
 Session 2 shipped the full communication overhaul described in
 `CLIENT-PORTAL-SESSION-2-COMMUNICATION.md`. Every focus area (4.1–4.11) is
