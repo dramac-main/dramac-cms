@@ -323,6 +323,17 @@ async function proxyCore(request: NextRequest) {
       );
     }
   }
+  // Ask Chiko settings (page removed to reduce Vercel route count)
+  // Redirects to live-chat settings which houses AI configuration.
+  {
+    const ac = pathname.match(/^\/dashboard\/sites\/([^/]+)\/ask-chiko(\/.*)?$/);
+    if (ac) {
+      return NextResponse.redirect(
+        new URL("/dashboard/sites/" + ac[1] + "/live-chat", request.url),
+        301,
+      );
+    }
+  }
   // Legacy domain settings redirects (pages removed to reduce Vercel route count)
   if (pathname.startsWith("/dashboard/settings/domains")) {
     const newPath = pathname.replace(
