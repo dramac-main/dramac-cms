@@ -312,6 +312,17 @@ async function proxyCore(request: NextRequest) {
       return NextResponse.redirect(`https://${b2[1]}.${baseDomain}/blog/${b2[2]}`, 301);
     }
   }
+  // Legacy portal products redirects (pages removed to reduce Vercel route count)
+  // Portal product/order management now lives at /ecommerce (EcommerceDashboard).
+  {
+    const pp = pathname.match(/^\/portal\/sites\/([^/]+)\/products(\/.*)?$/);
+    if (pp) {
+      return NextResponse.redirect(
+        new URL("/portal/sites/" + pp[1] + "/ecommerce", request.url),
+        301,
+      );
+    }
+  }
   // Legacy domain settings redirects (pages removed to reduce Vercel route count)
   if (pathname.startsWith("/dashboard/settings/domains")) {
     const newPath = pathname.replace(

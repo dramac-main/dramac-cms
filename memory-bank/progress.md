@@ -5,14 +5,15 @@
 
 ## Latest deployment
 
-- Commit `ca22ceac` — `feat(portal+chiko): per-module portal nav, structured payment methods, site-aware Chiko` — **READY** (`dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2`).
+- Commit `f52982f5` — `feat: portal nav cleanup + ecommerce/bookings DRY pages + pre-activate permissions + Ask Chiko module` — deployment `dpl_6S5X6B749AeriyZJyRCDNQaJ25eY` (verify READY on Vercel).
 - What works (new):
-  - Portal sidebar shows per-module subgroups (Store / Bookings / Live Chat / Marketing) gated by installed modules + permissions.
-  - Shared `StructuredPaymentMethodsEditor` used in both portal and agency surfaces; presets include Zamtel Money; Zanaco-named preset removed.
-  - Chiko has a `SITE OVERVIEW` injected into its system prompt so it can answer about modules, products, services, currency, business info.
-  - `auto-response-handler` honours per-site `ai_assistant_name`, recognises `zamtel` payment phrasing, and no longer dumps the full instructions blob when parsing fails.
-  - MessageBubble badge is icon-only (no double "Chiko"/"Luna" label).
-- New plan: `docs/ASK-CHIKO-MODULE-PLAN.md` — convert Ask-Chiko into a real module (`ask-chiko` slug + `mod_ask_chiko_settings`).
+  - Portal nav: Operations group removed; each module has one authoritative entry. CRM/Automation/Invoicing added as standalone nav groups.
+  - Portal `/ecommerce` page: renders `EcommerceDashboard` + `PortalProvider` — same full UI as agency.
+  - Portal `/bookings` page: renders `BookingDashboard` + `PortalProvider` — same full UI as agency.
+  - All client permissions pre-activated: `portal-auth.ts` + `portal-permissions.ts` fallbacks = `true`; DB column defaults + existing rows = `true`.
+  - **Ask Chiko module**: `ask-chiko` in `modules_v2`, `mod_ask_chiko_settings` table, installed on all 9 sites. Agency config page at `/dashboard/sites/[siteId]/ask-chiko/` (enable/disable, tone, custom instructions, data sources, monthly quota).
+  - Portal Ask Chiko chat at `/portal/ask-chiko/` (account-level, no change needed).
+- Previous: Commit `ca22ceac` (`dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2`, READY) — per-module portal nav, structured payment methods, site-aware Chiko.
 
 ---
 

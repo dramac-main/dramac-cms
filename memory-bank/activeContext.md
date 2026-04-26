@@ -1,12 +1,52 @@
 # Active Context
 
-**Last Updated**: Per-module portal nav + structured payment methods + site-aware Chiko (Vercel READY) ✅
+**Last Updated**: Portal nav cleanup + ecommerce/bookings DRY pages + Ask Chiko module + pre-activate permissions (commit `f52982f5`, Vercel BUILDING → check for READY) ✅
 
-## Current State: Portal nav rewrite + Chiko site-context — DEPLOYED ✅
+## Current State: Ask Chiko module shipped — DEPLOYED ✅
 
-Production deployment `dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2` (commit `ca22ceac`) is **READY** on Vercel (`app.dramacagency.com`).
+Production deployment `dpl_6S5X6B749AeriyZJyRCDNQaJ25eY` (commit `f52982f5`) targeting Vercel production.
 
 ### Shipped this session (latest)
+
+1. **Portal navigation cleanup** — `src/config/portal-navigation.ts`
+   - **Removed Operations group entirely** (was duplicating Store/Bookings/Live Chat/Marketing).
+   - Each module now has one authoritative nav entry.
+   - Added **CRM**, **Automation**, **Invoicing** as standalone nav groups.
+   - Store group links to `/portal/sites/${siteId}/ecommerce` (full EcommerceDashboard).
+   - Bookings group links to `/portal/sites/${siteId}/bookings` (full BookingDashboard).
+
+2. **Portal ecommerce page** — NEW `src/app/portal/sites/[siteId]/ecommerce/page.tsx`
+   - RSC: `requirePortalAuth()` → `verifyPortalModuleAccess(..., "ecommerce", "canManageProducts")` → `EcommerceDashboard` wrapped in `PortalProvider`.
+   - Props: `siteId`, `agencyId` (from sites table), `userId`, `userName`.
+   - Portal-aware via `useIsPortalView()` inside `EcommerceDashboard`.
+
+3. **Portal bookings page** — REPLACED `src/app/portal/sites/[siteId]/bookings/page.tsx`
+   - Was legacy 266-line file with duplicated merge artifact. Now ~84 lines clean.
+   - RSC: `requirePortalAuth()` → `verifyPortalModuleAccess(..., "booking", "canManageBookings")` → `BookingDashboard` wrapped in `PortalProvider`.
+
+4. **Permission pre-activation** (belt-and-suspenders)
+   - `portal-auth.ts`: all 10+ module permission fallbacks changed `?? false` → `?? true`.
+   - `portal-permissions.ts`: all module permission `resolve()` calls now pass `true` as fallback.
+   - DB: All 9 existing client rows updated to `can_* = true`; column defaults set to `true`.
+
+5. **Ask Chiko module** — full implementation:
+   - **DB**: `ask-chiko` row in `modules_v2`, `mod_ask_chiko_settings` table, installed on all 9 sites, 9-row backfill.
+   - **Agency config page**: `src/app/(dashboard)/dashboard/sites/[siteId]/ask-chiko/page.tsx` — RSC with `getSite()` + `Suspense`.
+   - **Server actions**: `src/app/(dashboard)/dashboard/sites/[siteId]/ask-chiko/actions.ts` — `getAskChikoSettings` + `saveAskChikoSettings` (validates tone/quota/data sources, upserts on `site_id`).
+   - **Settings form**: `src/app/(dashboard)/dashboard/sites/[siteId]/ask-chiko/ask-chiko-settings-form.tsx` — enable/disable, tone (professional/friendly/casual), custom instructions (2000 char limit), 7 data-source checkboxes, monthly quota input.
+   - Portal Ask Chiko page at `/portal/ask-chiko/` is account-level (not module-gated, no changes needed).
+
+6. **Lessons learned this session**
+   - `PageHeader` only accepts `title: string` (NOT ReactNode/JSX).
+   - PowerShell with `[siteId]` in path requires `-LiteralPath` flag (`Get-Content -LiteralPath`).
+   - `.next/types/validator.ts` TS2307 errors are pre-existing stale build artifacts — NOT from src/. TSC exit code 1 is expected; filter for `src/` errors only.
+   - `"use server"` files may ONLY export `async` functions — pure helpers must be in a sibling non-server module.
+
+### Previous session (kept for reference)
+
+**Commit `ca22ceac`** — `dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2` was **READY** on Vercel.
+
+### Shipped previous session
 
 1. **Portal navigation rewrite** — `src/config/portal-navigation.ts`
    - Replaced 3-stub "Module Settings" group with per-module subgroups gated by `hasModule()` + permissions:
