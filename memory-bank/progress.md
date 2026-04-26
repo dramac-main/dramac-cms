@@ -1,7 +1,18 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: Portal Overhaul — Session 2 (2A + 2B + 2C) complete
+**Last Updated**: Per-module portal nav + structured payment methods + site-aware Chiko (commit `ca22ceac`, Vercel READY)
 **Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+## Latest deployment
+
+- Commit `ca22ceac` — `feat(portal+chiko): per-module portal nav, structured payment methods, site-aware Chiko` — **READY** (`dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2`).
+- What works (new):
+  - Portal sidebar shows per-module subgroups (Store / Bookings / Live Chat / Marketing) gated by installed modules + permissions.
+  - Shared `StructuredPaymentMethodsEditor` used in both portal and agency surfaces; presets include Zamtel Money; Zanaco-named preset removed.
+  - Chiko has a `SITE OVERVIEW` injected into its system prompt so it can answer about modules, products, services, currency, business info.
+  - `auto-response-handler` honours per-site `ai_assistant_name`, recognises `zamtel` payment phrasing, and no longer dumps the full instructions blob when parsing fails.
+  - MessageBubble badge is icon-only (no double "Chiko"/"Luna" label).
+- New plan: `docs/ASK-CHIKO-MODULE-PLAN.md` — convert Ask-Chiko into a real module (`ask-chiko` slug + `mod_ask_chiko_settings`).
 
 ---
 

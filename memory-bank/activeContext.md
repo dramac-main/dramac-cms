@@ -1,10 +1,42 @@
 # Active Context
 
-**Last Updated**: Chiko branding + Portal payment-methods management (Vercel READY) ✅
+**Last Updated**: Per-module portal nav + structured payment methods + site-aware Chiko (Vercel READY) ✅
 
-## Current State: Chiko AI fixes + Portal Module Self-Service — DEPLOYED ✅
+## Current State: Portal nav rewrite + Chiko site-context — DEPLOYED ✅
 
-Production deployment `dpl_jfvHzWaNk9ZcQjcRiuUEtCHJdrdU` (commit `6c9b5c82`) is **READY** on Vercel.
+Production deployment `dpl_Eyw83Fr857fVf3cCqH6cjyjaCFt2` (commit `ca22ceac`) is **READY** on Vercel (`app.dramacagency.com`).
+
+### Shipped this session (latest)
+
+1. **Portal navigation rewrite** — `src/config/portal-navigation.ts`
+   - Replaced 3-stub "Module Settings" group with per-module subgroups gated by `hasModule()` + permissions:
+     - **Store** (ecommerce): Products, Orders, Quotes, Customers, Payment Methods.
+     - **Bookings**: Appointments, Payment Methods, Payment Proofs.
+     - **Live Chat**: Conversations, Scripted Flows, Chiko AI, Chat Agents.
+     - **Marketing**: Campaigns, Sequences, Subscribers, Templates, Forms, Landing Pages, Social, SMS, Calendar, Analytics.
+   - Operations group untouched (acts as quick-access strip; some duplicates accepted).
+
+2. **Structured payment methods (shared editor)**
+   - NEW `src/components/payments/structured-payment-methods-editor.tsx` — controlled component reused by portal AND agency.
+   - Presets: Airtel Money, MTN Mobile Money, **Zamtel Money** (NEW), Bank Transfer (Zanaco preset removed).
+   - Adopted in portal `payment-methods-form.tsx`, agency booking `settings-view.tsx`, agency ecom `payment-settings.tsx`, and `ecommerce-settings-dialog.tsx`.
+
+3. **Site-aware Chiko** — Chiko can now answer questions about modules, products, services, hours, currency, business info.
+   - NEW `src/modules/live-chat/lib/site-overview-context.ts` (`loadSiteOverviewContext`, `formatSiteOverviewContext`) — Promise.all over 8 queries: site row, installed modules (`site_module_installations` join `modules_v2`), ecommerce settings + 8 product samples, booking settings + 8 service samples.
+   - `ai-responder.ts` injects a `SITE OVERVIEW` block between knowledge base and conversation history when context is available.
+
+4. **auto-response-handler fixes** — `src/modules/live-chat/lib/auto-response-handler.ts`
+   - Per-site `assistantName` from `mod_chat_widget_settings.ai_assistant_name` (Luna vs Chiko vs ...).
+   - `PAYMENT_ORDER_PATTERNS` regex now matches `zamtel`.
+   - Removed instructions-dump fallback that posted ALL payment methods when parse failed; now returns `false` if no specific method matched.
+
+5. **MessageBubble badge** — icon-only, no more double "Chiko"/"Luna" label.
+
+6. **Plan doc** — `docs/ASK-CHIKO-MODULE-PLAN.md` recommends converting hardcoded `/portal/ask-chiko` into a real `ask-chiko` module slug (modules_v2 row, `mod_ask_chiko_settings`, surfaces, permissions, migration).
+
+### Previous session (kept for reference)
+
+Production deployment `dpl_jfvHzWaNk9ZcQjcRiuUEtCHJdrdU` (commit `6c9b5c82`).
 
 ### Shipped this session
 
