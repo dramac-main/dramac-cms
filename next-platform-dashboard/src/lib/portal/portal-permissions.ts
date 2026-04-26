@@ -106,7 +106,7 @@ export async function getEffectivePermissions(
     canEditContent: resolve(
       sitePerm?.can_edit_content,
       client.can_edit_content,
-      false,
+      true,
     ),
     canViewInvoices: resolve(null, client.can_view_invoices, true),
     canManageInvoices: resolve(null, client.can_view_invoices, true),
@@ -114,39 +114,48 @@ export async function getEffectivePermissions(
     canManageLiveChat: resolve(
       sitePerm?.can_manage_live_chat,
       client.can_manage_live_chat,
+      true,
     ),
     canManageOrders: resolve(
       sitePerm?.can_manage_orders,
       client.can_manage_orders,
+      true,
     ),
     canManageProducts: resolve(
       sitePerm?.can_manage_products,
       client.can_manage_products,
+      true,
     ),
     canManageBookings: resolve(
       sitePerm?.can_manage_bookings,
       client.can_manage_bookings,
+      true,
     ),
-    canManageCrm: resolve(sitePerm?.can_manage_crm, client.can_manage_crm),
+    canManageCrm: resolve(sitePerm?.can_manage_crm, client.can_manage_crm, true),
     canManageAutomation: resolve(
       sitePerm?.can_manage_automation,
       client.can_manage_automation,
+      true,
     ),
     canManageQuotes: resolve(
       sitePerm?.can_manage_quotes,
       client.can_manage_quotes,
+      true,
     ),
     canManageAgents: resolve(
       sitePerm?.can_manage_agents,
       client.can_manage_agents,
+      true,
     ),
     canManageCustomers: resolve(
       sitePerm?.can_manage_customers,
       client.can_manage_customers,
+      true,
     ),
     canManageMarketing: resolve(
       sitePerm?.can_manage_marketing,
       client.can_manage_marketing,
+      true,
     ),
     // Support is universal for portal users — filing a ticket is how
     // they request help. Defaults to true unless a future column

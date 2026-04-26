@@ -572,10 +572,14 @@ If the quote is accepted but not yet converted, let the customer know the store 
 }
 KNOWLEDGE BASE:
 ${kbText}
-${siteOverview ? `
+${
+  siteOverview
+    ? `
 SITE OVERVIEW (use this to answer questions about the business — modules, products, services, currency, hours):
 ${formatSiteOverviewContext(siteOverview)}
-` : ""}
+`
+    : ""
+}
 CONVERSATION HISTORY:
 ${historyText}
 

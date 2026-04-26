@@ -1,25 +1,29 @@
-﻿/**
- * Portal Bookings Dashboard Page
+/**
+ * Portal Ecommerce Dashboard Page
  *
- * Renders the full BookingDashboard (same UI as agency) wrapped in
+ * Renders the full EcommerceDashboard (same UI as agency) wrapped in
  * PortalProvider so the component knows it is in portal mode.
  *
- * The BookingDashboard detects portal context via useIsPortalView() and
- * adapts its UI accordingly (scoped to client's siteId).
+ * The EcommerceDashboard detects portal context via useIsPortalView() and:
+ *  - Skips the onboarding wizard
+ *  - Passes portalMode=true to EcommerceSidebar
+ *  - Scopes all data fetches to this client's siteId
  *
- * Tabs: Calendar, Appointments, Services, Staff, Analytics, Settings, Embed
+ * Permission: any of canManageProducts | canManageOrders |
+ *             canManageQuotes | canManageCustomers
  */
 
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PortalProvider } from "@/lib/portal/portal-context";
-import { BookingDashboard } from "@/modules/booking/components/booking-dashboard";
+import { EcommerceDashboard } from "@/modules/ecommerce/components/ecommerce-dashboard";
 
 export const metadata = {
-  title: "Bookings | Client Portal",
-  description: "Manage appointments, services, and staff availability.",
+  title: "Store | Client Portal",
+  description: "Manage your store — products, orders, customers, and quotes.",
 };
 
 interface PageProps {
@@ -27,7 +31,7 @@ interface PageProps {
   searchParams?: Promise<{ view?: string }>;
 }
 
-function BookingsSkeleton() {
+function StoreSkeleton() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -41,7 +45,7 @@ function BookingsSkeleton() {
   );
 }
 
-export default async function PortalBookingsPage({
+export default async function PortalEcommercePage({
   params,
   searchParams,
 }: PageProps) {
@@ -49,12 +53,25 @@ export default async function PortalBookingsPage({
   const { siteId } = await params;
   const { view } = (await searchParams) ?? {};
 
-  const { permissions } = await verifyPortalModuleAccess(
+  // Verify the client has access to the ecommerce module on this site.
+  // We check canManageProducts as the baseline — EcommerceDashboard itself
+  // gates individual tabs on the more granular permissions passed via PortalProvider.
+  const { site, permissions } = await verifyPortalModuleAccess(
     user,
     siteId,
-    "booking",
-    "canManageBookings",
+    "ecommerce",
+    "canManageProducts",
   );
+
+  // Fetch the site's agency_id for EcommerceDashboard (it renders agency-scoped data)
+  const admin = createAdminClient();
+  const { data: siteRow } = await admin
+    .from("sites")
+    .select("agency_id")
+    .eq("id", siteId)
+    .single();
+
+  const agencyId = siteRow?.agency_id ?? site.agencyId;
 
   return (
     <PortalProvider
@@ -82,8 +99,14 @@ export default async function PortalBookingsPage({
         siteId,
       }}
     >
-      <Suspense fallback={<BookingsSkeleton />}>
-        <BookingDashboard siteId={siteId} initialView={view} />
+      <Suspense fallback={<StoreSkeleton />}>
+        <EcommerceDashboard
+          siteId={siteId}
+          agencyId={agencyId}
+          userId={user.userId}
+          userName={user.fullName}
+          initialView={view}
+        />
       </Suspense>
     </PortalProvider>
   );

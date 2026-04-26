@@ -17,7 +17,11 @@ export interface SiteOverviewContext {
     storeName: string | null;
     currency: string | null;
     productCount: number;
-    sampleProducts: Array<{ name: string; price: number | null; currency: string | null }>;
+    sampleProducts: Array<{
+      name: string;
+      price: number | null;
+      currency: string | null;
+    }>;
   } | null;
   booking: {
     businessName: string | null;
@@ -100,7 +104,9 @@ export async function loadSiteOverviewContext(
     const installedModules: string[] = (installsRes.data || [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((row: any) => row?.modules_v2?.slug)
-      .filter((s: unknown): s is string => typeof s === "string" && s.length > 0);
+      .filter(
+        (s: unknown): s is string => typeof s === "string" && s.length > 0,
+      );
 
     const hasEcom = installedModules.includes("ecommerce");
     const hasBooking = installedModules.includes("booking");
@@ -157,7 +163,8 @@ export async function loadSiteOverviewContext(
 export function formatSiteOverviewContext(ctx: SiteOverviewContext): string {
   const lines: string[] = [];
   if (ctx.siteName) lines.push(`Site: ${ctx.siteName}`);
-  const domain = ctx.customDomain || (ctx.subdomain ? `${ctx.subdomain}.dramac.cms` : null);
+  const domain =
+    ctx.customDomain || (ctx.subdomain ? `${ctx.subdomain}.dramac.cms` : null);
   if (domain) lines.push(`Domain: ${domain}`);
   if (ctx.siteDescription) lines.push(`About: ${ctx.siteDescription}`);
   if (ctx.installedModules.length > 0) {
@@ -167,8 +174,10 @@ export function formatSiteOverviewContext(ctx: SiteOverviewContext): string {
   if (ctx.ecommerce) {
     lines.push("");
     lines.push("STORE:");
-    if (ctx.ecommerce.storeName) lines.push(`- Name: ${ctx.ecommerce.storeName}`);
-    if (ctx.ecommerce.currency) lines.push(`- Currency: ${ctx.ecommerce.currency}`);
+    if (ctx.ecommerce.storeName)
+      lines.push(`- Name: ${ctx.ecommerce.storeName}`);
+    if (ctx.ecommerce.currency)
+      lines.push(`- Currency: ${ctx.ecommerce.currency}`);
     lines.push(`- Active products: ${ctx.ecommerce.productCount}`);
     if (ctx.ecommerce.sampleProducts.length > 0) {
       lines.push("- Sample products:");
@@ -185,7 +194,8 @@ export function formatSiteOverviewContext(ctx: SiteOverviewContext): string {
   if (ctx.booking) {
     lines.push("");
     lines.push("BOOKINGS:");
-    if (ctx.booking.businessName) lines.push(`- Name: ${ctx.booking.businessName}`);
+    if (ctx.booking.businessName)
+      lines.push(`- Name: ${ctx.booking.businessName}`);
     if (ctx.booking.timezone) lines.push(`- Timezone: ${ctx.booking.timezone}`);
     if (ctx.booking.currency) lines.push(`- Currency: ${ctx.booking.currency}`);
     lines.push(`- Active services: ${ctx.booking.serviceCount}`);

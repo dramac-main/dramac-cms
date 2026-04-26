@@ -631,7 +631,11 @@ async function resolvePaymentMethodSelection(
   );
 
   // 4. Fetch the site's payment instructions (ecommerce takes priority, then bookings)
-  const [{ data: ecomSettings }, { data: bookSettings }, { data: widgetSettings }] = await Promise.all([
+  const [
+    { data: ecomSettings },
+    { data: bookSettings },
+    { data: widgetSettings },
+  ] = await Promise.all([
     supabase
       .from("mod_ecommod01_settings")
       .select("manual_payment_instructions")

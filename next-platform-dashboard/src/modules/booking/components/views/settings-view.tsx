@@ -799,7 +799,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                               Chat Opens Automatically
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              A live chat conversation opens for the customer with Chiko (AI assistant) guiding them through payment
+                              A live chat conversation opens for the customer
+                              with Chiko (AI assistant) guiding them through
+                              payment
                             </p>
                           </div>
                         </div>
@@ -812,7 +814,8 @@ export function SettingsView({ className }: SettingsViewProps) {
                               Customer Pays &amp; Uploads Proof
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Customer selects a payment method, pays, and uploads proof of payment in the chat
+                              Customer selects a payment method, pays, and
+                              uploads proof of payment in the chat
                             </p>
                           </div>
                         </div>
@@ -821,9 +824,12 @@ export function SettingsView({ className }: SettingsViewProps) {
                             4
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Review &amp; Confirm</p>
+                            <p className="text-sm font-medium">
+                              Review &amp; Confirm
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              Review the payment proof in Live Chat and mark payment as &quot;Paid&quot; to confirm the booking
+                              Review the payment proof in Live Chat and mark
+                              payment as &quot;Paid&quot; to confirm the booking
                             </p>
                           </div>
                         </div>
@@ -834,12 +840,18 @@ export function SettingsView({ className }: SettingsViewProps) {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <Label className="text-base">Payment Instructions</Label>
+                        <Label className="text-base">
+                          Payment Instructions
+                        </Label>
                       </div>
                       <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900 flex gap-2">
                         <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                         <p className="text-xs text-amber-700 dark:text-amber-300">
-                          Chiko (the AI chat assistant) will share these instructions with customers when guiding them through payment. Include your bank details, mobile money numbers, or other payment methods. Use clear formatting — each method on its own line.
+                          Chiko (the AI chat assistant) will share these
+                          instructions with customers when guiding them through
+                          payment. Include your bank details, mobile money
+                          numbers, or other payment methods. Use clear
+                          formatting — each method on its own line.
                         </p>
                       </div>
                       <StructuredPaymentMethodsEditor
@@ -851,7 +863,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                         unstyled
                       />
                       <p className="text-xs text-muted-foreground">
-                        Tip: Each method becomes an interactive button in chat. Customers tap one and Chiko sends just that method&apos;s details with their booking reference.
+                        Tip: Each method becomes an interactive button in chat.
+                        Customers tap one and Chiko sends just that
+                        method&apos;s details with their booking reference.
                       </p>
                     </div>
 

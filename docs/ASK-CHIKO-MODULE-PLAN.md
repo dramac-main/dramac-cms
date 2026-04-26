@@ -16,15 +16,15 @@ recommends converting Ask Chiko into a proper DRAMAC CMS module.
 The cleanest long-term shape is a registered module in `modules_v2` with the
 slug `ask-chiko`. Pros and cons summarised below; details follow.
 
-| Concern | Today (hardcoded) | As a module |
-| --- | --- | --- |
-| Billing | Free for everyone; no path to monetise | Per-tier pricing via `agency_module_subscriptions` |
-| Permissions | Always-on for portal users | Gated by `site_module_installations.is_enabled` + role permissions |
-| Surfaces | Portal only | Portal + Agency dashboard + (optional) website widget |
-| Knowledge sources | Implicit (whatever the responder pulls) | Configurable per-install (which modules to read from) |
-| Telemetry | Nothing | Standard module event log + automation hooks |
-| Removal | Code change | Uninstall through the standard module UI |
-| Onboarding | Implicit | Same install/seed/permissions flow as other modules |
+| Concern           | Today (hardcoded)                       | As a module                                                        |
+| ----------------- | --------------------------------------- | ------------------------------------------------------------------ |
+| Billing           | Free for everyone; no path to monetise  | Per-tier pricing via `agency_module_subscriptions`                 |
+| Permissions       | Always-on for portal users              | Gated by `site_module_installations.is_enabled` + role permissions |
+| Surfaces          | Portal only                             | Portal + Agency dashboard + (optional) website widget              |
+| Knowledge sources | Implicit (whatever the responder pulls) | Configurable per-install (which modules to read from)              |
+| Telemetry         | Nothing                                 | Standard module event log + automation hooks                       |
+| Removal           | Code change                             | Uninstall through the standard module UI                           |
+| Onboarding        | Implicit                                | Same install/seed/permissions flow as other modules                |
 
 ## Architecture
 
@@ -71,12 +71,12 @@ Reuse the existing `installCoreModules` plumbing in `lib/actions/sites.ts`:
 
 ### 4. Per-tier permissions
 
-| Tier | `canUseAskChiko` | `canConfigureAskChiko` | Quota |
-| --- | --- | --- | --- |
-| Owner | yes | yes | unlimited (uses agency pool) |
-| Editor | yes | no | shared agency pool |
-| Member | yes | no | shared agency pool |
-| Viewer | no | no | n/a |
+| Tier   | `canUseAskChiko` | `canConfigureAskChiko` | Quota                        |
+| ------ | ---------------- | ---------------------- | ---------------------------- |
+| Owner  | yes              | yes                    | unlimited (uses agency pool) |
+| Editor | yes              | no                     | shared agency pool           |
+| Member | yes              | no                     | shared agency pool           |
+| Viewer | no               | no                     | n/a                          |
 
 Quotas are enforced by the same metering used for live-chat AI: increment a
 counter on `mod_ask_chiko_settings` per response and short-circuit when over.
