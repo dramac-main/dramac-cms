@@ -15,6 +15,10 @@ import {
 } from "./customer-context-bridge";
 import { parsePaymentMethods } from "./payment-method-parser";
 import {
+  loadSiteOverviewContext,
+  formatSiteOverviewContext,
+} from "./site-overview-context";
+import {
   DEFAULT_HANDOFF_KEYWORDS,
   DEFAULT_HANDOFF_MESSAGE,
 } from "./ai-defaults";
@@ -127,6 +131,12 @@ export async function generateAutoResponse(
       siteId,
       visitorInfo?.email,
     ).catch(() => null);
+
+    // Fetch site overview (modules installed, products, services, business info)
+    // so Chiko can answer general questions about the business.
+    const siteOverview = await loadSiteOverviewContext(siteId).catch(
+      () => null,
+    );
 
     // ── Determine which specific order this conversation is about ──────────
     // Priority 1: conversation metadata.order_number (set by widget/API)
@@ -562,7 +572,10 @@ If the quote is accepted but not yet converted, let the customer know the store 
 }
 KNOWLEDGE BASE:
 ${kbText}
-
+${siteOverview ? `
+SITE OVERVIEW (use this to answer questions about the business — modules, products, services, currency, hours):
+${formatSiteOverviewContext(siteOverview)}
+` : ""}
 CONVERSATION HISTORY:
 ${historyText}
 

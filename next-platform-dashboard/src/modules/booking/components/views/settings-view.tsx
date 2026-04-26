@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/lib/locale-config";
+import { StructuredPaymentMethodsEditor } from "@/components/payments/structured-payment-methods-editor";
 import type {
   BookingSettings,
   BookingSettingsUpdate,
@@ -841,17 +842,16 @@ export function SettingsView({ className }: SettingsViewProps) {
                           Chiko (the AI chat assistant) will share these instructions with customers when guiding them through payment. Include your bank details, mobile money numbers, or other payment methods. Use clear formatting — each method on its own line.
                         </p>
                       </div>
-                      <Textarea
+                      <StructuredPaymentMethodsEditor
                         value={formData.manual_payment_instructions || ""}
-                        onChange={(e) =>
-                          handleChange("manual_payment_instructions", e.target.value)
+                        onChange={(v) =>
+                          handleChange("manual_payment_instructions", v)
                         }
-                        placeholder={`Bank Transfer:\nBank: Zambia National Commercial Bank\nAccount: 1234567890\nBranch: Cairo Road, Lusaka\nSwift: ZNCOZMLU\n\nMobile Money:\nMTN: 097XXXXXXX\nAirtel: 096XXXXXXX\n\nPlease use your booking reference as the payment reference.`}
-                        rows={10}
-                        className="font-mono text-sm"
+                        surfaceLabel="bookings"
+                        unstyled
                       />
                       <p className="text-xs text-muted-foreground">
-                        Tip: List each payment method with a clear label and details. Chiko will present them as interactive buttons for the customer to choose from.
+                        Tip: Each method becomes an interactive button in chat. Customers tap one and Chiko sends just that method&apos;s details with their booking reference.
                       </p>
                     </div>
 

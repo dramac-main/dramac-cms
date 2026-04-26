@@ -16,7 +16,9 @@ interface PageProps {
   params: Promise<{ siteId: string }>;
 }
 
-export default async function EcommercePaymentMethodsPage({ params }: PageProps) {
+export default async function EcommercePaymentMethodsPage({
+  params,
+}: PageProps) {
   const user = await requirePortalAuth();
   const { siteId } = await params;
 

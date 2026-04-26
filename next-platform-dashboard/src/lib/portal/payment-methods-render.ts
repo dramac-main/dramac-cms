@@ -17,7 +17,9 @@ export function renderPaymentMethods(rows: PaymentMethodRow[]): string {
     .map((row, idx) => {
       const label = row.label.trim() || `Method ${idx + 1}`;
       const details = row.details.trim();
-      return details ? `${idx + 1}. ${label}\n${details}` : `${idx + 1}. ${label}`;
+      return details
+        ? `${idx + 1}. ${label}\n${details}`
+        : `${idx + 1}. ${label}`;
     })
     .join("\n\n");
 }

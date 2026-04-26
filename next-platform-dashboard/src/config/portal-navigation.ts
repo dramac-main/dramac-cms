@@ -30,6 +30,7 @@ import {
   Send,
   Blocks,
   Sparkles,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -227,30 +228,157 @@ export function getPortalNavigationGroups(
     }
   }
 
-  // === Module Settings Group (per-site configuration clients can manage) ===
-  const moduleSettingsItems: NavItem[] = [];
+  // === Module-specific groups (per-site configuration clients can manage) ===
+  // Each group mirrors the agency dashboard's surfaces for that module so
+  // clients can run their site without having to ask the agency.
+  const ecommerceItems: NavItem[] = [];
+  const bookingItems: NavItem[] = [];
+  const liveChatItems: NavItem[] = [];
+  const marketingItems: NavItem[] = [];
 
   if (siteId) {
-    if (hasModule("ecommerce") && permissions.canManageProducts) {
-      moduleSettingsItems.push({
-        title: "Store Payment Methods",
-        href: siteUrl("ecommerce/payment-methods")!,
-        icon: ShoppingCart,
-      });
+    // ── Ecommerce ────────────────────────────────────────────────────────
+    if (hasModule("ecommerce")) {
+      if (permissions.canManageProducts) {
+        ecommerceItems.push({
+          title: "Products",
+          href: siteUrl("products")!,
+          icon: Package,
+        });
+      }
+      if (permissions.canManageOrders) {
+        ecommerceItems.push({
+          title: "Orders",
+          href: siteUrl("orders")!,
+          icon: ShoppingCart,
+        });
+      }
+      if (permissions.canManageQuotes) {
+        ecommerceItems.push({
+          title: "Quotes",
+          href: siteUrl("quotes")!,
+          icon: Receipt,
+        });
+      }
+      if (permissions.canManageCustomers) {
+        ecommerceItems.push({
+          title: "Customers",
+          href: siteUrl("customers")!,
+          icon: UserCog,
+        });
+      }
+      if (permissions.canManageProducts) {
+        ecommerceItems.push({
+          title: "Payment Methods",
+          href: siteUrl("ecommerce/payment-methods")!,
+          icon: CreditCard,
+        });
+      }
     }
+
+    // ── Bookings ─────────────────────────────────────────────────────────
     if (hasModule("booking") && permissions.canManageBookings) {
-      moduleSettingsItems.push({
-        title: "Booking Payment Methods",
-        href: siteUrl("bookings/payment-methods")!,
-        icon: CalendarDays,
-      });
+      bookingItems.push(
+        {
+          title: "Appointments",
+          href: siteUrl("bookings")!,
+          icon: CalendarDays,
+        },
+        {
+          title: "Payment Methods",
+          href: siteUrl("bookings/payment-methods")!,
+          icon: CreditCard,
+        },
+        {
+          title: "Payment Proofs",
+          href: siteUrl("payment-proofs")!,
+          icon: Receipt,
+        },
+      );
     }
+
+    // ── Live Chat ────────────────────────────────────────────────────────
     if (hasModule("live-chat") && permissions.canManageLiveChat) {
-      moduleSettingsItems.push({
-        title: "Chiko AI Settings",
-        href: siteUrl("live-chat/ai-settings")!,
-        icon: Sparkles,
-      });
+      liveChatItems.push(
+        {
+          title: "Conversations",
+          href: siteUrl("live-chat/conversations")!,
+          icon: MessageCircle,
+        },
+        {
+          title: "Scripted Flows",
+          href: siteUrl("live-chat/scripted-flows")!,
+          icon: Zap,
+        },
+        {
+          title: "Chiko AI",
+          href: siteUrl("live-chat/ai-settings")!,
+          icon: Sparkles,
+        },
+      );
+      if (permissions.canManageAgents) {
+        liveChatItems.push({
+          title: "Chat Agents",
+          href: siteUrl("chat-agents")!,
+          icon: Bot,
+        });
+      }
+    }
+
+    // ── Marketing ────────────────────────────────────────────────────────
+    if (hasModule("marketing") && permissions.canManageMarketing) {
+      marketingItems.push(
+        {
+          title: "Campaigns",
+          href: siteUrl("marketing/campaigns")!,
+          icon: Send,
+        },
+        {
+          title: "Sequences",
+          href: siteUrl("marketing/sequences")!,
+          icon: Zap,
+        },
+        {
+          title: "Subscribers",
+          href: siteUrl("marketing/subscribers")!,
+          icon: Users,
+        },
+        {
+          title: "Templates",
+          href: siteUrl("marketing/templates")!,
+          icon: FileText,
+        },
+        {
+          title: "Forms",
+          href: siteUrl("marketing/forms")!,
+          icon: Inbox,
+        },
+        {
+          title: "Landing Pages",
+          href: siteUrl("marketing/landing-pages")!,
+          icon: Globe,
+        },
+        {
+          title: "Social",
+          href: siteUrl("marketing/social")!,
+          icon: Send,
+        },
+        {
+          title: "SMS",
+          href: siteUrl("marketing/sms")!,
+          icon: MessageCircle,
+        },
+        {
+          title: "Calendar",
+          href: siteUrl("marketing/calendar")!,
+          icon: CalendarDays,
+        },
+        {
+          title: "Marketing Analytics",
+          href: siteUrl("marketing/analytics")!,
+          icon: BarChart3,
+        },
+      );
     }
   }
 
@@ -287,8 +415,17 @@ export function getPortalNavigationGroups(
   }
 
   groups.push({ title: "Content", items: contentItems });
-  if (moduleSettingsItems.length > 0) {
-    groups.push({ title: "Module Settings", items: moduleSettingsItems });
+  if (ecommerceItems.length > 0) {
+    groups.push({ title: "Store", items: ecommerceItems });
+  }
+  if (bookingItems.length > 0) {
+    groups.push({ title: "Bookings", items: bookingItems });
+  }
+  if (liveChatItems.length > 0) {
+    groups.push({ title: "Live Chat", items: liveChatItems });
+  }
+  if (marketingItems.length > 0) {
+    groups.push({ title: "Marketing", items: marketingItems });
   }
   groups.push({ title: "Support", items: supportItems });
 

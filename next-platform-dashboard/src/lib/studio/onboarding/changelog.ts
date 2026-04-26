@@ -1,8 +1,8 @@
 /**
  * DRAMAC Studio Changelog
- * 
+ *
  * Changelog data for the What's New panel.
- * 
+ *
  * @phase STUDIO-26
  */
 
@@ -48,7 +48,8 @@ export const CHANGELOG: ChangelogRelease[] = [
       {
         type: "feature",
         title: "Section Templates",
-        description: "Insert pre-designed sections like hero, pricing, and testimonials",
+        description:
+          "Insert pre-designed sections like hero, pricing, and testimonials",
       },
       {
         type: "feature",
@@ -84,7 +85,8 @@ export const CHANGELOG: ChangelogRelease[] = [
       {
         type: "feature",
         title: "Component States",
-        description: "Edit hover, active, and focus states for buttons and links",
+        description:
+          "Edit hover, active, and focus states for buttons and links",
       },
       {
         type: "improvement",
@@ -161,7 +163,7 @@ export function getUnreadReleases(): ChangelogRelease[] {
   if (typeof window === "undefined") return [];
   const lastSeen = localStorage.getItem(CHANGELOG_STORAGE_KEY);
   if (!lastSeen) return CHANGELOG;
-  
+
   return CHANGELOG.filter((release) => {
     // Compare version strings (semantic versioning)
     return compareVersions(release.version, lastSeen) > 0;
@@ -175,13 +177,13 @@ export function getUnreadReleases(): ChangelogRelease[] {
 function compareVersions(a: string, b: string): number {
   const partsA = a.split(".").map(Number);
   const partsB = b.split(".").map(Number);
-  
+
   for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
     const numA = partsA[i] || 0;
     const numB = partsB[i] || 0;
     if (numA > numB) return 1;
     if (numA < numB) return -1;
   }
-  
+
   return 0;
 }

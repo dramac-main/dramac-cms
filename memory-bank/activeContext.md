@@ -45,8 +45,6 @@ Production deployment `dpl_jfvHzWaNk9ZcQjcRiuUEtCHJdrdU` (commit `6c9b5c82`) is 
   `requirePortalAuth()` → `verifyPortalModuleAccess(user, siteId, moduleSlug, requiredPermission)` → `createAdminClient()` work → `writePortalAudit({...})` → `revalidatePath(...)`.
 - Dynamic-table Supabase calls need an `as any` admin alias to escape the strict generated types.
 
-
-
 Session 2 shipped the full communication overhaul described in
 `CLIENT-PORTAL-SESSION-2-COMMUNICATION.md`. Every focus area (4.1–4.11) is
 delivered either as new portal code, as existing agency-side surfaces now

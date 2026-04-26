@@ -48,7 +48,7 @@ const PAYMENT_ORDER_PATTERNS = [
   // Payment method selection — visitor clicked a payment method button
   /\bI(?:'d like| would like| will|'ll)?\s+(?:to\s+)?pay\s+(?:using|with|via|by|through)\b/i,
   /\bpay(?:ing)?\s+(?:using|with|via|by|through)\b/i,
-  /\b(?:use|using|choose|choosing|select(?:ing)?|go(?:ing)?\s+with)\s+(?:airtel|mtn|momo|zanaco|mobile\s+money|bank\s+transfer|card)\b/i,
+  /\b(?:use|using|choose|choosing|select(?:ing)?|go(?:ing)?\s+with)\s+(?:airtel|mtn|momo|zanaco|zamtel|mobile\s+money|bank\s+transfer|card)\b/i,
 ];
 
 /** Returns true if the message is about orders/payment and should trigger AI payment guidance */
@@ -631,7 +631,7 @@ async function resolvePaymentMethodSelection(
   );
 
   // 4. Fetch the site's payment instructions (ecommerce takes priority, then bookings)
-  const [{ data: ecomSettings }, { data: bookSettings }] = await Promise.all([
+  const [{ data: ecomSettings }, { data: bookSettings }, { data: widgetSettings }] = await Promise.all([
     supabase
       .from("mod_ecommod01_settings")
       .select("manual_payment_instructions")
@@ -642,7 +642,14 @@ async function resolvePaymentMethodSelection(
       .select("manual_payment_instructions")
       .eq("site_id", siteId)
       .maybeSingle(),
+    supabase
+      .from("mod_chat_widget_settings")
+      .select("ai_assistant_name")
+      .eq("site_id", siteId)
+      .maybeSingle(),
   ]);
+
+  const assistantName: string = widgetSettings?.ai_assistant_name || "Chiko";
 
   const instructions: string =
     ecomSettings?.manual_payment_instructions ||
@@ -663,14 +670,13 @@ async function resolvePaymentMethodSelection(
         methodDetails = matchedMethod.details;
       }
     }
-    // If parsePaymentMethods couldn't split the instructions, use them in full
-    if (!methodDetails) {
-      methodDetails = instructions;
-    }
+    // If we couldn't isolate a single method, do NOT dump every method as the
+    // "selected" one — that confuses the customer. Bail out and let the AI
+    // handle it conversationally.
   }
 
   if (!methodDetails) {
-    // No payment instructions configured — can't generate a meaningful response
+    // No structured/matching payment instructions configured — skip auto-reply
     return false;
   }
 
@@ -686,7 +692,7 @@ async function resolvePaymentMethodSelection(
       conversation_id: conversationId,
       site_id: siteId,
       sender_type: "ai",
-      sender_name: "Chiko",
+      sender_name: assistantName,
       content,
       content_type: "text",
       status: requireApproval ? "pending_approval" : "sent",

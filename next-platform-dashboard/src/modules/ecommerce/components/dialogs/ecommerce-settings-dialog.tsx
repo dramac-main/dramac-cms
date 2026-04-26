@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner'
 
 import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, getCurrencySymbol } from '@/lib/locale-config'
+import { StructuredPaymentMethodsEditor } from '@/components/payments/structured-payment-methods-editor'
 import type { PaymentProvider } from '../../types/ecommerce-types'
 interface EcommerceSettingsDialogProps {
   open: boolean
@@ -442,18 +443,14 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
                     Manual Payment Instructions
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Customers will see these instructions at checkout (e.g. bank account details, mobile money number).
+                    Each method becomes a tap-to-pay button in chat. Customers pick one and Chiko sends just that method&apos;s details with the order reference.
                   </p>
-                  <div className="space-y-2">
-                    <Label htmlFor="manualInstructions">Payment Instructions</Label>
-                    <textarea
-                      id="manualInstructions"
-                      className="w-full min-h-20 px-3 py-2 text-sm rounded-md border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                      value={manualInstructions}
-                      onChange={(e) => setManualInstructions(e.target.value)}
-                      placeholder="e.g. Pay via Airtel Money to: +260 97 123 4567 (DRAMAC AGENCY)&#10;Include your order number as reference."
-                    />
-                  </div>
+                  <StructuredPaymentMethodsEditor
+                    value={manualInstructions}
+                    onChange={setManualInstructions}
+                    surfaceLabel="store orders"
+                    unstyled
+                  />
                 </div>
               )}
 

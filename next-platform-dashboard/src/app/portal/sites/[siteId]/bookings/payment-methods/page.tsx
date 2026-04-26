@@ -20,12 +20,7 @@ export default async function BookingPaymentMethodsPage({ params }: PageProps) {
   const user = await requirePortalAuth();
   const { siteId } = await params;
 
-  await verifyPortalModuleAccess(
-    user,
-    siteId,
-    "booking",
-    "canManageBookings",
-  );
+  await verifyPortalModuleAccess(user, siteId, "booking", "canManageBookings");
 
   const admin = createAdminClient();
   const { data: site } = await admin

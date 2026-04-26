@@ -1,12 +1,12 @@
 /**
  * DRAMAC Studio Help Content
- * 
+ *
  * Content for the help panel organized by section.
- * 
+ *
  * @phase STUDIO-26
  */
 
-import { PLATFORM } from '@/lib/constants/platform';
+import { PLATFORM } from "@/lib/constants/platform";
 
 // =============================================================================
 // TYPES
@@ -156,6 +156,6 @@ export function searchHelpItems(query: string): HelpItem[] {
   return getAllHelpItems().filter(
     (item) =>
       item.title.toLowerCase().includes(lowerQuery) ||
-      item.description.toLowerCase().includes(lowerQuery)
+      item.description.toLowerCase().includes(lowerQuery),
   );
 }

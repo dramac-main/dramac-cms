@@ -47,6 +47,7 @@ import type {
 } from '../../types/ecommerce-types'
 import type { PaymentProvider } from '../../types/ecommerce-types'
 import { getSettingsTab, updatePaymentSettings, testPaymentGateway } from '../../actions/settings-actions'
+import { StructuredPaymentMethodsEditor } from '@/components/payments/structured-payment-methods-editor'
 
 interface PaymentSettingsFormProps {
   siteId: string
@@ -512,20 +513,16 @@ function ManualPaymentForm({
       <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900 flex gap-2">
         <Truck className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
         <p className="text-xs text-amber-700 dark:text-amber-300">
-          Customers will see these instructions when choosing manual payment. Include your bank details or cash-on-delivery terms.
+          Customers see these as buttons in chat when choosing manual payment. Each method becomes a tap-to-pay option — Chiko sends just the chosen method&apos;s details with the order reference.
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="manual_instructions">Payment Instructions</Label>
-        <Textarea
-          id="manual_instructions"
-          value={instructions}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={`Bank: Zambia National Commercial Bank\nAccount: 1234567890\nBranch: Cairo Road, Lusaka\nSwift: ZNCOZMLU\n\nPlease include your order number as payment reference.\nOrders will be processed once payment is confirmed.`}
-          rows={8}
-        />
-      </div>
+      <StructuredPaymentMethodsEditor
+        value={instructions}
+        onChange={onChange}
+        surfaceLabel="store orders"
+        unstyled
+      />
     </div>
   )
 }

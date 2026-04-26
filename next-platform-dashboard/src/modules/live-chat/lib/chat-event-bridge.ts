@@ -378,9 +378,7 @@ export async function createConversationForEntity(
     // 7. Send initial greeting message
     const { data: settings } = await supabase
       .from("mod_chat_widget_settings")
-      .select(
-        "ai_assistant_name, company_name, ai_responses_require_approval",
-      )
+      .select("ai_assistant_name, company_name, ai_responses_require_approval")
       .eq("site_id", siteId)
       .single();
     const assistantName = settings?.ai_assistant_name || "Chiko";
