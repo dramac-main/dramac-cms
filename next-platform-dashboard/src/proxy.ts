@@ -329,7 +329,7 @@ async function proxyCore(request: NextRequest) {
     const ac = pathname.match(/^\/dashboard\/sites\/([^/]+)\/ask-chiko(\/.*)?$/);
     if (ac) {
       return NextResponse.redirect(
-        new URL("/dashboard/sites/" + ac[1] + "/live-chat", request.url),
+        new URL("/dashboard/sites/" + ac[1] + "/live-chat/settings", request.url),
         301,
       );
     }
